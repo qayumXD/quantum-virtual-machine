@@ -1,0 +1,1 @@
+"""\nIntermediate Representation module to represent hardware-agnostic quantum circuits.\n"""\n\nclass QuantumCircuitIR:\n    """Class to encapsulate quantum circuit representation."""\n    def __init__(self):\n        pass\n\n    def add_gate(self, gate):\n        """Add a quantum gate to the representation."""\n        pass\n

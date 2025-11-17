@@ -1,0 +1,1 @@
+"""\nRuntime engine placeholder for job submission and execution management.\n"""\n\nclass Runtime:\n    """Runtime engine for managing execution of quantum jobs."""\n    def __init__(self):\n        pass\n\n    def submit_job(self, job):\n        """Submit a job to execution backend."""\n        pass\n
