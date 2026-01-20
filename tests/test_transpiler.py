@@ -1,0 +1,72 @@
+# tests/test_transpiler.py
+
+import pytest
+from src.qvm.ir import QuantumCircuit
+from src.qvm.parser import QASMParser
+from src.qvm.architecture import get_linear_architecture
+from src.qvm.transpiler import Transpiler
+
+def test_transpile_on_connected_arch():
+    """Tests transpilation on a fully connected architecture where no SWAPs are needed."""
+    circuit_desc = [
+        {"name": "h", "qubits": [0]},
+        {"name": "cx", "qubits": [0, 2]}
+    ]
+    logical_qc = QASMParser.parse(circuit_desc, 3)
+    
+    # On a fully connected architecture, the physical circuit should be identical
+    from src.qvm.architecture import get_fully_connected_architecture
+    arch = get_fully_connected_architecture(3)
+    transpiler = Transpiler(arch)
+    physical_qc = transpiler.transpile(logical_qc)
+    
+    assert len(physical_qc.operations) == 2
+    assert physical_qc.operations[0]["name"] == "h"
+    assert physical_qc.operations[1]["name"] == "cx"
+    assert physical_qc.operations[1]["qubits"] == [0, 2]
+
+def test_transpile_with_swap_insertion():
+    """Tests that the transpiler correctly inserts a SWAP gate."""
+    # CNOT(0, 2) on a 3-qubit linear chain 0-1-2 requires a SWAP
+    circuit_desc = [
+        {"name": "cx", "qubits": [0, 2]}
+    ]
+    logical_qc = QASMParser.parse(circuit_desc, 3)
+    
+    arch = get_linear_architecture(3) # Connectivity: {(0, 1), (1, 2)}
+    transpiler = Transpiler(arch)
+    physical_qc = transpiler.transpile(logical_qc)
+    
+    # Expected output: SWAP(0,1), CNOT(1,2) (if we move logical 0 to physical 1)
+    # or SWAP(1,2), CNOT(0,1) (if we move logical 2 to physical 1)
+    # Our BFS-based implementation will choose one path. Let's trace it:
+    # Path from 0 to 2 is [0, 1, 2]. Loop runs for len-2 = 1 time.
+    # Swaps path[0] (0) and path[1] (1).
+    # So we expect: SWAP(0, 1), then CNOT on the new positions.
+    # After SWAP(0,1): logical 0 is on physical 1, logical 1 is on physical 0.
+    # The CNOT's logical qubits are 0 and 2.
+    # Logical 0 is now on physical 1.
+    # Logical 2 is still on physical 2.
+    # So the CNOT should be on physical qubits [1, 2].
+    
+    op_names = [op["name"] for op in physical_qc.operations]
+    assert op_names == ["swap", "cx"]
+    
+    assert physical_qc.operations[0]["name"] == "swap"
+    assert physical_qc.operations[0]["qubits"] == [0, 1]
+    
+    assert physical_qc.operations[1]["name"] == "cx"
+    assert physical_qc.operations[1]["qubits"] == [1, 2]
+
+def test_transpile_no_path():
+    """Tests that the transpiler raises an error if no path exists."""
+    circuit_desc = [{"name": "cx", "qubits": [0, 3]}]
+    logical_qc = QASMParser.parse(circuit_desc, 4)
+    
+    # A disconnected architecture
+    from src.qvm.architecture import TargetArchitecture
+    arch = TargetArchitecture("Disconnected-4", 4, {(0, 1), (2, 3)}, {"cx"})
+    transpiler = Transpiler(arch)
+    
+    with pytest.raises(RuntimeError, match="No path between qubits"):
+        transpiler.transpile(logical_qc)
