@@ -18,6 +18,8 @@ venv/
 *.swp
 .DS_Store
 Thumbs.db
+# Ignore resources directory containing large files
+docs/resources/
 
 # Logs and databases
 *.log
