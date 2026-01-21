@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+*.env
+.vscode/
+
+# IDEs
+.idea/
+
+# Editors
+*~
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
+# Ignore resources directory containing large files
+docs/resources/
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+
+# OS generated files
+.Trash/
+.localized
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Temporary files
+/tmp/*
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.venv/
+.mypy_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Specific to this project (QVM)
+*.png # Ignore histogram images
+/bell_histogram.png
+/ghz_histogram.png
+/histogram.png
+/superposition_histogram.png
+
+# Ignore the external project in week1
+week1/
+
+# Requirements files (if we want to manage them separately or regenerate)
+# requirements.txt
+# src/requirements.txt
