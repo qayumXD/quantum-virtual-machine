@@ -67,8 +67,12 @@ class Simulator:
     def _apply_single_qubit_gate(self, statevector: np.ndarray, gate_matrix: np.ndarray, target_qubit: int, num_qubits: int) -> np.ndarray:
         """Applies a single-qubit gate to the statevector."""
         # Construct the tensor product of identity and gate matrices
+        # Note: We assume Little Endian ordering (Qubit 0 is LSB).
+        # In np.kron(A, B), B is the LSB (fastest changing index).
+        # So op_list should be [Q_n-1, ..., Q_1, Q_0].
         op_list = [self.I] * num_qubits
-        op_list[target_qubit] = gate_matrix
+        op_list[num_qubits - 1 - target_qubit] = gate_matrix
+        
         full_gate_matrix = op_list[0]
         for i in range(1, num_qubits):
             full_gate_matrix = np.kron(full_gate_matrix, op_list[i])
@@ -77,28 +81,49 @@ class Simulator:
         return full_gate_matrix @ statevector
 
     def _apply_cnot_gate(self, statevector: np.ndarray, control_qubit: int, target_qubit: int, num_qubits: int) -> np.ndarray:
-        """Applies a CNOT gate to the statevector."""
-        new_statevector = statevector.copy()
-        for i in range(2**num_qubits):
-            if (i >> control_qubit) & 1:
-                flipped_i = i ^ (1 << target_qubit)
-                new_statevector[i], new_statevector[flipped_i] = new_statevector[flipped_i], new_statevector[i]
-        return new_statevector
+        """Applies a CNOT gate to the statevector using vectorized operations."""
+        # Vectorized implementation for performance
+        N = 2**num_qubits
+        indices = np.arange(N)
+        
+        # Identify states where control qubit is 1
+        control_mask = (indices >> control_qubit) & 1 == 1
+        
+        # Calculate the destination indices
+        # If control is 0, dest is same as src (no change)
+        # If control is 1, dest is src flipped at target bit
+        target_bit_mask = 1 << target_qubit
+        permuted_indices = indices.copy()
+        permuted_indices[control_mask] = indices[control_mask] ^ target_bit_mask
+        
+        # Apply the permutation to the statevector
+        # new_state[i] comes from old_state[permuted_indices[i]]? 
+        # No, new_state[i] is the amplitude of state |i>.
+        # If the operation maps |j> -> |k>, then new_state[k] = old_state[j].
+        # Since CNOT is its own inverse (unitary and hermitian), |k> -> |j> also holds.
+        # So new_state[i] = old_state[permuted_indices[i]] works.
+        return statevector[permuted_indices]
 
     def _apply_swap_gate(self, statevector: np.ndarray, q1: int, q2: int, num_qubits: int) -> np.ndarray:
-        """Applies a SWAP gate to the statevector."""
-        new_statevector = statevector.copy()
-        for i in range(2**num_qubits):
-            # Check if the bits at positions q1 and q2 are different
-            bit1 = (i >> q1) & 1
-            bit2 = (i >> q2) & 1
-            if bit1 != bit2:
-                # If they are different, find the index of the state with these bits swapped
-                j = i ^ ((1 << q1) | (1 << q2))
-                # Only swap amplitudes for states i < j to avoid swapping twice
-                if i < j:
-                    new_statevector[i], new_statevector[j] = new_statevector[j], new_statevector[i]
-        return new_statevector
+        """Applies a SWAP gate to the statevector using vectorized operations."""
+        N = 2**num_qubits
+        indices = np.arange(N)
+        
+        # Check bits at q1 and q2
+        bit1 = (indices >> q1) & 1
+        bit2 = (indices >> q2) & 1
+        
+        # Identify where bits are different
+        diff_mask = bit1 != bit2
+        
+        # Calculate swap mask (flip both q1 and q2)
+        swap_mask = (1 << q1) | (1 << q2)
+        
+        # Construct permutation indices
+        permuted_indices = indices.copy()
+        permuted_indices[diff_mask] = indices[diff_mask] ^ swap_mask
+        
+        return statevector[permuted_indices]
 
     def simulate(self, circuit: QuantumCircuit) -> np.ndarray:
         """

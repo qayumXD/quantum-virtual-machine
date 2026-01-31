@@ -1,0 +1,64 @@
+[
+    {
+        "name": "h",
+        "qubits": [
+            0
+        ]
+    },
+    {
+        "name": "h",
+        "qubits": [
+            1
+        ]
+    },
+    {
+        "name": "h",
+        "qubits": [
+            2
+        ]
+    },
+    {
+        "name": "x",
+        "qubits": [
+            3
+        ]
+    },
+    {
+        "name": "h",
+        "qubits": [
+            3
+        ]
+    },
+    {
+        "name": "cx",
+        "qubits": [
+            0,
+            3
+        ]
+    },
+    {
+        "name": "cx",
+        "qubits": [
+            2,
+            3
+        ]
+    },
+    {
+        "name": "h",
+        "qubits": [
+            0
+        ]
+    },
+    {
+        "name": "h",
+        "qubits": [
+            1
+        ]
+    },
+    {
+        "name": "h",
+        "qubits": [
+            2
+        ]
+    }
+]

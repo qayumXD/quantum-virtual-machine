@@ -1,0 +1,4 @@
+[
+    {"name": "h", "qubits": [0]},
+    {"name": "cx", "qubits": [0, 1]}
+]
