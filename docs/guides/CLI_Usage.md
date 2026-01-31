@@ -55,3 +55,14 @@ Simulate a circuit that needs transpilation (e.g., CNOT between 0 and 2 on a lin
 ```bash
 python -m src.qvm.cli examples/my_circuit.json --nqubits 3 --transpile --export output.qasm
 ```
+
+## Algorithm Examples
+
+The project includes helper scripts to generate circuits for standard quantum algorithms.
+
+*   **Bernstein-Vazirani:** Finds a hidden bitstring in one shot.
+    *   [Documentation](../algorithms/Bernstein_Vazirani.md)
+    *   `python examples/generate_bv.py --secret 101`
+*   **Grover's Search:** Finds a marked item in an unsorted list.
+    *   [Documentation](../algorithms/Grover.md)
+    *   `python examples/generate_grover.py --target 101`
