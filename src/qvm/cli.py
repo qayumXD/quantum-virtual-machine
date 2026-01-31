@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from src.qvm.parser import QASMParser
 from src.qvm.simulator import Simulator
 from src.qvm.transpiler import Transpiler
+from src.qvm.decomposer import Decomposer
 from src.qvm.architecture import get_linear_architecture
 from src.qvm.visual import plot_histogram, plot_circuit
 from src.qvm.util.export import to_openqasm2
@@ -34,7 +35,18 @@ def main():
         print(f"Error parsing circuit: {e}")
         sys.exit(1)
     
-    # 2. Transpile (Optional)
+    # 2. Decompose (Always run to ensure simulator compatibility for high-level gates)
+    # The simulator natively supports: H, X, Y, Z, Rx, Ry, Rz, CX, SWAP, ID
+    print("Decomposing complex gates...")
+    native_gates = {'h', 'x', 'y', 'z', 'rx', 'ry', 'rz', 'cx', 'swap', 'id', 'measure'}
+    decomposer = Decomposer(native_gates)
+    try:
+        qc = decomposer.decompose_circuit(qc)
+    except Exception as e:
+        print(f"Error during decomposition: {e}")
+        sys.exit(1)
+
+    # 3. Transpile (Optional)
     if args.transpile:
         print("Transpiling for Linear Architecture...")
         try:
@@ -46,7 +58,7 @@ def main():
             print(f"Error during transpilation: {e}")
             sys.exit(1)
 
-    # 3. Simulate
+    # 4. Simulate
     print("Simulating...")
     try:
         sim = Simulator()
