@@ -67,8 +67,12 @@ class Simulator:
     def _apply_single_qubit_gate(self, statevector: np.ndarray, gate_matrix: np.ndarray, target_qubit: int, num_qubits: int) -> np.ndarray:
         """Applies a single-qubit gate to the statevector."""
         # Construct the tensor product of identity and gate matrices
+        # Note: We assume Little Endian ordering (Qubit 0 is LSB).
+        # In np.kron(A, B), B is the LSB (fastest changing index).
+        # So op_list should be [Q_n-1, ..., Q_1, Q_0].
         op_list = [self.I] * num_qubits
-        op_list[target_qubit] = gate_matrix
+        op_list[num_qubits - 1 - target_qubit] = gate_matrix
+        
         full_gate_matrix = op_list[0]
         for i in range(1, num_qubits):
             full_gate_matrix = np.kron(full_gate_matrix, op_list[i])
@@ -82,7 +86,9 @@ class Simulator:
         for i in range(2**num_qubits):
             if (i >> control_qubit) & 1:
                 flipped_i = i ^ (1 << target_qubit)
-                new_statevector[i], new_statevector[flipped_i] = new_statevector[flipped_i], new_statevector[i]
+                # Only perform the swap once for each pair (i, flipped_i)
+                if i < flipped_i:
+                    new_statevector[i], new_statevector[flipped_i] = new_statevector[flipped_i], new_statevector[i]
         return new_statevector
 
     def _apply_swap_gate(self, statevector: np.ndarray, q1: int, q2: int, num_qubits: int) -> np.ndarray:
