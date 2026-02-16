@@ -5,6 +5,8 @@ from src.qvm.ir import QuantumCircuit
 from src.qvm.parser import QASMParser
 from src.qvm.architecture import get_linear_architecture
 from src.qvm.transpiler import Transpiler
+from src.qvm.simulator import Simulator
+import numpy as np
 
 def test_transpile_on_connected_arch():
     """Tests transpilation on a fully connected architecture where no SWAPs are needed."""
@@ -70,3 +72,31 @@ def test_transpile_no_path():
     
     with pytest.raises(RuntimeError, match="No path between qubits"):
         transpiler.transpile(logical_qc)
+
+
+def test_transpilation_is_logically_correct():
+    """
+    Tests that the transpiled circuit is logically equivalent to the original
+    by comparing the final statevectors of both. This is the ultimate test of correctness.
+    """
+    # 1. Define the scenario
+    logical_circuit_desc = [
+        {"name": "h", "qubits": [0]},
+        {"name": "cx", "qubits": [0, 2]}
+    ]
+    logical_qc = QASMParser.parse(logical_circuit_desc, 3)
+    arch = get_linear_architecture(3)
+    simulator = Simulator()
+
+    # 2. Get the expected statevector by simulating the LOGICAL circuit
+    # The simulator doesn't care about connectivity, so this gives the "correct" answer.
+    expected_state = simulator.simulate(logical_qc)
+
+    # 3. Get the actual statevector by transpiling and then simulating the PHYSICAL circuit
+    transpiler = Transpiler(arch)
+    physical_qc = transpiler.transpile(logical_qc)
+    actual_state = simulator.simulate(physical_qc)
+
+    # 4. Assert that the results are the same (up to floating point tolerance)
+    # This test will FAIL with the current transpiler implementation, proving the bug.
+    assert np.allclose(expected_state, actual_state)
