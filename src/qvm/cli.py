@@ -15,6 +15,10 @@ def main():
     parser.add_argument("input_file", help="Path to the input JSON circuit file")
     parser.add_argument("--nqubits", type=int, required=True, help="Number of qubits in the circuit")
     parser.add_argument("--transpile", action="store_true", help="Enable transpilation for linear topology")
+    parser.add_argument("--routing", choices=["greedy", "sabre"], default="greedy", help="Routing strategy when --transpile is set")
+    parser.add_argument("--no-restore-mapping", dest="restore_mapping", action="store_false",
+                        help="Do not swap back to restore logical->physical identity after routing (saves swaps).")
+    parser.set_defaults(restore_mapping=True)
     parser.add_argument("--visualize", action="store_true", help="Show circuit and probability plots")
     parser.add_argument("--export", help="Path to export OpenQASM code")
     parser.add_argument("--shots", type=int, default=0, help="If >0, draw this many measurement samples")
@@ -53,7 +57,7 @@ def main():
         print("Transpiling for Linear Architecture...")
         try:
             arch = get_linear_architecture(args.nqubits)
-            transpiler = Transpiler(arch)
+            transpiler = Transpiler(arch, strategy=args.routing, restore_mapping=args.restore_mapping)
             qc = transpiler.transpile(qc)
             print("Transpilation complete.")
         except Exception as e:

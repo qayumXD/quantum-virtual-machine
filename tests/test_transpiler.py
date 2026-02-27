@@ -99,3 +99,26 @@ def test_transpilation_is_logically_correct():
     # 4. Assert that the results are the same (up to floating point tolerance)
     # This test will FAIL with the current transpiler implementation, proving the bug.
     assert np.allclose(expected_state, actual_state)
+
+
+def test_sabre_reduces_swaps_for_repeated_far_gates():
+    """
+    SABRE strategy with restore_mapping=False should reuse routing and emit fewer swaps
+    for consecutive distant gates.
+    """
+    circuit_desc = [
+        {"name": "cx", "qubits": [0, 2]},
+        {"name": "cx", "qubits": [0, 2]},
+    ]
+    logical_qc = QASMParser.parse(circuit_desc, 3)
+    arch = get_linear_architecture(3)
+
+    greedy = Transpiler(arch, strategy="greedy", restore_mapping=True).transpile(logical_qc)
+    sabre = Transpiler(arch, strategy="sabre", restore_mapping=False).transpile(logical_qc)
+
+    greedy_swaps = sum(1 for op in greedy.operations if op["name"] == "swap")
+    sabre_swaps = sum(1 for op in sabre.operations if op["name"] == "swap")
+
+    assert sabre_swaps < greedy_swaps
+    # sanity: sabre should produce expected concise sequence swap, cx, cx
+    assert [op["name"] for op in sabre.operations][0] == "swap"
