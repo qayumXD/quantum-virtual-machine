@@ -169,6 +169,53 @@ class Simulator:
         """Calculates measurement probabilities from a statevector."""
         return np.abs(statevector)**2
 
+    def sample(self, circuit: QuantumCircuit, shots: int = 1024, seed: int | None = None) -> dict:
+        """
+        Draws measurement samples from the final state of the circuit.
+
+        Measurement gates in the circuit are treated as an instruction to
+        include those qubits in the reported bitstrings. If no measurement
+        operations are present, all qubits are measured.
+
+        Args:
+            circuit: QuantumCircuit to execute.
+            shots: Number of samples to draw.
+            seed: Optional RNG seed for reproducibility.
+
+        Returns:
+            dict mapping measured bitstrings -> counts.
+        """
+        if shots <= 0:
+            raise ValueError("shots must be a positive integer")
+
+        measured_qubits = self._extract_measured_qubits(circuit)
+        if not measured_qubits:
+            measured_qubits = list(range(circuit.num_qubits))
+
+        state = self.simulate(circuit)
+        probs = self.get_probabilities(state)
+
+        rng = np.random.default_rng(seed)
+        outcomes = rng.choice(len(probs), size=shots, p=probs)
+
+        counts: dict[str, int] = {}
+        for outcome in outcomes:
+            bitstring = format(outcome, f"0{circuit.num_qubits}b")
+            # Little-endian convention: qubit 0 is LSB (rightmost)
+            measured_bits = "".join(bitstring[circuit.num_qubits - 1 - q] for q in measured_qubits)
+            counts[measured_bits] = counts.get(measured_bits, 0) + 1
+
+        return counts
+
+    @staticmethod
+    def _extract_measured_qubits(circuit: QuantumCircuit) -> list:
+        """Return sorted unique qubit indices that are explicitly measured."""
+        measured = []
+        for op in circuit.operations:
+            if op["name"] == "measure":
+                measured.extend(op["qubits"])
+        return sorted(set(measured))
+
 # Example Usage (for testing during development)
 if __name__ == "__main__":
     from src.qvm.ir import QuantumCircuit

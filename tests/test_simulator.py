@@ -99,3 +99,28 @@ def test_invalid_qubit_for_cnot_gate():
     qc = QASMParser.parse(circuit_desc, 2)
     with pytest.raises(ValueError, match="gate must act on two qubits"):
         sim.simulate(qc)
+
+def test_sampling_bell_state_counts():
+    """Sampling should reflect Bell state probabilities."""
+    circuit_desc = [
+        {"name": "h", "qubits": [0]},
+        {"name": "cx", "qubits": [0, 1]},
+    ]
+    qc = QASMParser.parse(circuit_desc, 2)
+    counts = sim.sample(qc, shots=2000, seed=42)
+    total = sum(counts.values())
+    assert set(counts.keys()) == {"00", "11"}
+    assert abs(counts["00"] / total - 0.5) < 0.05
+    assert abs(counts["11"] / total - 0.5) < 0.05
+
+def test_sampling_respects_measure_subset():
+    """If measure ops are present, only those qubits are reported."""
+    circuit_desc = [
+        {"name": "h", "qubits": [0]},
+        {"name": "measure", "qubits": [0]},
+    ]
+    qc = QASMParser.parse(circuit_desc, 2)  # 2 qubits, only q0 measured
+    counts = sim.sample(qc, shots=500, seed=7)
+    assert set(counts.keys()) <= {"0", "1"}
+    total = sum(counts.values())
+    assert abs(counts.get("0", 0) / total - 0.5) < 0.08
