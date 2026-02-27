@@ -17,6 +17,8 @@ def main():
     parser.add_argument("--transpile", action="store_true", help="Enable transpilation for linear topology")
     parser.add_argument("--visualize", action="store_true", help="Show circuit and probability plots")
     parser.add_argument("--export", help="Path to export OpenQASM code")
+    parser.add_argument("--shots", type=int, default=0, help="If >0, draw this many measurement samples")
+    parser.add_argument("--seed", type=int, default=None, help="Optional RNG seed for sampling")
     
     args = parser.parse_args()
     
@@ -77,6 +79,17 @@ def main():
             bin_str = format(i, f'0{args.nqubits}b')
             print(f"|{bin_str}|: {prob:.4f}")
 
+    # Optional sampling
+    counts = None
+    if args.shots and args.shots > 0:
+        try:
+            counts = sim.sample(qc, shots=args.shots, seed=args.seed)
+            print(f"\nSampled counts (shots={args.shots}):")
+            for state, ct in sorted(counts.items()):
+                print(f"|{state}>: {ct}")
+        except Exception as e:
+            print(f"Error during sampling: {e}")
+    
     # 4. Export (Optional)
     if args.export:
         print(f"\nExporting OpenQASM to {args.export}...")
@@ -93,7 +106,9 @@ def main():
         print("\nDisplaying visualizations...")
         try:
             plot_circuit(qc, title="Quantum Circuit")
-            plot_histogram(probs, title="Simulation Results")
+            plot_data = counts if counts is not None else probs
+            plot_title = "Sampled Counts" if counts is not None else "Simulation Results"
+            plot_histogram(plot_data, title=plot_title)
             plt.show()
         except Exception as e:
             print(f"Error visualizing: {e}")
