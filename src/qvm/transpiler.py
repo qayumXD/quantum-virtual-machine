@@ -84,8 +84,10 @@ class Transpiler:
 
                     # Move logical qubit q1_log along the path to become adjacent to q2_log's final position
                     # We need to SWAP along the path from path[0] to path[-2]
+                    swap_pairs = []
                     for i in range(len(path) - 2):
                         p1, p2 = path[i], path[i+1]
+                        swap_pairs.append((p1, p2))
                         physical_circuit.add_operation("swap", [p1, p2])
                         
                         # Update the qubit maps after the SWAP
@@ -101,6 +103,14 @@ class Transpiler:
                     
                     # Apply the original gate to the now-adjacent physical qubits
                     physical_circuit.add_operation(gate_name, [final_q1_phys, final_q2_phys], params)
+
+                    # Swap back to restore original logical -> physical mapping
+                    for p1, p2 in reversed(swap_pairs):
+                        physical_circuit.add_operation("swap", [p1, p2])
+                        log_at_p1 = inverse_qubit_map[p1]
+                        log_at_p2 = inverse_qubit_map[p2]
+                        qubit_map[log_at_p1], qubit_map[log_at_p2] = qubit_map[log_at_p2], qubit_map[log_at_p1]
+                        inverse_qubit_map[p1], inverse_qubit_map[p2] = inverse_qubit_map[p2], inverse_qubit_map[p1]
 
             else:
                 physical_circuit.add_operation(gate_name, physical_qubits, params)

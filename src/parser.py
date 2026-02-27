@@ -7,7 +7,9 @@ circuits into the `QuantumCircuitIR` defined in `src/ir.py`. The main QVM
 pipeline continues to live under `src/qvm/`.
 """
 
-from typing import Any
+from typing import Any, Dict, List
+
+import math
 
 try:
     from qiskit import QuantumCircuit  # type: ignore
@@ -15,6 +17,13 @@ try:
 except ImportError:  # pragma: no cover - exercised in tests via skip
     QuantumCircuit = None
     QISKIT_AVAILABLE = False
+
+try:
+    import cirq  # type: ignore
+    CIRQ_AVAILABLE = True
+except ImportError:  # pragma: no cover - exercised in tests via skip
+    cirq = None
+    CIRQ_AVAILABLE = False
 
 from src.ir import QuantumCircuitIR, QuantumGate
 
@@ -88,9 +97,86 @@ class QiskitParser:
 
 class CirqParser:
     """
-    Placeholder for a future Cirq parser. Kept for interface completeness;
-    not implemented yet.
+    Parser for Cirq Circuit objects.
+
+    Supported gates:
+      - H, X, Y, Z
+      - CNOT / CX
+      - CZ
+      - SWAP
+      - RX / RY / RZ (angles in radians)
+      - Measurement (qubit -> classical bit mapping in encounter order)
     """
 
-    def parse(self, circuit: Any):  # pragma: no cover - not implemented
-        raise NotImplementedError("CirqParser is not implemented yet")
+    def parse(self, circuit: Any) -> QuantumCircuitIR:
+        if not CIRQ_AVAILABLE:
+            raise ImportError("Cirq is not installed. Install with: pip install cirq")
+        if not isinstance(circuit, cirq.Circuit):
+            raise TypeError("Expected a cirq.Circuit instance")
+
+        qubit_list = sorted(circuit.all_qubits())
+        qubit_index: Dict[Any, int] = {q: i for i, q in enumerate(qubit_list)}
+        ir = QuantumCircuitIR(num_qubits=len(qubit_list))
+        meas_bit_counter = 0
+
+        for op in circuit.all_operations():
+            gate = op.gate
+            targets = [qubit_index[q] for q in op.qubits]
+
+            # Measurement
+            if isinstance(gate, cirq.MeasurementGate):
+                for q in targets:
+                    ir.add_measurement(q, meas_bit_counter)
+                    meas_bit_counter += 1
+                continue
+
+            name, params = self._map_gate(gate)
+            if name is None:
+                raise ValueError(f"Unsupported Cirq gate: {gate!r}")
+            ir.add_gate(QuantumGate(gate_type=name, qubits=targets, params=params))
+
+        return ir
+
+    def _map_gate(self, gate) -> tuple[str | None, List[float]]:
+        """
+        Map Cirq gate object to IR gate name and parameters.
+        Returns (name, params) or (None, []) if unsupported.
+        """
+        # Exact matches
+        if gate == cirq.H:
+            return "H", []
+        if gate == cirq.X:
+            return "X", []
+        if gate == cirq.Y:
+            return "Y", []
+        if gate == cirq.Z:
+            return "Z", []
+        if gate == cirq.CNOT or gate == cirq.CX:
+            return "CX", []
+        if gate == cirq.CZ:
+            return "CZ", []
+        if gate == cirq.SWAP:
+            return "SWAP", []
+
+        # Rotation gates (PowGates)
+        if isinstance(gate, cirq.ops.common_gates.XPowGate):
+            angle = float(gate.exponent * math.pi)
+            return "RX", [angle]
+        if isinstance(gate, cirq.ops.common_gates.YPowGate):
+            angle = float(gate.exponent * math.pi)
+            return "RY", [angle]
+        if isinstance(gate, cirq.ops.common_gates.ZPowGate):
+            angle = float(gate.exponent * math.pi)
+            return "RZ", [angle]
+
+        # Controlled gates encoded via ControlledGate
+        if isinstance(gate, cirq.ops.controlled_gate.ControlledGate):
+            # Only support controlled X and Z with one control
+            if gate.num_controls() == 1:
+                sub = gate.sub_gate
+                if sub == cirq.X:
+                    return "CX", []
+                if sub == cirq.Z:
+                    return "CZ", []
+
+        return None, []

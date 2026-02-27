@@ -52,13 +52,12 @@ def test_transpile_with_swap_insertion():
     # So the CNOT should be on physical qubits [1, 2].
     
     op_names = [op["name"] for op in physical_qc.operations]
-    assert op_names == ["swap", "cx"]
+    # With swap-back enabled we expect swap, cx, swap
+    assert op_names == ["swap", "cx", "swap"]
     
-    assert physical_qc.operations[0]["name"] == "swap"
     assert physical_qc.operations[0]["qubits"] == [0, 1]
-    
-    assert physical_qc.operations[1]["name"] == "cx"
     assert physical_qc.operations[1]["qubits"] == [1, 2]
+    assert physical_qc.operations[2]["qubits"] == [0, 1]
 
 def test_transpile_no_path():
     """Tests that the transpiler raises an error if no path exists."""
