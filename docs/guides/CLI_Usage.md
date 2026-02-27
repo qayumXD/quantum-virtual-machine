@@ -15,8 +15,14 @@ python -m src.qvm.cli <input_file> --nqubits <N> [options]
 *   `input_file`: Path to a JSON file containing the circuit description.
 *   `--nqubits <N>`: (Required) Total number of qubits in the circuit.
 *   `--transpile`: (Optional) Enable automatic transpilation for a linear qubit topology. Use this if your circuit uses gates on non-adjacent qubits.
+*   `--routing {greedy,sabre}`: Routing strategy when `--transpile` is used. `sabre` uses a lookahead heuristic to reduce swaps.
+*   `--no-restore-mapping`: When set with `--transpile`, do not swap back to the original logical/physical mapping (fewer swaps, but final labeling follows physical qubits).
 *   `--visualize`: (Optional) Display popup windows with the circuit diagram and probability histogram.
 *   `--export <path>`: (Optional) Save the executed circuit as an OpenQASM 2.0 file.
+*   `--shots <N>`: (Optional) Draw N samples (shot-based execution). If omitted, only probabilities are printed.
+*   `--seed <int>`: RNG seed for reproducible sampling.
+*   `--noise-depol <p>`: Depolarizing probability (mixes distribution with uniform).
+*   `--noise-readout <p>`: Per-bit readout flip probability.
 
 ## Input File Format
 
@@ -56,6 +62,11 @@ Simulate a circuit that needs transpilation (e.g., CNOT between 0 and 2 on a lin
 python -m src.qvm.cli examples/my_circuit.json --nqubits 3 --transpile --export output.qasm
 ```
 
+### 4. Shot-based sampling with noise
+```bash
+python -m src.qvm.cli examples/bell_state.json --nqubits 2 --shots 2000 --noise-depol 0.05 --noise-readout 0.01
+```
+
 ## Algorithm Examples
 
 The project includes helper scripts to generate circuits for standard quantum algorithms.
@@ -66,3 +77,7 @@ The project includes helper scripts to generate circuits for standard quantum al
 *   **Grover's Search:** Finds a marked item in an unsorted list.
     *   [Documentation](../algorithms/Grover.md)
     *   `python examples/generate_grover.py --target 101`
+
+## Cirq → QVM example
+
+If you use Cirq, see `examples/cirq_to_ir_demo.py` for parsing a Cirq circuit into the lightweight IR and exporting a JSON gate list for the CLI.
