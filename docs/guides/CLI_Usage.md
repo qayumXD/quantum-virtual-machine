@@ -13,6 +13,7 @@ python -m src.qvm.cli <input_file> --nqubits <N> [options]
 ### Arguments
 
 *   `input_file`: Path to a JSON file containing the circuit description.
+    * If the path ends with `.qasm`, the CLI will parse OpenQASM 2.0 directly (qreg/creg + standard gates).
 *   `--nqubits <N>`: (Required) Total number of qubits in the circuit.
 *   `--transpile`: (Optional) Enable automatic transpilation for a linear qubit topology. Use this if your circuit uses gates on non-adjacent qubits.
 *   `--routing {greedy,sabre}`: Routing strategy when `--transpile` is used. `sabre` uses a lookahead heuristic to reduce swaps.

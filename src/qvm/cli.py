@@ -2,7 +2,7 @@ import argparse
 import json
 import sys
 import matplotlib.pyplot as plt
-from src.qvm.parser import QASMParser
+from src.qvm.parser import QASMParser, OpenQASM2Parser
 from src.qvm.simulator import Simulator
 from src.qvm.transpiler import Transpiler
 from src.qvm.decomposer import Decomposer
@@ -31,17 +31,18 @@ def main():
     
     # 1. Load Circuit
     try:
-        with open(args.input_file, 'r') as f:
-            circuit_data = json.load(f)
+        if args.input_file.lower().endswith(".qasm"):
+            print(f"Loading OpenQASM from {args.input_file}...")
+            qc = OpenQASM2Parser.parse_file(args.input_file)
+            # override nqubits from file
+            args.nqubits = qc.num_qubits
+        else:
+            with open(args.input_file, 'r') as f:
+                circuit_data = json.load(f)
+            print(f"Loading circuit from {args.input_file}...")
+            qc = QASMParser.parse(circuit_data, args.nqubits)
     except Exception as e:
-        print(f"Error reading input file: {e}")
-        sys.exit(1)
-        
-    print(f"Loading circuit from {args.input_file}...")
-    try:
-        qc = QASMParser.parse(circuit_data, args.nqubits)
-    except Exception as e:
-        print(f"Error parsing circuit: {e}")
+        print(f"Error reading/parsing input file: {e}")
         sys.exit(1)
     
     # 2. Decompose (Always run to ensure simulator compatibility for high-level gates)
