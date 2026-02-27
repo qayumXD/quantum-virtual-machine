@@ -1,6 +1,8 @@
 # Minimal FastAPI backend for QVM
 
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
 
@@ -35,6 +37,14 @@ class RunResponse(BaseModel):
 
 
 app = FastAPI(title="QVM API", version="0.1")
+
+# Serve static web client if available
+app.mount("/web", StaticFiles(directory="web"), name="web")
+
+
+@app.get("/")
+def root():
+    return FileResponse("web/index.html")
 
 
 @app.get("/health")

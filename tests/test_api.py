@@ -35,6 +35,7 @@ def test_run_json_bell_state():
     assert pytest.approx(probs[0], rel=1e-6) == 0.5
     assert pytest.approx(probs[3], rel=1e-6) == 0.5
     assert data["counts"] is None
+    assert data["openqasm2"].startswith("OPENQASM")
 
 
 def test_run_qasm():

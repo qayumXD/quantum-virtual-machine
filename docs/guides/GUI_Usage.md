@@ -7,6 +7,8 @@ python -m src.qvm.server --host 127.0.0.1 --port 8000
 python -m src.qvm.server --host 127.0.0.1 --port 8000 --reload
 ```
 
+Then open the static client at http://127.0.0.1:8000/web (root `/` also redirects to the client).
+
 ## API endpoints
 - `GET /health` → `{"status":"ok"}`
 - `POST /run`
@@ -47,3 +49,8 @@ python -m src.qvm.cli examples/bell_state.json --nqubits 2 --transpile --routing
 - Routing: `greedy` (default) or `sabre`.
 - Noise: depolarizing + readout available in sampling; `collapse` enables mid-circuit measurement semantics.
 - QASM: pass entire OpenQASM 2.0 program in the `qasm` field when using the API.
+
+## Smoke test (manual)
+1. Start server: `python -m src.qvm.server --host 127.0.0.1 --port 8000`
+2. Open `http://127.0.0.1:8000/web`
+3. Keep the default Bell JSON, click **Run**. Probabilities should show ~[0.5, 0, 0, 0.5]; counts remain null unless you set shots>0.
