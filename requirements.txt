@@ -2,3 +2,5 @@ qiskit>=0.55
 matplotlib
 numpy
 pytest
+fastapi>=0.109
+uvicorn>=0.23
