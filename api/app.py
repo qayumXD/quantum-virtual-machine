@@ -8,6 +8,7 @@ from src.qvm.parser import QASMParser, OpenQASM2Parser
 from src.qvm.transpiler import Transpiler
 from src.qvm.simulator import Simulator
 from src.qvm.architecture import get_linear_architecture
+from src.qvm.util.export import to_openqasm2
 
 
 class RunRequest(BaseModel):
@@ -30,6 +31,7 @@ class RunResponse(BaseModel):
     counts: Optional[dict]
     transpiled_operations: List[dict]
     nqubits: int
+    openqasm2: Optional[str] = None
 
 
 app = FastAPI(title="QVM API", version="0.1")
@@ -74,6 +76,7 @@ def run(req: RunRequest):
         counts=counts,
         transpiled_operations=qc.operations,
         nqubits=qc.num_qubits,
+        openqasm2=to_openqasm2(qc),
     )
 
 
