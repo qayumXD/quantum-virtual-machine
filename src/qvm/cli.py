@@ -25,6 +25,7 @@ def main():
     parser.add_argument("--seed", type=int, default=None, help="Optional RNG seed for sampling")
     parser.add_argument("--noise-depol", type=float, default=0.0, help="Depolarizing probability to mix with uniform (0-1)")
     parser.add_argument("--noise-readout", type=float, default=0.0, help="Per-bit readout flip probability (0-1)")
+    parser.add_argument("--collapse", action="store_true", help="Respect measurement collapse during sampling (shot-by-shot)")
     
     args = parser.parse_args()
     
@@ -89,13 +90,16 @@ def main():
     counts = None
     if args.shots and args.shots > 0:
         try:
-            counts = sim.sample(
-                qc,
-                shots=args.shots,
-                seed=args.seed,
-                depol_prob=args.noise_depol,
-                readout_error=args.noise_readout,
-            )
+            if args.collapse:
+                counts = sim.sample_with_collapse(qc, shots=args.shots, seed=args.seed)
+            else:
+                counts = sim.sample(
+                    qc,
+                    shots=args.shots,
+                    seed=args.seed,
+                    depol_prob=args.noise_depol,
+                    readout_error=args.noise_readout,
+                )
             print(f"\nSampled counts (shots={args.shots}):")
             for state, ct in sorted(counts.items()):
                 print(f"|{state}>: {ct}")

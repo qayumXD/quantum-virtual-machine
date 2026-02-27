@@ -23,6 +23,7 @@ python -m src.qvm.cli <input_file> --nqubits <N> [options]
 *   `--seed <int>`: RNG seed for reproducible sampling.
 *   `--noise-depol <p>`: Depolarizing probability (mixes distribution with uniform).
 *   `--noise-readout <p>`: Per-bit readout flip probability.
+*   `--collapse`: Perform shot-by-shot simulation respecting measurement collapse (slower, but needed for mid-circuit measurements).
 
 ## Input File Format
 

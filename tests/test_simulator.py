@@ -142,3 +142,24 @@ def test_readout_noise_flips_bits():
     total = sum(counts.values())
     p1 = counts.get("1", 0) / total
     assert 0.12 <= p1 <= 0.28
+
+def test_measure_and_collapse_helper():
+    """Measurement collapse should leave a single basis component."""
+    state = (1/np.sqrt(2)) * np.array([1, 1], dtype=complex)
+    outcome, collapsed = Simulator._measure_and_collapse(state, [0], 1, np.random.default_rng(0))
+    assert outcome in ("0", "1")
+    assert np.isclose(np.linalg.norm(collapsed), 1.0)
+    assert np.count_nonzero(np.abs(collapsed) > 1e-9) == 1
+
+def test_sample_with_collapse_runs():
+    """Smoke test for collapse-based sampling respecting measurement ops."""
+    circuit_desc = [
+        {"name": "h", "qubits": [0]},
+        {"name": "cx", "qubits": [0, 1]},
+        {"name": "measure", "qubits": [0]},
+        {"name": "cx", "qubits": [0, 1]},
+    ]
+    qc = QASMParser.parse(circuit_desc, 2)
+    counts = sim.sample_with_collapse(qc, shots=500, seed=3)
+    total = sum(counts.values())
+    assert total == 500

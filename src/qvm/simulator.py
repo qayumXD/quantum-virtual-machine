@@ -231,6 +231,45 @@ class Simulator:
 
         return counts
 
+    def sample_with_collapse(self, circuit: QuantumCircuit, shots: int = 1024, seed: int | None = None) -> dict:
+        """
+        Execute the circuit shot-by-shot, applying projective measurements when encountered.
+        Outputs counts keyed by measured-qubit bitstrings (sorted qubit indices).
+        """
+        if shots <= 0:
+            raise ValueError("shots must be a positive integer")
+
+        measured_qubits = self._extract_measured_qubits(circuit)
+        if not measured_qubits:
+            measured_qubits = list(range(circuit.num_qubits))
+
+        rng = np.random.default_rng(seed)
+        counts: dict[str, int] = {}
+
+        for _ in range(shots):
+            state = np.zeros(2 ** circuit.num_qubits, dtype=complex)
+            state[0] = 1.0
+
+            for op in circuit.operations:
+                name, qubits, params = op["name"], op["qubits"], op["params"]
+                if name in ["h", "x", "y", "z", "rx", "ry", "rz", "id"]:
+                    gate_matrix = self._get_gate_matrix(name, params)
+                    state = self._apply_single_qubit_gate(state, gate_matrix, qubits[0], circuit.num_qubits)
+                elif name == "cx":
+                    state = self._apply_cnot_gate(state, qubits[0], qubits[1], circuit.num_qubits)
+                elif name == "swap":
+                    state = self._apply_swap_gate(state, qubits[0], qubits[1], circuit.num_qubits)
+                elif name == "measure":
+                    outcome, state = self._measure_and_collapse(state, qubits, circuit.num_qubits, rng)
+                else:
+                    raise ValueError(f"Unsupported gate operation: {name}")
+
+            # Final measurement of requested qubits
+            measured_bits, _ = self._measure_and_collapse(state, measured_qubits, circuit.num_qubits, rng)
+            counts[measured_bits] = counts.get(measured_bits, 0) + 1
+
+        return counts
+
     @staticmethod
     def _extract_measured_qubits(circuit: QuantumCircuit) -> list:
         """Return sorted unique qubit indices that are explicitly measured."""
@@ -247,6 +286,42 @@ class Simulator:
             if rng.random() < flip_prob:
                 bits[i] = "0" if b == "1" else "1"
         return "".join(bits)
+
+    @staticmethod
+    def _measure_and_collapse(statevector: np.ndarray, qubits: list, num_qubits: int, rng) -> tuple[str, np.ndarray]:
+        """
+        Measure the given qubits, collapse the state, and return (bitstring, collapsed_state).
+        """
+        if not qubits:
+            return "", statevector
+
+        # Compute probabilities for each outcome on the measured subset
+        probs = {}
+        indices = np.arange(len(statevector))
+        for outcome in range(2 ** len(qubits)):
+            mask = np.ones_like(statevector, dtype=bool)
+            for i, q in enumerate(qubits):
+                bit = (outcome >> i) & 1
+                mask &= ((indices >> q) & 1) == bit
+            probs[outcome] = float(np.sum(np.abs(statevector[mask]) ** 2))
+
+        outcomes = np.array(list(probs.keys()))
+        prob_vals = np.array(list(probs.values()))
+        prob_vals = prob_vals / prob_vals.sum()
+        sampled_outcome = int(rng.choice(outcomes, p=prob_vals))
+
+        # Collapse state
+        mask = np.ones_like(statevector, dtype=bool)
+        indices = np.arange(len(statevector))
+        for i, q in enumerate(qubits):
+            bit = (sampled_outcome >> i) & 1
+            mask &= ((indices >> q) & 1) == bit
+        collapsed = np.zeros_like(statevector)
+        collapsed[mask] = statevector[mask]
+        collapsed = collapsed / np.linalg.norm(collapsed)
+
+        bitstring = format(sampled_outcome, f"0{len(qubits)}b")[::-1]  # maintain little-endian order
+        return bitstring, collapsed
 
 # Example Usage (for testing during development)
 if __name__ == "__main__":
