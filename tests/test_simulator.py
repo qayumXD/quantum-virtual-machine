@@ -124,3 +124,21 @@ def test_sampling_respects_measure_subset():
     assert set(counts.keys()) <= {"0", "1"}
     total = sum(counts.values())
     assert abs(counts.get("0", 0) / total - 0.5) < 0.08
+
+def test_depolarizing_noise_mixes_distribution():
+    """Depolarizing noise should move probabilities toward uniform."""
+    qc = QASMParser.parse([{"name": "h", "qubits": [0]}], 1)
+    counts = sim.sample(qc, shots=2000, seed=1, depol_prob=1.0)
+    total = sum(counts.values())
+    p0 = counts.get("0", 0) / total
+    p1 = counts.get("1", 0) / total
+    assert abs(p0 - 0.5) < 0.08
+    assert abs(p1 - 0.5) < 0.08
+
+def test_readout_noise_flips_bits():
+    """Readout noise should introduce bit flips roughly at the specified rate."""
+    qc = QASMParser.parse([{"name": "id", "qubits": [0]}], 1)
+    counts = sim.sample(qc, shots=2000, seed=2, readout_error=0.2)
+    total = sum(counts.values())
+    p1 = counts.get("1", 0) / total
+    assert 0.12 <= p1 <= 0.28

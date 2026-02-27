@@ -23,6 +23,8 @@ def main():
     parser.add_argument("--export", help="Path to export OpenQASM code")
     parser.add_argument("--shots", type=int, default=0, help="If >0, draw this many measurement samples")
     parser.add_argument("--seed", type=int, default=None, help="Optional RNG seed for sampling")
+    parser.add_argument("--noise-depol", type=float, default=0.0, help="Depolarizing probability to mix with uniform (0-1)")
+    parser.add_argument("--noise-readout", type=float, default=0.0, help="Per-bit readout flip probability (0-1)")
     
     args = parser.parse_args()
     
@@ -87,7 +89,13 @@ def main():
     counts = None
     if args.shots and args.shots > 0:
         try:
-            counts = sim.sample(qc, shots=args.shots, seed=args.seed)
+            counts = sim.sample(
+                qc,
+                shots=args.shots,
+                seed=args.seed,
+                depol_prob=args.noise_depol,
+                readout_error=args.noise_readout,
+            )
             print(f"\nSampled counts (shots={args.shots}):")
             for state, ct in sorted(counts.items()):
                 print(f"|{state}>: {ct}")

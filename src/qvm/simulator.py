@@ -169,7 +169,14 @@ class Simulator:
         """Calculates measurement probabilities from a statevector."""
         return np.abs(statevector)**2
 
-    def sample(self, circuit: QuantumCircuit, shots: int = 1024, seed: int | None = None) -> dict:
+    def sample(
+        self,
+        circuit: QuantumCircuit,
+        shots: int = 1024,
+        seed: int | None = None,
+        depol_prob: float = 0.0,
+        readout_error: float = 0.0,
+    ) -> dict:
         """
         Draws measurement samples from the final state of the circuit.
 
@@ -182,11 +189,19 @@ class Simulator:
             shots: Number of samples to draw.
             seed: Optional RNG seed for reproducibility.
 
+        Noise model (educational, simplified):
+            depol_prob: mixes final distribution with uniform with weight p.
+            readout_error: per-bit flip probability applied after sampling.
+
         Returns:
             dict mapping measured bitstrings -> counts.
         """
         if shots <= 0:
             raise ValueError("shots must be a positive integer")
+        if not 0 <= depol_prob <= 1:
+            raise ValueError("depol_prob must be in [0,1]")
+        if not 0 <= readout_error <= 1:
+            raise ValueError("readout_error must be in [0,1]")
 
         measured_qubits = self._extract_measured_qubits(circuit)
         if not measured_qubits:
@@ -194,6 +209,11 @@ class Simulator:
 
         state = self.simulate(circuit)
         probs = self.get_probabilities(state)
+
+        # Apply simple depolarizing noise: mix with uniform distribution
+        if depol_prob > 0:
+            uniform = 1 / len(probs)
+            probs = (1 - depol_prob) * probs + depol_prob * uniform
 
         rng = np.random.default_rng(seed)
         outcomes = rng.choice(len(probs), size=shots, p=probs)
@@ -203,6 +223,10 @@ class Simulator:
             bitstring = format(outcome, f"0{circuit.num_qubits}b")
             # Little-endian convention: qubit 0 is LSB (rightmost)
             measured_bits = "".join(bitstring[circuit.num_qubits - 1 - q] for q in measured_qubits)
+
+            if readout_error > 0:
+                measured_bits = self._apply_readout_noise(measured_bits, readout_error, rng)
+
             counts[measured_bits] = counts.get(measured_bits, 0) + 1
 
         return counts
@@ -215,6 +239,14 @@ class Simulator:
             if op["name"] == "measure":
                 measured.extend(op["qubits"])
         return sorted(set(measured))
+
+    @staticmethod
+    def _apply_readout_noise(bitstring: str, flip_prob: float, rng) -> str:
+        bits = list(bitstring)
+        for i, b in enumerate(bits):
+            if rng.random() < flip_prob:
+                bits[i] = "0" if b == "1" else "1"
+        return "".join(bits)
 
 # Example Usage (for testing during development)
 if __name__ == "__main__":
