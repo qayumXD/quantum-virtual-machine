@@ -56,3 +56,26 @@ def test_run_qasm():
     probs = resp.json()["probabilities"]
     assert pytest.approx(probs[0], rel=1e-6) == 0.5
     assert pytest.approx(probs[3], rel=1e-6) == 0.5
+
+
+def test_run_json_with_shots_and_noise():
+    payload = {
+        "source_type": "json",
+        "circuit": [
+            {"name": "h", "qubits": [0]},
+            {"name": "cx", "qubits": [0, 1]},
+        ],
+        "nqubits": 2,
+        "transpile": True,
+        "routing": "sabre",
+        "shots": 200,
+        "noise_depol": 0.05,
+        "noise_readout": 0.01,
+    }
+    resp = client.post("/run", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    counts = data["counts"]
+    assert counts is not None
+    total = sum(counts.values())
+    assert total == 200

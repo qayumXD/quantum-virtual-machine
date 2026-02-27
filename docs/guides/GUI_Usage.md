@@ -54,3 +54,15 @@ python -m src.qvm.cli examples/bell_state.json --nqubits 2 --transpile --routing
 1. Start server: `python -m src.qvm.server --host 127.0.0.1 --port 8000`
 2. Open `http://127.0.0.1:8000/web`
 3. Keep the default Bell JSON, click **Run**. Probabilities should show ~[0.5, 0, 0, 0.5]; counts remain null unless you set shots>0.
+
+## GUI smoke test (scripted)
+You can also verify the client is served by fetching the page:
+```bash
+python - <<'PY'
+import requests
+resp = requests.get("http://127.0.0.1:8000/web/index.html")
+resp.raise_for_status()
+print("Fetched web client OK, length", len(resp.text))
+PY
+```
+Run this while the server is up.
