@@ -7,5 +7,5 @@ Implement a minimal, cross-platform web UI served by the Python backend. Check i
 - [x] CLI flag: add `--api` (or `qvm serve`) to start the API quickly.
 - [x] Static client scaffolding: add minimal `web/` (plain HTML/JS) served via FastAPI `StaticFiles`; form for upload/flags; display probabilities/counts.
 - [x] API tests: add pytest client tests hitting `/run` with bell_state (JSON + QASM) asserting probabilities/counts; `/health` returns 200.
-- [ ] GUI smoke test: automated or documented manual step to fetch the static index and run a sample request.
+- [x] GUI smoke test: automated or documented manual step to fetch the static index and run a sample request.
 - [x] Docs: add `docs/guides/GUI_Usage.md` with start commands, API schema, and client usage.

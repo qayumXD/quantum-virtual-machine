@@ -79,3 +79,9 @@ def test_run_json_with_shots_and_noise():
     assert counts is not None
     total = sum(counts.values())
     assert total == 200
+
+
+def test_static_client_served():
+    resp = client.get("/web/index.html")
+    assert resp.status_code == 200
+    assert "QVM Web UI" in resp.text
