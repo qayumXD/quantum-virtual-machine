@@ -1,11 +1,14 @@
-# FastAPI backend for QVM with OpenQASM 3.0 and MPS support
+# FastAPI backend for QVM with OpenQASM 3.0, MPS, and Visualizations
 
+import io
+import base64
+import numpy as np
+import matplotlib.pyplot as plt
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
-import numpy as np
 
 from src.qvm.parser import QASMParser, OpenQASM2Parser
 from src.qvm.qasm3_parser import OpenQASM3Parser
@@ -13,6 +16,7 @@ from src.qvm.transpiler import Transpiler
 from src.qvm.simulator import Simulator
 from src.qvm.mps_simulator import MPSSimulator
 from src.qvm.architecture import get_linear_architecture
+from src.qvm.visual import plot_histogram, plot_circuit
 
 
 class RunRequest(BaseModel):
@@ -24,7 +28,6 @@ class RunRequest(BaseModel):
     routing: Literal["greedy", "sabre"] = "greedy"
     restore_mapping: bool = True
     engine: Literal["statevector", "mps"] = "statevector"
-    shots: int = 0
     seed: Optional[int] = None
 
 
@@ -33,9 +36,11 @@ class RunResponse(BaseModel):
     classical_memory: Optional[dict]
     transpiled_operations: List[dict]
     nqubits: int
+    circuit_plot: Optional[str] = None # Base64 encoded PNG
+    histogram_plot: Optional[str] = None # Base64 encoded PNG
 
 
-app = FastAPI(title="QVM API", version="0.2")
+app = FastAPI(title="QVM API", version="0.2.1")
 
 # Serve static web client
 app.mount("/web", StaticFiles(directory="web"), name="web")
@@ -49,6 +54,15 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+def fig_to_base64(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", bbox_inches='tight')
+    buf.seek(0)
+    img_str = base64.b64encode(buf.read()).decode("utf-8")
+    plt.close(fig)
+    return img_str
 
 
 @app.post("/run", response_model=RunResponse)
@@ -71,27 +85,46 @@ def run(req: RunRequest):
     try:
         if req.engine == "mps":
             sim = MPSSimulator()
-            sim.simulate(qc)
+            _, mem = sim.simulate(qc, seed=req.seed)
             probs = np.abs(sim.get_statevector())**2
-            mem = {} # MPS currently doesn't track classical memory in this prototype
         else:
             sim = Simulator()
             state, mem = sim.simulate(qc, seed=req.seed)
             probs = np.abs(state)**2
-            # Convert numpy arrays in memory to lists for JSON serialization
-            mem = {k: v.tolist() for k, v in mem.items()}
+        
+        # Ensure all numpy types are converted for JSON
+        serializable_mem = {}
+        for k, v in mem.items():
+            if isinstance(v, np.ndarray):
+                serializable_mem[k] = v.tolist()
+            else:
+                serializable_mem[k] = v
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Simulation error: {e}")
 
+    # Generate Visualizations
+    circuit_b64 = None
+    hist_b64 = None
+    try:
+        fig_c = plot_circuit(qc, title="Executed Physical Circuit")
+        circuit_b64 = fig_to_base64(fig_c)
+        
+        fig_h = plot_histogram(probs, title="Simulation Probabilities")
+        hist_b64 = fig_to_base64(fig_h)
+    except Exception as e:
+        print(f"Viz error: {e}") # Non-fatal
+
     return RunResponse(
         probabilities=list(map(float, probs)),
-        classical_memory=mem,
+        classical_memory=serializable_mem,
         transpiled_operations=qc.operations,
-        nqubits=qc.num_qubits
+        nqubits=qc.num_qubits,
+        circuit_plot=circuit_b64,
+        histogram_plot=hist_b64
     )
 
 
-# Helpers -----------------------------------------------------------------
 def _parse_request(req: RunRequest):
     if req.source_type == "json":
         if req.circuit is None or req.nqubits is None:
@@ -100,8 +133,6 @@ def _parse_request(req: RunRequest):
     else:
         if not req.qasm:
             raise ValueError("qasm text required for source_type=qasm")
-        
-        # Robust detection of OpenQASM 3.0
         if "OPENQASM 3" in req.qasm.upper():
             parser3 = OpenQASM3Parser()
             return parser3.parse(req.qasm)

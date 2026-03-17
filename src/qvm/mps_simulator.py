@@ -16,18 +16,15 @@ class MPSSimulator:
         self.X = np.array([[0, 1], [1, 0]], dtype=complex)
         self.I = np.array([[1, 0], [0, 1]], dtype=complex)
 
-    def simulate(self, circuit: QuantumCircuit) -> list:
+    def simulate(self, circuit: QuantumCircuit, seed: int = None) -> tuple[list, dict]:
         """
         Simulates the circuit using MPS.
-        Returns a list of tensors representing the MPS.
+        Returns: (list of tensors, classical_memory)
         """
         n = circuit.num_qubits
-        # Initialize MPS to |0...0>
-        # Each tensor has shape (bond_left, physical, bond_right)
         self.tensors = [np.array([[[1.0], [0.0]]], dtype=complex) for _ in range(n)]
-        
-        # Note: In a proper MPS, first and last bonds are size 1.
-        # Initial shapes: (1, 2, 1)
+        classical_memory = {name: np.zeros(size, dtype=int) for name, size in circuit.classical_registers.items()}
+        rng = np.random.default_rng(seed)
         
         for op in circuit.operations:
             name = op["name"]
@@ -41,9 +38,37 @@ class MPSSimulator:
                 self._apply_cx(qubits[0], qubits[1])
             elif name == "swap":
                 self._apply_swap(qubits[0], qubits[1])
-            # For this prototype, we'll focus on these core gates.
+            elif name == "measure":
+                outcome = self._measure_qubit(qubits[0], rng)
+                if op["target_bit"]:
+                    reg_name, reg_idx = op["target_bit"]
+                    classical_memory[reg_name][reg_idx] = outcome
         
-        return self.tensors
+        return self.tensors, classical_memory
+
+    def _measure_qubit(self, q, rng) -> int:
+        """Projective measurement on an MPS tensor."""
+        # Compute probability of |0>
+        # Trace out all other tensors (in our simple 1D chain, just contract local tensor)
+        # Prob(0) = <psi | P0 | psi>
+        # Since our tensors are normalized during SVD, we just check local norm
+        t = self.tensors[q]
+        # Contract over bond indices: sum_{L,R} |A(L, 0, R)|^2
+        prob_0 = np.sum(np.abs(t[:, 0, :])**2)
+        
+        outcome = 0 if rng.random() < prob_0 else 1
+        
+        # Collapse: project and re-normalize
+        if outcome == 0:
+            t[:, 1, :] = 0
+        else:
+            t[:, 0, :] = 0
+        
+        norm = np.linalg.norm(t)
+        if norm > 0:
+            self.tensors[q] = t / norm
+            
+        return outcome
 
     def _get_gate_matrix(self, name, params):
         # Re-using logic from statevector simulator for simplicity

@@ -5,47 +5,46 @@
   <title>QVM Web UI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 24px; max-width: 1000px; background-color: #f9f9f9; color: #333; }
-    header { margin-bottom: 24px; border-bottom: 2px solid #eee; padding-bottom: 12px; }
-    fieldset { margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; background: white; padding: 16px; }
-    legend { font-weight: bold; padding: 0 8px; color: #0056b3; }
-    textarea { width: 100%; min-height: 180px; font-family: monospace; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-    .row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
-    .row > label { flex: 1 1 180px; font-size: 0.9em; font-weight: 600; }
-    input[type="number"], select, input[type="text"] { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; margin-top: 4px; }
-    pre { background: #272822; color: #f8f8f2; padding: 12px; border-radius: 6px; overflow: auto; max-height: 300px; font-size: 0.85em; }
-    .small { font-size: 0.85em; color: #666; }
-    button { background-color: #007bff; color: white; border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 24px; max-width: 1200px; background-color: #f4f7f6; color: #333; line-height: 1.6; }
+    header { margin-bottom: 24px; border-bottom: 3px solid #007bff; padding-bottom: 12px; }
+    fieldset { margin-bottom: 20px; border: 1px solid #ccc; border-radius: 8px; background: white; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    legend { font-weight: bold; padding: 0 10px; color: #007bff; font-size: 1.1em; }
+    textarea { width: 100%; min-height: 200px; font-family: 'Consolas', 'Monaco', monospace; padding: 12px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+    .row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px; }
+    .row > label { flex: 1 1 200px; font-size: 0.9em; font-weight: 600; }
+    input[type="number"], select, input[type="text"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px; }
+    .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 20px; }
+    .viz-panel { background: white; padding: 15px; border-radius: 8px; border: 1px solid #eee; text-align: center; }
+    .viz-panel img { max-width: 100%; height: auto; border-radius: 4px; }
+    pre { background: #272822; color: #f8f8f2; padding: 15px; border-radius: 6px; overflow: auto; max-height: 250px; font-size: 0.85em; }
+    button { background-color: #007bff; color: white; border: none; padding: 12px 30px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 1em; transition: background 0.2s; }
     button:hover { background-color: #0056b3; }
-    .results-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    @media (max-width: 768px) { .results-container { grid-template-columns: 1fr; } }
+    #status { font-weight: bold; margin-left: 15px; }
+    .data-card { background: #fff; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; margin-bottom: 15px; }
   </style>
 </head>
 <body>
   <header>
     <h1>Quantum Virtual Machine (QVM)</h1>
-    <p class="small">OpenQASM 3.0 Compliant & Hybrid Simulation (Statevector/MPS)</p>
+    <p>Educational Quantum Simulator with OpenQASM 3.0 & Hybrid MPS Support</p>
   </header>
 
-  <fieldset>
-    <legend>Circuit Input</legend>
-    <div class="row">
-      <label>Source Type<br/>
-        <select id="source-type">
-          <option value="qasm">OpenQASM 2.0/3.0</option>
-          <option value="json">JSON gate list</option>
-        </select>
-      </label>
-      <label>Simulation Engine<br/>
-        <select id="engine">
-          <option value="statevector">Statevector (Exact)</option>
-          <option value="mps">MPS (Compressible)</option>
-        </select>
-      </label>
-      <label>Qubits (JSON only)<br/><input id="nqubits" type="number" value="2" min="1"></label>
-    </div>
-    <label>Circuit Code</label>
-    <textarea id="circuit-input">OPENQASM 3.0;
+  <div class="row">
+    <div style="flex: 2;">
+      <fieldset>
+        <legend>Circuit Definition</legend>
+        <div class="row">
+          <label>Simulation Engine
+            <select id="engine">
+              <option value="statevector">Statevector (Exact)</option>
+              <option value="mps">MPS (Large-Scale / Compressed)</option>
+            </select>
+          </label>
+          <label>Seed (Optional)
+            <input id="seed" type="number" placeholder="Random">
+          </label>
+        </div>
+        <textarea id="circuit-input">OPENQASM 3.0;
 qubit[2] q;
 bit[2] c;
 
@@ -53,72 +52,77 @@ h q[0];
 cx q[0], q[1];
 c[0] = measure q[0];
 c[1] = measure q[1];</textarea>
-  </fieldset>
+        <div style="margin-top: 15px;">
+          <button id="run-btn">Run Simulation</button>
+          <span id="status"></span>
+        </div>
+      </fieldset>
+    </div>
+
+    <div style="flex: 1;">
+      <fieldset>
+        <legend>Transpiler Settings</legend>
+        <label><input id="transpile" type="checkbox"> Enable Transpilation</label>
+        <br><br>
+        <label>Routing Strategy
+          <select id="routing">
+            <option value="sabre">SABRE (Heuristic)</option>
+            <option value="greedy">Greedy (BFS)</option>
+          </select>
+        </label>
+        <br>
+        <label><input id="restore-mapping" type="checkbox" checked> Restore Logical Mapping</label>
+      </fieldset>
+      
+      <div class="data-card">
+        <strong>Classical Memory</strong>
+        <pre id="mem-output">{}</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-grid">
+    <div class="viz-panel">
+      <strong>Circuit Visualization</strong>
+      <div id="circuit-viz"><p class="small">Run to generate diagram</p></div>
+    </div>
+    <div class="viz-panel">
+      <strong>Probability Histogram</strong>
+      <div id="hist-viz"><p class="small">Run to generate plot</p></div>
+    </div>
+  </div>
 
   <fieldset>
-    <legend>Configuration</legend>
+    <legend>Raw Output & IR</legend>
     <div class="row">
-      <label>Transpile <input id="transpile" type="checkbox"></label>
-      <label>Routing
-        <select id="routing">
-          <option value="greedy">greedy</option>
-          <option value="sabre">sabre</option>
-        </select>
-      </label>
-      <label>Restore mapping <input id="restore-mapping" type="checkbox" checked></label>
-      <label>Seed <input id="seed" type="number" placeholder="Random"></label>
+      <div style="flex: 1;">
+        <strong>Probabilities</strong>
+        <pre id="prob-output">[]</pre>
+      </div>
+      <div style="flex: 1;">
+        <strong>Transpiled Operations</strong>
+        <pre id="ops-output">[]</pre>
+      </div>
     </div>
   </fieldset>
-
-  <div class="row" style="align-items: center;">
-    <button id="run-btn">Execute Simulation</button>
-    <span id="status" class="small" style="margin-left: 12px;"></span>
-  </div>
-
-  <div class="results-container">
-    <div>
-      <h3>Probabilities</h3>
-      <pre id="prob-output">// Run to see results</pre>
-    </div>
-    <div>
-      <h3>Classical Memory</h3>
-      <pre id="mem-output">// Classical bits after execution</pre>
-    </div>
-  </div>
-
-  <h3>Transpiled IR Operations</h3>
-  <pre id="ops-output">// Intermediate Representation</pre>
 
   <script>
     const runBtn = document.getElementById("run-btn");
     const statusEl = document.getElementById("status");
 
     runBtn.onclick = async () => {
-      statusEl.textContent = "Processing...";
-      const sourceType = document.getElementById("source-type").value;
-      const engine = document.getElementById("engine").value;
+      statusEl.textContent = "⚙️ Executing...";
+      statusEl.style.color = "#666";
       
       const payload = {
-        source_type: sourceType,
-        engine: engine,
+        source_type: "qasm", // We default to QASM for the editor
+        engine: document.getElementById("engine").value,
         transpile: document.getElementById("transpile").checked,
         routing: document.getElementById("routing").value,
         restore_mapping: document.getElementById("restore-mapping").checked,
         seed: document.getElementById("seed").value ? Number(document.getElementById("seed").value) : null,
+        qasm: document.getElementById("circuit-input").value
       };
-
-      const text = document.getElementById("circuit-input").value;
-      if (sourceType === "json") {
-        try {
-          payload.circuit = JSON.parse(text);
-        } catch (e) {
-          statusEl.textContent = "Error: Invalid JSON format";
-          return;
-        }
-        payload.nqubits = Number(document.getElementById("nqubits").value);
-      } else {
-        payload.qasm = text;
-      }
 
       try {
         const resp = await fetch("/run", {
@@ -128,28 +132,25 @@ c[1] = measure q[1];</textarea>
         });
         
         const data = await resp.json();
-        
-        if (!resp.ok) {
-          throw new Error(data.detail || "Server error");
-        }
+        if (!resp.ok) throw new Error(data.detail || "Server error");
 
-        // Format probabilities nicely
-        const formattedProbs = data.probabilities.map((p, i) => {
-            if (p > 0.0001) {
-                const bin = i.toString(2).padStart(data.nqubits, '0');
-                return `|${bin}>: ${p.toFixed(4)}`;
-            }
-            return null;
-        }).filter(x => x !== null).join('\n');
-
-        document.getElementById("prob-output").textContent = formattedProbs || "All zero (normalization error?)";
+        // 1. Update Data
+        document.getElementById("prob-output").textContent = JSON.stringify(data.probabilities, null, 2);
         document.getElementById("mem-output").textContent = JSON.stringify(data.classical_memory, null, 2);
         document.getElementById("ops-output").textContent = JSON.stringify(data.transpiled_operations, null, 2);
+
+        // 2. Update Visualizations
+        if (data.circuit_plot) {
+            document.getElementById("circuit-viz").innerHTML = `<img src="data:image/png;base64,${data.circuit_plot}">`;
+        }
+        if (data.histogram_plot) {
+            document.getElementById("hist-viz").innerHTML = `<img src="data:image/png;base64,${data.histogram_plot}">`;
+        }
         
-        statusEl.textContent = "Success";
+        statusEl.textContent = "✅ Success";
         statusEl.style.color = "green";
       } catch (err) {
-        statusEl.textContent = "Error: " + err.message;
+        statusEl.textContent = "❌ " + err.message;
         statusEl.style.color = "red";
       }
     };
