@@ -1,0 +1,64 @@
+// src/qvm/qasm3.lark
+// OpenQASM 3.0 Grammar Subset for QVM
+
+start: "OPENQASM" "3.0" ";" program
+
+program: statement*
+
+?statement: declaration
+          | gate_call
+          | delay_call
+          | measurement
+          | assignment
+          | if_statement
+          | for_loop
+          | while_loop
+          | comment
+
+declaration: "qubit" "[" INT "]" CNAME ";"  -> qubit_decl
+           | "bit" "[" INT "]" CNAME ";"    -> bit_decl
+           | "bit" CNAME ";"               -> bit_single_decl
+
+gate_call: CNAME ["(" arguments ")"] qubit_list ";"
+arguments: expression ("," expression)*
+qubit_list: qubit ("," qubit)*
+qubit: CNAME "[" INT "]"
+
+delay_call: "delay" "[" duration "]" qubit_list ";"
+duration: NUMBER CNAME
+
+measurement: bit_index "=" "measure" qubit ";"
+
+assignment: bit_index "=" boolean_expr ";"
+
+?boolean_expr: bit_index
+             | INT
+             | boolean_expr "&" boolean_expr -> and_expr
+             | boolean_expr "|" boolean_expr -> or_expr
+             | boolean_expr "^" boolean_expr -> xor_expr
+             | "~" boolean_expr              -> not_expr
+             | "(" boolean_expr ")"
+
+bit_index: CNAME "[" INT "]" -> bit_idx
+         | CNAME             -> bit_name
+
+if_statement: "if" "(" condition ")" "{" program "}"
+
+for_loop: "for" CNAME "in" range "{" program "}"
+range: "[" INT ":" INT "]"
+
+while_loop: "while" "(" condition ")" "{" program "}"
+
+condition: CNAME "[" INT "]" "==" INT -> cond_indexed
+         | CNAME "==" INT           -> cond_simple
+
+?expression: NUMBER | CNAME
+
+comment: "//" /[^\n]+/
+
+%import common.CNAME
+%import common.INT
+%import common.NUMBER
+%import common.WS
+%ignore WS
+

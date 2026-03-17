@@ -2,53 +2,61 @@ import argparse
 import json
 import sys
 import matplotlib.pyplot as plt
+import numpy as np
 from src.qvm.parser import QASMParser, OpenQASM2Parser
+from src.qvm.qasm3_parser import OpenQASM3Parser
 from src.qvm.simulator import Simulator
 from src.qvm.transpiler import Transpiler
 from src.qvm.decomposer import Decomposer
 from src.qvm.architecture import get_linear_architecture
 from src.qvm.visual import plot_histogram, plot_circuit
-from src.qvm.util.export import to_openqasm2
 
 def main():
     parser = argparse.ArgumentParser(description="Quantum Virtual Machine (QVM) CLI")
-    parser.add_argument("input_file", help="Path to the input JSON circuit file")
-    parser.add_argument("--nqubits", type=int, required=True, help="Number of qubits in the circuit")
+    parser.add_argument("input_file", help="Path to the input JSON or QASM circuit file")
+    parser.add_argument("--nqubits", type=int, help="Number of qubits (optional if QASM file)")
     parser.add_argument("--transpile", action="store_true", help="Enable transpilation for linear topology")
     parser.add_argument("--routing", choices=["greedy", "sabre"], default="greedy", help="Routing strategy when --transpile is set")
     parser.add_argument("--no-restore-mapping", dest="restore_mapping", action="store_false",
                         help="Do not swap back to restore logical->physical identity after routing (saves swaps).")
     parser.set_defaults(restore_mapping=True)
     parser.add_argument("--visualize", action="store_true", help="Show circuit and probability plots")
-    parser.add_argument("--export", help="Path to export OpenQASM code")
-    parser.add_argument("--shots", type=int, default=0, help="If >0, draw this many measurement samples")
-    parser.add_argument("--seed", type=int, default=None, help="Optional RNG seed for sampling")
-    parser.add_argument("--noise-depol", type=float, default=0.0, help="Depolarizing probability to mix with uniform (0-1)")
-    parser.add_argument("--noise-readout", type=float, default=0.0, help="Per-bit readout flip probability (0-1)")
-    parser.add_argument("--collapse", action="store_true", help="Respect measurement collapse during sampling (shot-by-shot)")
+    parser.add_argument("--shots", type=int, default=0, help="If >0, draw this many measurement samples (legacy)")
+    parser.add_argument("--seed", type=int, default=None, help="Optional RNG seed for simulation")
     
     args = parser.parse_args()
     
     # 1. Load Circuit
     try:
         if args.input_file.lower().endswith(".qasm"):
-            print(f"Loading OpenQASM from {args.input_file}...")
-            qc = OpenQASM2Parser.parse_file(args.input_file)
-            # override nqubits from file
-            args.nqubits = qc.num_qubits
+            with open(args.input_file, 'r') as f:
+                content = f.read()
+            
+            if "OPENQASM 3.0" in content:
+                print(f"Detected OpenQASM 3.0 in {args.input_file}...")
+                parser3 = OpenQASM3Parser()
+                qc = parser3.parse(content)
+                args.nqubits = qc.num_qubits
+            else:
+                print(f"Loading OpenQASM 2.0 from {args.input_file}...")
+                qc = OpenQASM2Parser.parse(content)
+                args.nqubits = qc.num_qubits
         else:
             with open(args.input_file, 'r') as f:
                 circuit_data = json.load(f)
+            if not args.nqubits:
+                print("Error: --nqubits is required for JSON input files.")
+                sys.exit(1)
             print(f"Loading circuit from {args.input_file}...")
             qc = QASMParser.parse(circuit_data, args.nqubits)
     except Exception as e:
         print(f"Error reading/parsing input file: {e}")
         sys.exit(1)
     
-    # 2. Decompose (Always run to ensure simulator compatibility for high-level gates)
-    # The simulator natively supports: H, X, Y, Z, Rx, Ry, Rz, CX, SWAP, ID
-    print("Decomposing complex gates...")
-    native_gates = {'h', 'x', 'y', 'z', 'rx', 'ry', 'rz', 'cx', 'swap', 'id', 'measure'}
+    # 2. Decompose (for legacy gates, etc.)
+    # Note: Our new simulator natively handles many gates, but we still decompose 
+    # if anything non-supported is left.
+    native_gates = {'h', 'x', 'y', 'z', 'rx', 'ry', 'rz', 'cx', 'swap', 'id', 'measure', 'ccx', 'toffoli', 'sx', 'sxdg', 's', 'sdg', 't', 'tdg', 'p', 'delay', 'label', 'jump', 'classical_op'}
     decomposer = Decomposer(native_gates)
     try:
         qc = decomposer.decompose_circuit(qc)
@@ -72,60 +80,31 @@ def main():
     print("Simulating...")
     try:
         sim = Simulator()
-        state = sim.simulate(qc)
-        probs = sim.get_probabilities(state)
+        state, mem = sim.simulate(qc, seed=args.seed)
+        probs = np.abs(state)**2
         print("Simulation complete.")
     except Exception as e:
         print(f"Error during simulation: {e}")
         sys.exit(1)
     
     # Output Results
-    # Identify non-zero states
-    print("\nResults:")
+    print("\nResults (Statevector Probabilities):")
     for i, prob in enumerate(probs):
         if prob > 1e-6:
             bin_str = format(i, f'0{args.nqubits}b')
-            print(f"|{bin_str}|: {prob:.4f}")
+            print(f"|{bin_str}>: {prob:.4f}")
 
-    # Optional sampling
-    counts = None
-    if args.shots and args.shots > 0:
-        try:
-            if args.collapse:
-                counts = sim.sample_with_collapse(qc, shots=args.shots, seed=args.seed)
-            else:
-                counts = sim.sample(
-                    qc,
-                    shots=args.shots,
-                    seed=args.seed,
-                    depol_prob=args.noise_depol,
-                    readout_error=args.noise_readout,
-                )
-            print(f"\nSampled counts (shots={args.shots}):")
-            for state, ct in sorted(counts.items()):
-                print(f"|{state}>: {ct}")
-        except Exception as e:
-            print(f"Error during sampling: {e}")
-    
-    # 4. Export (Optional)
-    if args.export:
-        print(f"\nExporting OpenQASM to {args.export}...")
-        try:
-            qasm_str = to_openqasm2(qc)
-            with open(args.export, 'w') as f:
-                f.write(qasm_str)
-            print("Export complete.")
-        except Exception as e:
-            print(f"Error exporting QASM: {e}")
-            
+    if mem:
+        print("\nClassical Memory:")
+        for name, values in mem.items():
+            print(f"{name}: {values}")
+
     # 5. Visualize (Optional)
     if args.visualize:
         print("\nDisplaying visualizations...")
         try:
             plot_circuit(qc, title="Quantum Circuit")
-            plot_data = counts if counts is not None else probs
-            plot_title = "Sampled Counts" if counts is not None else "Simulation Results"
-            plot_histogram(plot_data, title=plot_title)
+            plot_histogram(probs, title="Statevector Probabilities")
             plt.show()
         except Exception as e:
             print(f"Error visualizing: {e}")
