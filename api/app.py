@@ -101,7 +101,8 @@ def _parse_request(req: RunRequest):
         if not req.qasm:
             raise ValueError("qasm text required for source_type=qasm")
         
-        if "OPENQASM 3.0" in req.qasm:
+        # Robust detection of OpenQASM 3.0
+        if "OPENQASM 3" in req.qasm.upper():
             parser3 = OpenQASM3Parser()
             return parser3.parse(req.qasm)
         else:
