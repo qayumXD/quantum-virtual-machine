@@ -1,44 +1,43 @@
-# Minimal FastAPI backend for QVM
+# FastAPI backend for QVM with OpenQASM 3.0 and MPS support
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
+import numpy as np
 
 from src.qvm.parser import QASMParser, OpenQASM2Parser
+from src.qvm.qasm3_parser import OpenQASM3Parser
 from src.qvm.transpiler import Transpiler
 from src.qvm.simulator import Simulator
+from src.qvm.mps_simulator import MPSSimulator
 from src.qvm.architecture import get_linear_architecture
-from src.qvm.util.export import to_openqasm2
 
 
 class RunRequest(BaseModel):
     source_type: Literal["json", "qasm"] = Field("json", description="Input format")
     circuit: Optional[List[dict]] = Field(None, description="Gate list when source_type=json")
-    qasm: Optional[str] = Field(None, description="OpenQASM 2.0 text when source_type=qasm")
-    nqubits: Optional[int] = Field(None, description="Number of qubits (required for json)")
+    qasm: Optional[str] = Field(None, description="OpenQASM text when source_type=qasm")
+    nqubits: Optional[int] = Field(None, description="Number of qubits")
     transpile: bool = False
     routing: Literal["greedy", "sabre"] = "greedy"
     restore_mapping: bool = True
+    engine: Literal["statevector", "mps"] = "statevector"
     shots: int = 0
     seed: Optional[int] = None
-    noise_depol: float = 0.0
-    noise_readout: float = 0.0
-    collapse: bool = False
 
 
 class RunResponse(BaseModel):
     probabilities: List[float]
-    counts: Optional[dict]
+    classical_memory: Optional[dict]
     transpiled_operations: List[dict]
     nqubits: int
-    openqasm2: Optional[str] = None
 
 
-app = FastAPI(title="QVM API", version="0.1")
+app = FastAPI(title="QVM API", version="0.2")
 
-# Serve static web client if available
+# Serve static web client
 app.mount("/web", StaticFiles(directory="web"), name="web")
 
 
@@ -61,32 +60,34 @@ def run(req: RunRequest):
 
     # Transpile if requested
     if req.transpile:
-        arch = get_linear_architecture(qc.num_qubits)
-        transpiler = Transpiler(arch, strategy=req.routing, restore_mapping=req.restore_mapping)
-        qc = transpiler.transpile(qc)
+        try:
+            arch = get_linear_architecture(qc.num_qubits)
+            transpiler = Transpiler(arch, strategy=req.routing, restore_mapping=req.restore_mapping)
+            qc = transpiler.transpile(qc)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Transpilation error: {e}")
 
-    sim = Simulator()
-    probs = sim.get_probabilities(sim.simulate(qc))
-
-    counts = None
-    if req.shots and req.shots > 0:
-        if req.collapse:
-            counts = sim.sample_with_collapse(qc, shots=req.shots, seed=req.seed)
+    # Simulation
+    try:
+        if req.engine == "mps":
+            sim = MPSSimulator()
+            sim.simulate(qc)
+            probs = np.abs(sim.get_statevector())**2
+            mem = {} # MPS currently doesn't track classical memory in this prototype
         else:
-            counts = sim.sample(
-                qc,
-                shots=req.shots,
-                seed=req.seed,
-                depol_prob=req.noise_depol,
-                readout_error=req.noise_readout,
-            )
+            sim = Simulator()
+            state, mem = sim.simulate(qc, seed=req.seed)
+            probs = np.abs(state)**2
+            # Convert numpy arrays in memory to lists for JSON serialization
+            mem = {k: v.tolist() for k, v in mem.items()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Simulation error: {e}")
 
     return RunResponse(
         probabilities=list(map(float, probs)),
-        counts=counts,
+        classical_memory=mem,
         transpiled_operations=qc.operations,
-        nqubits=qc.num_qubits,
-        openqasm2=to_openqasm2(qc),
+        nqubits=qc.num_qubits
     )
 
 
@@ -99,10 +100,14 @@ def _parse_request(req: RunRequest):
     else:
         if not req.qasm:
             raise ValueError("qasm text required for source_type=qasm")
-        return OpenQASM2Parser.parse(req.qasm)
+        
+        if "OPENQASM 3.0" in req.qasm:
+            parser3 = OpenQASM3Parser()
+            return parser3.parse(req.qasm)
+        else:
+            return OpenQASM2Parser.parse(req.qasm)
 
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run("api.app:app", host="127.0.0.1", port=8000, reload=False)

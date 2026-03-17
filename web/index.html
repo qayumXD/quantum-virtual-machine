@@ -5,43 +5,58 @@
   <title>QVM Web UI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; max-width: 960px; }
-    header { margin-bottom: 16px; }
-    fieldset { margin-bottom: 16px; }
-    textarea { width: 100%; min-height: 140px; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; }
-    .row > label { flex: 1 1 220px; }
-    pre { background: #f6f8fa; padding: 12px; border-radius: 6px; overflow: auto; }
-    .small { font-size: 0.9em; color: #555; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 24px; max-width: 1000px; background-color: #f9f9f9; color: #333; }
+    header { margin-bottom: 24px; border-bottom: 2px solid #eee; padding-bottom: 12px; }
+    fieldset { margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; background: white; padding: 16px; }
+    legend { font-weight: bold; padding: 0 8px; color: #0056b3; }
+    textarea { width: 100%; min-height: 180px; font-family: monospace; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    .row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+    .row > label { flex: 1 1 180px; font-size: 0.9em; font-weight: 600; }
+    input[type="number"], select, input[type="text"] { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; margin-top: 4px; }
+    pre { background: #272822; color: #f8f8f2; padding: 12px; border-radius: 6px; overflow: auto; max-height: 300px; font-size: 0.85em; }
+    .small { font-size: 0.85em; color: #666; }
+    button { background-color: #007bff; color: white; border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    button:hover { background-color: #0056b3; }
+    .results-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 768px) { .results-container { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <header>
-    <h1>Quantum Virtual Machine (QVM) – Web UI</h1>
-    <p class="small">Runs against the local API. Start server: <code>python -m src.qvm.server</code> (default localhost:8000).</p>
+    <h1>Quantum Virtual Machine (QVM)</h1>
+    <p class="small">OpenQASM 3.0 Compliant & Hybrid Simulation (Statevector/MPS)</p>
   </header>
 
   <fieldset>
-    <legend>Input</legend>
+    <legend>Circuit Input</legend>
     <div class="row">
-      <label>API URL<br/><input id="api-url" value="http://127.0.0.1:8000/run" style="width:100%"></label>
       <label>Source Type<br/>
         <select id="source-type">
+          <option value="qasm">OpenQASM 2.0/3.0</option>
           <option value="json">JSON gate list</option>
-          <option value="qasm">OpenQASM 2.0</option>
         </select>
       </label>
-      <label>Qubits (for JSON)<br/><input id="nqubits" type="number" value="2" min="1" style="width:100%"></label>
+      <label>Simulation Engine<br/>
+        <select id="engine">
+          <option value="statevector">Statevector (Exact)</option>
+          <option value="mps">MPS (Compressible)</option>
+        </select>
+      </label>
+      <label>Qubits (JSON only)<br/><input id="nqubits" type="number" value="2" min="1"></label>
     </div>
-    <label>JSON gates or QASM text</label>
-    <textarea id="circuit-input">[
-  {"name":"h","qubits":[0]},
-  {"name":"cx","qubits":[0,1]}
-]</textarea>
+    <label>Circuit Code</label>
+    <textarea id="circuit-input">OPENQASM 3.0;
+qubit[2] q;
+bit[2] c;
+
+h q[0];
+cx q[0], q[1];
+c[0] = measure q[0];
+c[1] = measure q[1];</textarea>
   </fieldset>
 
   <fieldset>
-    <legend>Options</legend>
+    <legend>Configuration</legend>
     <div class="row">
       <label>Transpile <input id="transpile" type="checkbox"></label>
       <label>Routing
@@ -51,43 +66,45 @@
         </select>
       </label>
       <label>Restore mapping <input id="restore-mapping" type="checkbox" checked></label>
-      <label>Shots <input id="shots" type="number" value="0" min="0" style="width:100%"></label>
-      <label>Seed <input id="seed" type="number" value="" style="width:100%"></label>
-      <label>Depol p <input id="depol" type="number" value="0" min="0" max="1" step="0.01" style="width:100%"></label>
-      <label>Readout p <input id="readout" type="number" value="0" min="0" max="1" step="0.01" style="width:100%"></label>
-      <label>Collapse <input id="collapse" type="checkbox"></label>
+      <label>Seed <input id="seed" type="number" placeholder="Random"></label>
     </div>
   </fieldset>
 
-  <button id="run-btn">Run</button>
-  <span id="status" class="small"></span>
+  <div class="row" style="align-items: center;">
+    <button id="run-btn">Execute Simulation</button>
+    <span id="status" class="small" style="margin-left: 12px;"></span>
+  </div>
 
-  <h3>Probabilities</h3>
-  <pre id="prob-output">(run to view)</pre>
+  <div class="results-container">
+    <div>
+      <h3>Probabilities</h3>
+      <pre id="prob-output">// Run to see results</pre>
+    </div>
+    <div>
+      <h3>Classical Memory</h3>
+      <pre id="mem-output">// Classical bits after execution</pre>
+    </div>
+  </div>
 
-  <h3>Counts</h3>
-  <pre id="count-output">(run with shots>0)</pre>
-
-  <h3>Transpiled Ops</h3>
-  <pre id="ops-output">(shown after run)</pre>
+  <h3>Transpiled IR Operations</h3>
+  <pre id="ops-output">// Intermediate Representation</pre>
 
   <script>
     const runBtn = document.getElementById("run-btn");
     const statusEl = document.getElementById("status");
 
     runBtn.onclick = async () => {
-      statusEl.textContent = "Running...";
+      statusEl.textContent = "Processing...";
       const sourceType = document.getElementById("source-type").value;
+      const engine = document.getElementById("engine").value;
+      
       const payload = {
         source_type: sourceType,
+        engine: engine,
         transpile: document.getElementById("transpile").checked,
         routing: document.getElementById("routing").value,
         restore_mapping: document.getElementById("restore-mapping").checked,
-        shots: Number(document.getElementById("shots").value) || 0,
         seed: document.getElementById("seed").value ? Number(document.getElementById("seed").value) : null,
-        noise_depol: Number(document.getElementById("depol").value) || 0,
-        noise_readout: Number(document.getElementById("readout").value) || 0,
-        collapse: document.getElementById("collapse").checked,
       };
 
       const text = document.getElementById("circuit-input").value;
@@ -95,7 +112,7 @@
         try {
           payload.circuit = JSON.parse(text);
         } catch (e) {
-          statusEl.textContent = "Invalid JSON";
+          statusEl.textContent = "Error: Invalid JSON format";
           return;
         }
         payload.nqubits = Number(document.getElementById("nqubits").value);
@@ -104,19 +121,36 @@
       }
 
       try {
-        const resp = await fetch(document.getElementById("api-url").value, {
+        const resp = await fetch("/run", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        if (!resp.ok) throw new Error(await resp.text());
+        
         const data = await resp.json();
-        document.getElementById("prob-output").textContent = JSON.stringify(data.probabilities, null, 2);
-        document.getElementById("count-output").textContent = JSON.stringify(data.counts, null, 2);
+        
+        if (!resp.ok) {
+          throw new Error(data.detail || "Server error");
+        }
+
+        // Format probabilities nicely
+        const formattedProbs = data.probabilities.map((p, i) => {
+            if (p > 0.0001) {
+                const bin = i.toString(2).padStart(data.nqubits, '0');
+                return `|${bin}>: ${p.toFixed(4)}`;
+            }
+            return null;
+        }).filter(x => x !== null).join('\n');
+
+        document.getElementById("prob-output").textContent = formattedProbs || "All zero (normalization error?)";
+        document.getElementById("mem-output").textContent = JSON.stringify(data.classical_memory, null, 2);
         document.getElementById("ops-output").textContent = JSON.stringify(data.transpiled_operations, null, 2);
-        statusEl.textContent = "Done";
+        
+        statusEl.textContent = "Success";
+        statusEl.style.color = "green";
       } catch (err) {
-        statusEl.textContent = "Error: " + err;
+        statusEl.textContent = "Error: " + err.message;
+        statusEl.style.color = "red";
       }
     };
   </script>
