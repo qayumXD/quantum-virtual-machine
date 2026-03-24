@@ -87,3 +87,76 @@ python -m src.qvm.cli examples/bell_state.json --nqubits 2 --transpile --routing
 
 ## 📄 License
 [Insert License Information Here]
+
+---
+
+## 🎨 Visual Overview
+
+<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+    <div style="flex:1;min-width:300px;max-width:520px;padding:12px;background:#0f172a;color:#e6f0ff;border-radius:8px"> 
+        <h3 style="margin-top:0;color:#bfe3ff">Feature Maturity</h3>
+        <svg viewBox="0 0 300 120" width="100%" height="120" role="img" aria-label="feature maturity bar chart">
+            <rect x="10" y="20" width="80" height="20" fill="#60a5fa" />
+            <text x="100" y="35" font-size="12" fill="#e6f0ff">OpenQASM 3.0 parsing (complete)</text>
+            <rect x="10" y="50" width="60" height="20" fill="#34d399" />
+            <text x="100" y="65" font-size="12" fill="#e6f0ff">Statevector simulator</text>
+            <rect x="10" y="80" width="50" height="20" fill="#f59e0b" />
+            <text x="100" y="95" font-size="12" fill="#e6f0ff">MPS simulator</text>
+        </svg>
+    </div>
+
+    <div style="flex:1;min-width:300px;max-width:520px;padding:12px;background:#081029;color:#f0fff4;border-radius:8px">
+        <h3 style="margin-top:0;color:#c7f9d4">Simulator Scaling (example)</h3>
+        <svg viewBox="0 0 320 140" width="100%" height="140" role="img" aria-label="simulator scaling line chart">
+            <polyline fill="none" stroke="#60a5fa" stroke-width="2" points="20,120 70,100 120,85 170,70 220,60 270,58" />
+            <text x="22" y="128" font-size="10" fill="#c7f9d4">2</text>
+            <text x="72" y="128" font-size="10" fill="#c7f9d4">4</text>
+            <text x="122" y="128" font-size="10" fill="#c7f9d4">8</text>
+            <text x="172" y="128" font-size="10" fill="#c7f9d4">12</text>
+            <text x="222" y="128" font-size="10" fill="#c7f9d4">16</text>
+            <text x="272" y="128" font-size="10" fill="#c7f9d4">20</text>
+            <text x="10" y="12" font-size="11" fill="#c7f9d4">Memory / compute (rel.)</text>
+        </svg>
+    </div>
+</div>
+
+---
+
+## 🧾 Example QASM Outputs (Qiskit & Cirq)
+
+Below are short example logs to show how QASM from different frontends looks when fed to the QVM pipeline.
+
+**Qiskit-style QASM (trimmed):**
+
+```qasm
+OPENQASM 2.0;
+include "qelib1.inc";
+qreg q[2];
+creg c[2];
+h q[0];
+cx q[0],q[1];
+measure q -> c;
+```
+
+**Cirq-style (pseudo-output / converted):**
+
+```qasm
+// Cirq circuit converted to OpenQASM (example)
+OPENQASM 2.0;
+qreg q[3];
+h q[0];
+cx q[0],q[1];
+ry(1.5708) q[2];
+```
+
+---
+
+## 🔎 Quick Visual Notes
+
+<div style="background:#fff7ed;border-left:4px solid #f59e0b;padding:10px;border-radius:6px;margin:8px 0">
+    <strong style="color:#92400e">Tip:</strong> These inline SVG charts are lightweight and render on GitHub. For interactive charts, we can add a small HTML/JS demo in `web/` and link to it.
+</div>
+
+<div style="background:#eef2ff;border-left:4px solid #6366f1;padding:10px;border-radius:6px;margin:8px 0">
+    <strong style="color:#1e3a8a">Logs:</strong> If you want live execution logs (e.g., Qiskit/Cirq transpile output), we can add a `docs/logs/` directory with sample runs or auto-generate them during CI.
+</div>
