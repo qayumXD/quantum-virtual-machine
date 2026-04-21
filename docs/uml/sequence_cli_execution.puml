@@ -1,0 +1,136 @@
+@startuml Sequence_CLI_Execution
+!theme plain
+skinparam sequenceMessageAlign center
+
+title Sequence Diagram - CLI Execution Flow
+
+actor User
+participant "CLI\n(cli.py)" as CLI
+participant "QASM3Parser\n(qasm3_parser.py)" as Parser
+participant "QuantumCircuit\n(ir.py)" as IR
+participant "Transpiler\n(transpiler.py)" as Transpiler
+participant "Simulator\n(simulator.py)" as Simulator
+participant "Visualizer\n(visual.py)" as Visualizer
+database "File System" as FS
+
+User -> CLI: python -m src.qvm.cli circuit.qasm\n--transpile --routing sabre
+activate CLI
+
+CLI -> CLI: parse_arguments()
+note right
+  Parse command line args:
+  - filepath
+  - --transpile flag
+  - --routing algorithm
+  - --nqubits
+end note
+
+CLI -> FS: read_file(circuit.qasm)
+activate FS
+FS --> CLI: file_content
+deactivate FS
+
+CLI -> Parser: parse(file_content)
+activate Parser
+
+Parser -> Parser: _find_declarations()
+note right
+  First pass:
+  - Scan for qubit declarations
+  - Scan for bit declarations
+  - Build qubit_map
+end note
+
+Parser -> IR: QuantumCircuit(num_qubits)
+activate IR
+IR --> Parser: circuit_instance
+deactivate IR
+
+Parser -> Parser: _process_node(tree)
+note right
+  Second pass:
+  - Process gate calls
+  - Process measurements
+  - Process control flow
+  - Add operations to circuit
+end note
+
+Parser --> CLI: quantum_circuit
+deactivate Parser
+
+alt Transpilation Requested
+    CLI -> Transpiler: transpile(quantum_circuit)
+    activate Transpiler
+    
+    Transpiler -> Transpiler: _transpile_sabre()
+    note right
+      SABRE routing:
+      1. Initialize qubit mapping
+      2. Process 2-qubit gates
+      3. Insert SWAPs as needed
+      4. Optimize circuit depth
+    end note
+    
+    Transpiler --> CLI: transpiled_circuit
+    deactivate Transpiler
+else No Transpilation
+    CLI -> CLI: use original circuit
+end
+
+CLI -> Simulator: simulate(circuit, seed)
+activate Simulator
+
+Simulator -> Simulator: initialize_state(|0...0⟩)
+Simulator -> Simulator: initialize_classical_memory()
+
+loop For each operation
+    Simulator -> Simulator: fetch_operation(PC)
+    
+    alt Single-Qubit Gate
+        Simulator -> Simulator: _apply_single_qubit_gate()
+        note right
+          Matrix-vector multiplication:
+          |ψ⟩ = U|ψ⟩
+        end note
+    else Two-Qubit Gate (CNOT)
+        Simulator -> Simulator: _apply_cnot_gate()
+        note right
+          Efficient index permutation
+        end note
+    else Measurement
+        Simulator -> Simulator: _measure_and_collapse()
+        note right
+          1. Calculate probabilities
+          2. Sample outcome
+          3. Collapse state
+          4. Update classical memory
+        end note
+    else Control Flow
+        Simulator -> Simulator: handle_jump/condition()
+    end
+    
+    Simulator -> Simulator: PC++
+end
+
+Simulator -> Simulator: calculate_probabilities()
+Simulator --> CLI: (state_vector, classical_memory)
+deactivate Simulator
+
+CLI -> Visualizer: plot_histogram(probabilities)
+activate Visualizer
+Visualizer -> Visualizer: generate_bar_chart()
+Visualizer --> CLI: matplotlib_figure
+deactivate Visualizer
+
+CLI -> User: Display results:\n- Probabilities\n- Classical memory\n- Histogram
+deactivate CLI
+
+note over User
+  User sees:
+  - Measurement outcomes
+  - Probability distribution
+  - Classical register values
+  - Execution statistics
+end note
+
+@enduml

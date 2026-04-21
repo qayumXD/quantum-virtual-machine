@@ -1,0 +1,216 @@
+@startuml Sequence_Transpilation_Detail
+!theme plain
+skinparam sequenceMessageAlign center
+
+title Sequence Diagram - Transpilation Process (Detailed)
+
+participant "User/System" as User
+participant "Transpiler" as T
+participant "TargetArchitecture" as Arch
+participant "Decomposer" as Decomp
+participant "QuantumCircuit\n(Logical)" as LogicalCircuit
+participant "QuantumCircuit\n(Physical)" as PhysicalCircuit
+
+User -> T: transpile(logical_circuit, architecture)
+activate T
+
+T -> Arch: load_architecture_constraints()
+activate Arch
+Arch --> T: (num_qubits, connectivity, native_gates)
+deactivate Arch
+
+T -> T: validate_circuit_size()
+note right
+  Check:
+  logical_qubits <= physical_qubits
+end note
+
+alt Circuit Too Large
+    T --> User: Error: Circuit exceeds architecture capacity
+else Circuit Valid
+    T -> T: initialize_qubit_mapping()
+    note right
+      Initial mapping:
+      logical[i] → physical[i]
+      (identity mapping)
+    end note
+    
+    T -> PhysicalCircuit: QuantumCircuit(num_physical_qubits)
+    activate PhysicalCircuit
+    PhysicalCircuit --> T: physical_circuit
+    deactivate PhysicalCircuit
+    
+    loop For each operation in logical_circuit
+        T -> LogicalCircuit: get_next_operation()
+        activate LogicalCircuit
+        LogicalCircuit --> T: (gate_name, qubits, params)
+        deactivate LogicalCircuit
+        
+        alt Single-Qubit Gate
+            T -> T: map_logical_to_physical(qubit)
+            T -> Decomp: is_native_gate(gate_name)
+            activate Decomp
+            
+            alt Gate is Native
+                Decomp --> T: true
+                deactivate Decomp
+                T -> PhysicalCircuit: add_operation(gate, physical_qubit, params)
+                activate PhysicalCircuit
+                PhysicalCircuit --> T: success
+                deactivate PhysicalCircuit
+            else Gate Not Native
+                Decomp -> Decomp: decompose_to_native(gate)
+                note right
+                  Example: Toffoli →
+                  H, CNOT, T, Tdg, CNOT, ...
+                end note
+                Decomp --> T: [native_gate_sequence]
+                deactivate Decomp
+                
+                loop For each native gate
+                    T -> PhysicalCircuit: add_operation(native_gate, ...)
+                    activate PhysicalCircuit
+                    PhysicalCircuit --> T: success
+                    deactivate PhysicalCircuit
+                end
+            end
+            
+        else Two-Qubit Gate (e.g., CNOT)
+            T -> T: map_logical_to_physical(control, target)
+            note right
+              control_phys = qubit_map[control_log]
+              target_phys = qubit_map[target_log]
+            end note
+            
+            T -> Arch: is_connected(control_phys, target_phys)
+            activate Arch
+            
+            alt Qubits Connected
+                Arch --> T: true
+                deactivate Arch
+                T -> PhysicalCircuit: add_operation(gate, [control_phys, target_phys], params)
+                activate PhysicalCircuit
+                PhysicalCircuit --> T: success
+                deactivate PhysicalCircuit
+                
+            else Qubits Not Connected
+                Arch --> T: false
+                deactivate Arch
+                
+                T -> T: select_routing_algorithm()
+                note right
+                  Algorithm: Greedy or SABRE
+                end note
+                
+                alt Routing: SABRE
+                    T -> T: _transpile_sabre()
+                    note right
+                      SABRE Algorithm:
+                      1. Calculate heuristic cost
+                      2. Find best SWAP candidate
+                      3. Apply SWAP
+                      4. Update qubit mapping
+                    end note
+                    
+                    loop Until qubits adjacent
+                        T -> T: calculate_heuristic_cost()
+                        note right
+                          Cost = Σ distance(q1, q2) × decay^i
+                          for gates in lookahead window
+                        end note
+                        
+                        T -> T: find_best_swap()
+                        note right
+                          Try all edges in connectivity
+                          Select SWAP with lowest cost
+                        end note
+                        
+                        T -> PhysicalCircuit: add_operation("swap", [p1, p2])
+                        activate PhysicalCircuit
+                        PhysicalCircuit --> T: success
+                        deactivate PhysicalCircuit
+                        
+                        T -> T: update_qubit_mapping(p1, p2)
+                        note right
+                          Swap logical qubit assignments:
+                          qubit_map[l1] ↔ qubit_map[l2]
+                        end note
+                        
+                        T -> Arch: is_connected(control_phys, target_phys)
+                        activate Arch
+                        Arch --> T: connected_status
+                        deactivate Arch
+                    end
+                    
+                else Routing: Greedy
+                    T -> T: _transpile_greedy()
+                    note right
+                      Greedy Algorithm:
+                      1. Find shortest path (BFS)
+                      2. Insert SWAPs along path
+                      3. Apply original gate
+                      4. Restore mapping (optional)
+                    end note
+                    
+                    T -> T: bfs_shortest_path(control_phys, target_phys)
+                    note right
+                      BFS to find shortest path
+                      through connectivity graph
+                    end note
+                    
+                    loop For each edge in path
+                        T -> PhysicalCircuit: add_operation("swap", [p_i, p_i+1])
+                        activate PhysicalCircuit
+                        PhysicalCircuit --> T: success
+                        deactivate PhysicalCircuit
+                        
+                        T -> T: update_qubit_mapping(p_i, p_i+1)
+                    end
+                end
+                
+                T -> PhysicalCircuit: add_operation(gate, [control_phys, target_phys], params)
+                activate PhysicalCircuit
+                PhysicalCircuit --> T: success
+                deactivate PhysicalCircuit
+                
+                alt Restore Mapping Enabled
+                    T -> T: _restore_identity_mapping()
+                    note right
+                      Insert reverse SWAPs to restore
+                      logical[i] → physical[i] mapping
+                    end note
+                    
+                    loop For each misplaced qubit
+                        T -> PhysicalCircuit: add_operation("swap", [current, target])
+                        activate PhysicalCircuit
+                        PhysicalCircuit --> T: success
+                        deactivate PhysicalCircuit
+                        
+                        T -> T: update_qubit_mapping()
+                    end
+                end
+            end
+        end
+    end
+    
+    T -> T: calculate_statistics()
+    note right
+      Statistics:
+      - Total SWAP count
+      - Circuit depth
+      - Gate count by type
+      - Optimization metrics
+    end note
+    
+    T --> User: (physical_circuit, statistics)
+    deactivate T
+    
+    note over User
+      Transpiled circuit ready for:
+      - Simulation
+      - Export to QASM
+      - Execution on hardware
+    end note
+end
+
+@enduml

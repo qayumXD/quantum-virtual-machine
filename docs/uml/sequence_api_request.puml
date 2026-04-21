@@ -1,0 +1,174 @@
+@startuml Sequence_API_Request
+!theme plain
+skinparam sequenceMessageAlign center
+
+title Sequence Diagram - REST API Request Flow
+
+actor "External\nClient" as Client
+participant "FastAPI\nServer" as API
+participant "APIServer\n(server.py)" as Server
+participant "QASM3Parser" as Parser
+participant "QuantumCircuit" as IR
+participant "Transpiler" as Transpiler
+participant "Simulator" as Simulator
+participant "Visualizer" as Visualizer
+
+Client -> API: POST /api/execute\nContent-Type: application/json
+activate API
+note right of Client
+  Request Body:
+  {
+    "circuit": "OPENQASM 3.0; ...",
+    "format": "qasm3",
+    "transpile": true,
+    "architecture": "linear",
+    "routing": "sabre",
+    "backend": "statevector"
+  }
+end note
+
+API -> API: validate_request()
+note right
+  Validate:
+  - Required fields present
+  - Valid format (qasm2/qasm3/json)
+  - Valid architecture
+  - Valid routing algorithm
+end note
+
+alt Invalid Request
+    API --> Client: 400 Bad Request\n{"error": "Invalid format"}
+    note right
+      Error response includes:
+      - Error message
+      - Field that failed validation
+      - Suggested corrections
+    end note
+else Valid Request
+    API -> Server: execute_circuit(request)
+    activate Server
+    
+    Server -> Server: extract_parameters()
+    
+    alt Format: QASM
+        Server -> Parser: parse(circuit_text)
+        activate Parser
+        Parser -> IR: QuantumCircuit(num_qubits)
+        activate IR
+        IR --> Parser: circuit
+        deactivate IR
+        Parser --> Server: quantum_circuit
+        deactivate Parser
+    else Format: JSON
+        Server -> Server: parse_json_gates()
+        Server -> IR: QuantumCircuit(num_qubits)
+        activate IR
+        IR --> Server: circuit
+        deactivate IR
+    end
+    
+    alt Transpilation Requested
+        Server -> Transpiler: transpile(circuit, architecture, routing)
+        activate Transpiler
+        
+        Transpiler -> Transpiler: configure_architecture()
+        Transpiler -> Transpiler: decompose_gates()
+        Transpiler -> Transpiler: route_qubits()
+        Transpiler -> Transpiler: insert_swaps()
+        
+        Transpiler --> Server: transpiled_circuit
+        deactivate Transpiler
+        
+        Server -> Server: collect_transpilation_stats()
+        note right
+          Statistics:
+          - SWAP count
+          - Circuit depth
+          - Gate count
+          - Optimization metrics
+        end note
+    end
+    
+    Server -> Simulator: simulate(circuit, backend)
+    activate Simulator
+    
+    alt Backend: Statevector
+        Simulator -> Simulator: statevector_simulation()
+        note right
+          Exact simulation:
+          - Initialize |0...0⟩
+          - Apply gates sequentially
+          - Calculate probabilities
+        end note
+    else Backend: MPS
+        Simulator -> Simulator: mps_simulation()
+        note right
+          Tensor network simulation:
+          - Initialize MPS tensors
+          - Apply gates with SVD truncation
+          - Contract to probabilities
+        end note
+    end
+    
+    Simulator --> Server: (state_vector, classical_memory)
+    deactivate Simulator
+    
+    Server -> Server: format_results()
+    note right
+      Format response:
+      - Probabilities (dict)
+      - Classical memory (dict)
+      - Execution time
+      - Transpilation stats (if applicable)
+    end note
+    
+    alt Visualization Requested
+        Server -> Visualizer: generate_histogram_base64()
+        activate Visualizer
+        Visualizer -> Visualizer: plot_histogram()
+        Visualizer -> Visualizer: encode_to_base64()
+        Visualizer --> Server: base64_image
+        deactivate Visualizer
+    end
+    
+    Server --> API: CircuitResponse
+    deactivate Server
+    
+    API --> Client: 200 OK\nContent-Type: application/json
+    deactivate API
+    
+    note right of Client
+      Response Body:
+      {
+        "probabilities": {...},
+        "classical_memory": {...},
+        "execution_time_ms": 45.2,
+        "transpilation_stats": {
+          "swap_count": 3,
+          "circuit_depth": 12
+        },
+        "visualization": "base64_image..."
+      }
+    end note
+end
+
+alt Server Error
+    API --> Client: 500 Internal Server Error\n{"error": "Simulation failed"}
+    note right
+      Error handling:
+      - Log error details
+      - Return user-friendly message
+      - Include error code
+    end note
+end
+
+Client -> Client: process_results()
+note right of Client
+  Client can:
+  - Display probabilities
+  - Render histogram
+  - Analyze statistics
+  - Make follow-up requests
+end note
+
+@enduml
