@@ -1,0 +1,148 @@
+@startuml Activity_Simulation
+!theme plain
+skinparam activityDiamondBackgroundColor #lightblue
+skinparam activityStartColor #green
+skinparam activityEndColor #red
+
+title Activity Diagram - Simulation Process
+
+start
+
+:Receive quantum circuit\n(QuantumCircuit IR);
+
+:Determine simulation backend;
+
+if (Backend type?) then (Statevector)
+  partition "Statevector Simulation" {
+    :Initialize state vector\n|ψ⟩ = |0...0⟩;
+    note right
+      State vector size: 2^n
+      Complex amplitudes
+    end note
+    
+    :Initialize classical memory\n(all registers to 0);
+    
+    :Set program counter (PC) = 0;
+    
+    repeat
+      :Fetch operation at PC;
+      
+      if (Operation type?) then (Label)
+        :Record label position;
+        :PC++;
+        
+      elseif (Jump) then
+        if (Condition met?) then (yes)
+          :PC = label position;
+        else (no)
+          :PC++;
+        endif
+        
+      elseif (Classical Op) then
+        :Execute boolean logic\n(AND/OR/XOR/NOT);
+        :Update classical memory;
+        :PC++;
+        
+      elseif (Conditional Gate) then
+        if (Classical bit == value?) then (yes)
+          :Apply quantum gate;
+        else (no)
+          :Skip gate;
+        endif
+        :PC++;
+        
+      elseif (Single-Qubit Gate) then
+        :Get gate matrix\n(H, X, Y, Z, RX, RY, RZ);
+        :Compute full operator\n(tensor product with I);
+        :Apply: |ψ⟩ = U|ψ⟩;
+        note right
+          Matrix-vector multiplication
+          O(2^n) complexity
+        end note
+        :PC++;
+        
+      elseif (CNOT Gate) then
+        :Permute state vector\nindices;
+        note right
+          Efficient index manipulation
+          No explicit matrix
+        end note
+        :PC++;
+        
+      elseif (SWAP Gate) then
+        :Swap qubit amplitudes\nin state vector;
+        :PC++;
+        
+      elseif (CCX/Toffoli) then
+        :Apply controlled-controlled-X;
+        :PC++;
+        
+      elseif (Measurement) then
+        :Calculate P(|0⟩) and P(|1⟩);
+        :Sample outcome\n(random number);
+        :Collapse state vector;
+        :Normalize state;
+        :Store result in\nclassical memory;
+        :PC++;
+        
+      else (Delay)
+        :Wait (timing simulation);
+        :PC++;
+      endif
+      
+      if (PC >= circuit length?) then (yes)
+        :Exit loop;
+      endif
+      
+      if (Operations > max limit?) then (yes)
+        :Error: Infinite loop detected;
+        stop
+      endif
+      
+    repeat while (PC < circuit length?) is (yes)
+    ->no;
+    
+    :Calculate final probabilities\nP(|x⟩) = |⟨x|ψ⟩|²;
+  }
+  
+else (MPS)
+  partition "MPS Simulation" {
+    :Initialize MPS tensors\n(product state);
+    note right
+      MPS: Matrix Product State
+      Efficient for low entanglement
+    end note
+    
+    :Set bond dimension χ_max;
+    
+    repeat
+      :Get next gate;
+      
+      if (Single-qubit gate?) then (yes)
+        :Apply gate to\nlocal tensor;
+      else (Two-qubit gate)
+        :Contract tensors;
+        :Apply gate;
+        :Perform SVD truncation;
+        note right
+          Truncate to χ_max
+          Controls memory usage
+        end note
+        :Split back into\ntwo tensors;
+      endif
+      
+    repeat while (More gates?) is (yes)
+    ->no;
+    
+    :Contract full MPS\nto state vector;
+    :Calculate probabilities;
+  }
+endif
+
+:Format simulation results;
+
+:Return state vector\nand classical memory;
+
+stop
+
+@enduml

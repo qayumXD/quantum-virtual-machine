@@ -1,0 +1,101 @@
+@startuml Activity_Circuit_Execution
+!theme plain
+skinparam activityDiamondBackgroundColor #lightblue
+skinparam activityStartColor #green
+skinparam activityEndColor #red
+
+title Activity Diagram - Circuit Execution Flow
+
+start
+
+:User provides circuit file\n(QASM/JSON);
+
+:Load circuit file\nfrom file system;
+
+if (File exists?) then (yes)
+  :Read file content;
+  
+  if (Valid format?) then (yes)
+    :Parse circuit\n(QASM3Parser/QASMParser);
+    
+    if (Syntax valid?) then (yes)
+      :Generate AST;
+      :Create QuantumCircuit IR;
+      
+      if (Transpilation required?) then (yes)
+        :Configure target\narchitecture;
+        :Decompose gates to\nnative gate set;
+        :Map logical qubits\nto physical qubits;
+        :Insert SWAP gates\nfor connectivity;
+        :Optimize circuit depth;
+        note right
+          Transpilation ensures
+          circuit respects hardware
+          constraints
+        end note
+      else (no)
+        :Use circuit as-is;
+      endif
+      
+      :Select simulation backend\n(Statevector or MPS);
+      
+      if (Circuit size ≤ 12 qubits?) then (yes)
+        :Use Statevector\nSimulator;
+      else (no)
+        if (Low entanglement?) then (yes)
+          :Use MPS Simulator;
+        else (no)
+          :Error: Circuit too large;
+          stop
+        endif
+      endif
+      
+      :Initialize quantum state\n|0...0⟩;
+      
+      repeat
+        :Apply next gate\nfrom circuit;
+        :Update state vector;
+      repeat while (More gates?) is (yes)
+      ->no;
+      
+      if (Measurements specified?) then (yes)
+        :Perform measurements;
+        :Collapse state;
+        :Update classical memory;
+      else (no)
+        :Keep final state;
+      endif
+      
+      :Calculate probabilities;
+      :Format results;
+      
+      if (Visualization requested?) then (yes)
+        :Generate histogram;
+        :Plot state vector;
+      endif
+      
+      if (Export requested?) then (yes)
+        :Export to QASM format;
+        :Save to file system;
+      endif
+      
+      :Return simulation results\nto user;
+      
+      stop
+      
+    else (no)
+      :Display syntax error\nwith line number;
+      stop
+    endif
+    
+  else (no)
+    :Display format error\n(Invalid QASM/JSON);
+    stop
+  endif
+  
+else (no)
+  :Display file not found error;
+  stop
+endif
+
+@enduml

@@ -1,0 +1,115 @@
+@startuml Activity_Transpilation
+!theme plain
+skinparam activityDiamondBackgroundColor #lightblue
+skinparam activityStartColor #green
+skinparam activityEndColor #red
+
+title Activity Diagram - Transpilation Process
+
+start
+
+:Receive logical circuit\n(QuantumCircuit IR);
+
+:Load target architecture\nconstraints;
+note right
+  Architecture includes:
+  - Qubit topology (Linear/Grid)
+  - Connectivity graph
+  - Native gate set
+end note
+
+:Initialize qubit mapping\n(logical → physical);
+
+partition "Gate Decomposition" {
+  :Scan circuit for\nnon-native gates;
+  
+  repeat
+    :Get next gate;
+    
+    if (Gate in native set?) then (yes)
+      :Keep gate as-is;
+    else (no)
+      :Decompose gate into\nnative gates;
+      note right
+        Example: Toffoli → 
+        CNOT + single-qubit gates
+      end note
+      :Replace in circuit;
+    endif
+    
+  repeat while (More gates?) is (yes)
+  ->no;
+}
+
+partition "Qubit Routing" {
+  :Select routing algorithm\n(Greedy or SABRE);
+  
+  if (Routing algorithm?) then (SABRE)
+    :Use SABRE heuristic\nwith lookahead;
+    note right
+      SABRE: Better optimization
+      Uses decay-based cost function
+    end note
+  else (Greedy)
+    :Use Greedy BFS routing;
+    note right
+      Greedy: Simpler, faster
+      Uses shortest path
+    end note
+  endif
+  
+  :Create empty physical circuit;
+  
+  repeat
+    :Get next 2-qubit gate;
+    :Map logical qubits\nto physical qubits;
+    
+    if (Qubits connected?) then (yes)
+      :Add gate to\nphysical circuit;
+    else (no)
+      :Find shortest path\nbetween qubits;
+      
+      if (Path found?) then (yes)
+        repeat
+          :Insert SWAP gate\nalong path;
+          :Update qubit mapping;
+        repeat while (Qubits adjacent?) is (no)
+        ->yes;
+        
+        :Add original gate;
+        
+        if (Restore mapping?) then (yes)
+          :Insert reverse SWAPs\nto restore mapping;
+          note right
+            Optional: Maintains
+            logical-physical identity
+          end note
+        endif
+        
+      else (no)
+        :Error: No valid path\n(disconnected architecture);
+        stop
+      endif
+    endif
+    
+  repeat while (More 2-qubit gates?) is (yes)
+  ->no;
+}
+
+partition "Circuit Optimization" {
+  :Analyze circuit depth;
+  
+  if (Depth > threshold?) then (yes)
+    :Display warning\nto user;
+  endif
+  
+  :Calculate SWAP count;
+  :Calculate gate count;
+  :Generate statistics;
+}
+
+:Return transpiled\nphysical circuit;
+
+stop
+
+@enduml
