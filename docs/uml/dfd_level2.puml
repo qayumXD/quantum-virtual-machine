@@ -1,0 +1,94 @@
+@startuml DFD_Level2
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam rectangle {
+  BackgroundColor #E6F3FF
+  BorderColor #2C5F8D
+  FontSize 11
+  FontName Arial
+}
+skinparam storage {
+  BackgroundColor #FFF9E6
+  BorderColor #8B6914
+}
+
+title Data Flow Diagram - Level 2 (Module Level)
+
+rectangle "P1\nParse Circuit" as p1
+rectangle "P2\nDecompose Gates" as p2
+rectangle "P3\nTranspile Circuit" as p3
+rectangle "P4\nSimulate Circuit" as p4
+rectangle "P5\nVisualize Results" as p5
+rectangle "P6\nExport Circuit" as p6
+
+storage "Architecture\nDefinitions" as arch
+storage "Gate Decomposition\nRules" as rules
+storage "Simulation\nState" as state
+
+' External entities
+actor User as user
+storage "File System" as fs
+
+' Data flows from user
+user -down-> p1 : Circuit Text\n(QASM/JSON)
+user -down-> p4 : Execution Parameters\n(seed, max_ops)
+user -down-> p3 : Target Architecture\n(linear, grid)
+
+' Main pipeline flow
+p1 -right-> p2 : QuantumCircuit IR\n(with complex gates)
+p2 -right-> p3 : Native Gate Circuit\n(H, X, Y, Z, CX only)
+p3 -down-> p4 : Physical Circuit\n(with SWAP gates)
+p4 -down-> p5 : Statevector +\nClassical Memory
+p5 -left-> user : Visualizations\n(circuit diagram,\nhistogram)
+
+' Export flow
+p1 -down-> p6 : QuantumCircuit IR
+p6 -down-> fs : OpenQASM String
+
+' Alternative flow (no transpilation)
+p2 -down-> p4 : [skip transpilation]
+
+' Data store interactions
+p2 ..> rules : read\ndecomposition\nrules
+p3 ..> arch : read\ntopology\nspecifications
+p4 ..> state : read/write\nintermediate\nstate
+
+' Results to user
+p4 -up-> user : Statevector +\nClassical Memory
+p6 -up-> user : OpenQASM Export
+
+note right of p1
+  Validates syntax
+  Creates IR object
+  Handles QASM 2.0/3.0/JSON
+end note
+
+note right of p2
+  Toffoli → CNOTs
+  Complex → Native gates
+end note
+
+note right of p3
+  Greedy or SABRE routing
+  SWAP insertion
+  Mapping restoration
+end note
+
+note right of p4
+  Statevector or MPS
+  Control flow handling
+  Classical operations
+end note
+
+note left of p5
+  Matplotlib rendering
+  Circuit diagrams
+  Probability histograms
+end note
+
+note left of p6
+  Converts IR to QASM 2.0
+  Compatible with IBM Quantum
+end note
+
+@enduml

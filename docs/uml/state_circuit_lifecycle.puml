@@ -1,0 +1,98 @@
+@startuml State_Circuit_Lifecycle
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam state {
+  BackgroundColor<<Initial>> #90EE90
+  BackgroundColor<<Final>> #FFB6C1
+  BackgroundColor<<Error>> #FF6B6B
+  BackgroundColor #E6F3FF
+  BorderColor #2C5F8D
+  FontSize 12
+  FontName Arial
+}
+
+title Circuit Lifecycle State Transition Diagram
+
+[*] --> Created : Parse circuit file
+
+state Created {
+  Created : Circuit IR object created
+  Created : Operations list populated
+  Created : Registers declared
+}
+
+state Validated {
+  Validated : Semantic checks passed
+  Validated : Qubit indices valid
+  Validated : Registers defined
+}
+
+state Decomposed {
+  Decomposed : Complex gates broken down
+  Decomposed : Only native gates remain
+  Decomposed : Ready for transpilation
+}
+
+state Transpiled {
+  Transpiled : Mapped to physical qubits
+  Transpiled : SWAP gates inserted
+  Transpiled : Topology constraints satisfied
+}
+
+state Executing {
+  Executing : Simulator processing operations
+  Executing : Quantum state evolving
+  Executing : Classical memory updating
+}
+
+state Completed <<Final>> {
+  Completed : Simulation finished
+  Completed : Final statevector available
+  Completed : Classical memory final
+}
+
+state Error <<Error>> {
+  Error : Processing failed
+  Error : Error message available
+  Error : Cannot proceed
+}
+
+Created --> Validated : validate()\n[validation succeeds]
+Created --> Error : validate()\n[validation fails:\ninvalid qubit index,\nundefined register]
+
+Validated --> Decomposed : decompose()\n[decomposition succeeds]
+Validated --> Error : decompose()\n[unsupported gate]
+
+Decomposed --> Transpiled : transpile()\n[transpilation requested\nand succeeds]
+Decomposed --> Executing : simulate()\n[no transpilation\nrequested]
+Transpiled --> Executing : simulate()
+
+Executing --> Completed : [all operations\nexecuted successfully]
+Executing --> Error : [runtime error:\ninfinite loop,\ninvalid operation,\nresource limit]
+
+Transpiled --> Error : transpile()\n[no valid routing,\ntoo many qubits]
+
+Completed --> [*]
+Error --> [*]
+
+note right of Created
+  Initial state after
+  parsing completes
+end note
+
+note right of Validated
+  All semantic checks
+  have passed
+end note
+
+note right of Executing
+  Active simulation
+  in progress
+end note
+
+note bottom of Error
+  Terminal error state
+  Requires user intervention
+end note
+
+@enduml

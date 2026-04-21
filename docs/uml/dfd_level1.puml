@@ -1,0 +1,68 @@
+@startuml DFD_Level1
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam rectangle {
+  BackgroundColor #E6F3FF
+  BorderColor #2C5F8D
+  FontSize 12
+  FontName Arial
+}
+skinparam actor {
+  BackgroundColor #FFE6E6
+  BorderColor #8B0000
+}
+skinparam storage {
+  BackgroundColor #FFF9E6
+  BorderColor #8B6914
+}
+
+title Data Flow Diagram - Level 1 (System Level)
+
+actor User as user
+actor "Web Browser" as browser
+storage "File System" as fs
+
+rectangle "Quantum Virtual Machine\n(QVM System)" as qvm {
+}
+
+user -down-> qvm : Circuit File\n(QASM/JSON)
+user -down-> qvm : Execution Parameters\n(architecture, simulator, seed)
+qvm -up-> user : Results\n(statevector, probabilities,\nvisualizations)
+
+fs -right-> qvm : Read Circuit File
+qvm -left-> fs : Write Output Files\n(PNG, QASM export)
+
+browser -down-> qvm : HTTP Request\n(POST /execute)
+qvm -up-> browser : HTTP Response\n(JSON results)
+
+storage "Circuit Files" as circuits
+storage "Configuration" as config
+
+qvm ..> circuits : read
+qvm ..> config : read
+
+note right of user
+  Provides quantum programs
+  and execution options
+end note
+
+note left of fs
+  Persistent storage for
+  circuits and results
+end note
+
+note top of qvm
+  Core system processes:
+  - Parse circuits
+  - Transpile for architecture
+  - Simulate execution
+  - Generate visualizations
+  - Export results
+end note
+
+note right of browser
+  Web-based interface
+  for interactive use
+end note
+
+@enduml
