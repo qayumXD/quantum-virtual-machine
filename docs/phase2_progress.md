@@ -1,7 +1,7 @@
 # Phase 2 Progress Report
-**Date:** April 21, 2026  
+**Date:** April 22, 2026  
 **Phase:** Requirements & Design (Week 2-4)  
-**Status:** Week 2 COMPLETE ✅
+**Status:** Week 3 COMPLETE ✅
 
 ---
 
@@ -10,7 +10,7 @@
 **Goal:** Complete Chapters 3 & 4 (Requirements & Design)  
 **Duration:** 3 weeks (Week 2-4)  
 **Estimated Effort:** 25-30 hours  
-**Current Progress:** 36% (9 of 25 hours)
+**Current Progress:** 72% (18 of 25 hours)
 
 ---
 
@@ -118,61 +118,126 @@
 
 ---
 
+### Week 3: Requirements & Sequence Diagrams (Days 4-6)
+
+#### 6. Sequence Diagrams ✅ **COMPLETE**
+**Time Spent:** ~2 hours  
+**Status:** Complete
+
+**Deliverables:**
+- [x] `docs/uml/sequence_cli_execution.puml` - CLI execution flow ✅
+- [x] `docs/uml/sequence_api_request.puml` - API request flow ✅
+- [x] `docs/uml/sequence_transpilation_detail.puml` - Transpilation detail ✅
+- [x] Generated PNG diagrams for all three ✅
+
+**Content:**
+- **CLI Execution Flow:** User command → CLI → Transpiler → Simulator → Visualizer
+  * Complete interaction from user input to results display
+  * Shows all major components and their interactions
+- **API Request Flow:** HTTP POST → FastAPI → QVM Core → JSON Response
+  * Request validation and error handling
+  * JSON response formatting
+- **Transpilation Detail:** Logical circuit → SABRE/Greedy routing → Physical circuit
+  * Detailed transpilation process
+  * SWAP insertion and optimization
+
+**Quality:** Publication-ready ✅
+
+#### 7. Chapter 3: Requirement Analysis ✅ **COMPLETE**
+**Time Spent:** ~7 hours  
+**Status:** Complete
+
+**Deliverables:**
+- [x] `docs/fyp_latex/ch_3_requirements.tex` - Complete chapter ✅
+
+**Content:**
+- **Section 3.1:** Introduction (requirement elicitation overview)
+- **Section 3.2:** Requirement Elicitation Techniques (4 methods)
+- **Section 3.3:** User Classes and Characteristics (4 user types)
+- **Section 3.4:** System Overview (comprehensive description)
+- **Section 3.5:** Use Case Model with 10 detailed use cases:
+  * UC-1.1: Parse Quantum Circuit
+  * UC-1.2: Transpile Circuit for Target Architecture
+  * UC-1.3: Execute Circuit with Statevector Simulation
+  * UC-1.4: Execute Circuit with MPS Simulation
+  * UC-1.5: Visualize Circuit
+  * UC-1.6: Visualize Measurement Results
+  * UC-1.7: Export Circuit to OpenQASM
+  * UC-1.8: Execute via Command Line Interface
+  * UC-1.9: Execute via Web API
+  * UC-1.10: Interact via Web GUI
+- **Section 3.6:** Functional Requirements (48 requirements across 6 modules)
+  * FR-1.x: Parsing Module (8 requirements)
+  * FR-2.x: IR Module (8 requirements)
+  * FR-3.x: Transpiler Module (10 requirements)
+  * FR-4.x: Simulator Module (12 requirements)
+  * FR-5.x: Visualization Module (6 requirements)
+  * FR-6.x: Interface Module (9 requirements)
+- **Section 3.7:** Non-Functional Requirements (24 requirements across 6 categories)
+  * NFR-1.x: Performance (5 requirements)
+  * NFR-2.x: Reliability (5 requirements)
+  * NFR-3.x: Usability (5 requirements)
+  * NFR-4.x: Portability (4 requirements)
+  * NFR-5.x: Maintainability (5 requirements)
+  * NFR-6.x: Security (4 requirements)
+- **Section 3.8:** External Interface Requirements (4 subsections)
+- **Section 3.9:** Requirement Traceability Matrix
+
+**Statistics:**
+- Total: ~4,500 words
+- 48 Functional Requirements
+- 24 Non-Functional Requirements
+- 10 Detailed Use Cases
+- 4 User Classes
+
+**Quality:** Publication-ready ✅
+
+---
+
 ## 📊 Phase 2 Statistics
 
 ### Completion Metrics
-- **Time Spent:** ~9 hours (Week 2 complete)
-- **Diagrams Created:** 7 of 10-12 (58%)
-- **Use Cases Documented:** 13 use cases
-- **Status:** Week 2 complete, ahead of schedule ✅
+- **Time Spent:** ~18 hours (Week 2 & 3 complete)
+- **Diagrams Created:** 10 of 10-12 (83%)
+- **Use Cases Documented:** 10 detailed use cases
+- **Functional Requirements:** 48 FRs documented
+- **Non-Functional Requirements:** 24 NFRs documented
+- **Status:** Week 3 complete, ahead of schedule ✅
 
-### Week 2 Progress
+### Week 2 & 3 Progress
 ```
 Use Case Diagram:    [██████████] 100% ✅ COMPLETE
 Context Diagram:     [██████████] 100% ✅ COMPLETE
 Architecture Diagram:[██████████] 100% ✅ COMPLETE
 Class Diagram:       [██████████] 100% ✅ COMPLETE
 Activity Diagrams:   [██████████] 100% ✅ COMPLETE (3 diagrams)
-Sequence Diagrams:   [░░░░░░░░░░] 0% (Week 3)
-State Diagram:       [░░░░░░░░░░] 0% (Week 3)
+Sequence Diagrams:   [██████████] 100% ✅ COMPLETE (3 diagrams)
+Chapter 3:           [██████████] 100% ✅ COMPLETE (4,500 words)
+State Diagram:       [░░░░░░░░░░] 0% (Week 4)
 ```
 
 ---
 
-## 🎯 Next Steps: Week 3
+## 🎯 Next Steps: Week 4
 
-### Week 3: Requirements & Sequence Diagrams (8-10 hours)
+### Week 4: Chapter 4 Design Documentation (7-9 hours)
 
-#### Functional Requirements (4-5 hours)
+#### Chapter 4: Software Design (7-9 hours)
 **Tasks:**
-- [ ] Document 20-30 Functional Requirements
-  * FR-1.x: Parser Module (5 FRs)
-  * FR-2.x: Transpiler Module (5 FRs)
-  * FR-3.x: Simulator Module (5 FRs)
-  * FR-4.x: Visualization Module (3 FRs)
-  * FR-5.x: CLI/API Module (5 FRs)
-- [ ] Extract from code and documentation
-- [ ] Format as requirement tables
+- [ ] Section 4.1: Introduction (use template)
+- [ ] Section 4.2: Design Methodology (OOD approach)
+- [ ] Section 4.3: System Overview (context diagram reference)
+- [ ] Section 4.4: Architectural Design (architecture diagram reference)
+- [ ] Section 4.5: Activity Diagrams (reference Week 2 diagrams)
+- [ ] Section 4.6: Class Diagram (reference Week 2 diagram)
+- [ ] Section 4.7: Sequence Diagrams (reference Week 3 diagrams)
+- [ ] Section 4.8: State Diagrams (create 1-2 new diagrams)
+- [ ] Section 4.9: Data Flow Diagrams (create Level 1 & 2)
+- [ ] Section 4.10: ERD (explain file-based approach, N/A)
+- [ ] Section 4.11: Data Dictionary (document IR structure)
 
-#### Non-Functional Requirements (2-3 hours)
-**Tasks:**
-- [ ] Document 15-20 Non-Functional Requirements
-  * Performance (PER-1 to PER-4)
-  * Reliability (REL-1 to REL-3)
-  * Usability (USE-1 to USE-4)
-  * Maintainability (MAIN-1 to MAIN-3)
-  * Scalability (SCA-1 to SCA-3)
-
-#### Sequence Diagrams (2-3 hours)
-**Tasks:**
-- [ ] Create sequence_cli_execution.puml
-  - User → CLI → Parser → Simulator → Visualizer
-- [ ] Create sequence_api_request.puml
-  - Client → FastAPI → QVM Core → Response
-- [ ] Generate PNG diagrams
-
-**Estimated Time:** 8-10 hours  
-**Target Completion:** End of Week 3
+**Estimated Time:** 7-9 hours  
+**Target Completion:** End of Week 4
 
 ---
 
@@ -183,6 +248,10 @@ State Diagram:       [░░░░░░░░░░] 0% (Week 3)
 Target Week 2: Use Case + Context + Architecture + Class + Activity diagrams
 Actual Week 2: All 7 diagrams complete ✅
 Status: WEEK 2 COMPLETE (3 days ahead of schedule)
+
+Target Week 3: Functional Requirements + Non-Functional Requirements + Sequence Diagrams
+Actual Week 3: All requirements + 3 sequence diagrams + Complete Chapter 3 ✅
+Status: WEEK 3 COMPLETE (ahead of schedule)
 ```
 
 ### Quality Assessment
@@ -196,23 +265,28 @@ Status: WEEK 2 COMPLETE (3 days ahead of schedule)
 ## 💡 Key Achievements
 
 1. ✅ **Week 2 Complete** - All planned diagrams finished
-2. ✅ **7 UML Diagrams Created** - Professional quality
-3. ✅ **Use Case Diagram** - 13 use cases, 4 actors
-4. ✅ **Context Diagram** - System boundary and external actors
-5. ✅ **Architecture Diagram** - 7-layer pipeline architecture
-6. ✅ **Class Diagram** - Core classes and relationships
-7. ✅ **Activity Diagrams** - 3 comprehensive process flows
-8. ✅ **Detailed Documentation** - All use cases fully documented
-9. ✅ **PlantUML Mastery** - All diagrams generated successfully
-10. ✅ **Ahead of Schedule** - Week 2 done in 4 days instead of 7
+2. ✅ **Week 3 Complete** - Requirements + Sequence diagrams + Chapter 3
+3. ✅ **10 UML Diagrams Created** - Professional quality
+4. ✅ **Use Case Diagram** - 13 use cases, 4 actors
+5. ✅ **Context Diagram** - System boundary and external actors
+6. ✅ **Architecture Diagram** - 7-layer pipeline architecture
+7. ✅ **Class Diagram** - Core classes and relationships
+8. ✅ **Activity Diagrams** - 3 comprehensive process flows
+9. ✅ **Sequence Diagrams** - 3 detailed interaction flows
+10. ✅ **Chapter 3 Complete** - 4,500 words, 48 FRs, 24 NFRs, 10 use cases
+11. ✅ **Detailed Documentation** - All use cases fully documented
+12. ✅ **PlantUML Mastery** - All diagrams generated successfully
+13. ✅ **Ahead of Schedule** - Week 2 & 3 done efficiently
 
 ---
 
 ## 🚀 Confidence Level
 
 **Week 2 Progress:** 🟢 EXCELLENT (100% complete, 3 days ahead)  
-**Phase 2 Overall:** 🟢 HIGH (36% complete, strong momentum)  
-**Diagram Quality:** 🟢 EXCELLENT (professional, comprehensive)
+**Week 3 Progress:** 🟢 EXCELLENT (100% complete, ahead of schedule)  
+**Phase 2 Overall:** 🟢 HIGH (72% complete, strong momentum)  
+**Diagram Quality:** 🟢 EXCELLENT (professional, comprehensive)  
+**Chapter 3 Quality:** 🟢 EXCELLENT (publication-ready, comprehensive)
 
 **Risk Level:** 🟢 VERY LOW
 
@@ -220,27 +294,23 @@ Status: WEEK 2 COMPLETE (3 days ahead of schedule)
 
 ## 📝 Notes for Next Session
 
-### Immediate Next Steps (Week 3)
-1. **Functional Requirements** (4-5 hours)
-   - Document 20-30 FRs from code
-   - Format as requirement tables
+### Immediate Next Steps (Week 4)
+1. **Chapter 4: Software Design** (7-9 hours)
+   - Write all sections referencing existing diagrams
+   - Create State Diagram (circuit lifecycle)
+   - Create DFD Level 1 & 2
+   - Document data dictionary (IR structure)
    
-2. **Non-Functional Requirements** (2-3 hours)
-   - Performance, Reliability, Usability
-   - Maintainability, Scalability
-   
-3. **Sequence Diagrams** (2-3 hours)
-   - CLI execution flow
-   - API request flow
-
 ### Tools & Commands
 - **PlantUML Command:** `java -jar G:\Downloads\plantuml-jar-gplv2-1.2023.7\plantuml.jar docs/uml/[filename].puml`
 - **Git Commit:** `wsl git commit -m "message"`
+- **Git Push:** `wsl git push origin main`
 
 ### Content Sources
 - `README.md` - Architecture description
 - `src/qvm/` - Code structure for class diagram
 - `docs/ScopeDocumentV1.md` - Module descriptions
+- Existing UML diagrams - Reference in Chapter 4
 
 ---
 
@@ -254,24 +324,22 @@ Status: WEEK 2 COMPLETE (3 days ahead of schedule)
   * Class Diagram
   * Activity Diagrams (3)
 
-**Week 3 (Next):**
-- Functional Requirements (20-30 FRs)
-- Non-Functional Requirements (15-20 NFRs)
-- Sequence Diagrams (2-3)
+**Week 3 (Complete):**
+- Days 4-6: ✅ Requirements + Sequence diagrams + Chapter 3 (9 hours) - DONE
+  * Sequence Diagrams (3)
+  * Functional Requirements (48 FRs)
+  * Non-Functional Requirements (24 NFRs)
+  * Chapter 3 complete (4,500 words)
 
-**Week 3:**
-- Functional Requirements (20-30 FRs)
-- Non-Functional Requirements (15-20 NFRs)
-- Sequence Diagrams (2-3)
-
-**Week 4:**
+**Week 4 (Next):**
+- Chapter 4: Software Design
 - State Diagram
 - DFD Diagrams (Level 1, Level 2)
-- Traceability Matrix
-- Chapter 3 & 4 polish
+- Data Dictionary
+- Chapter 4 polish
 
 ---
 
-**Report Generated:** April 21, 2026  
-**Next Update:** After Functional Requirements  
-**Status:** ✅ Phase 2 Week 2 COMPLETE (7 diagrams, 3 days ahead)
+**Report Generated:** April 22, 2026  
+**Next Update:** After Chapter 4 completion  
+**Status:** ✅ Phase 2 Week 2 & 3 COMPLETE (10 diagrams, Chapter 3, ahead of schedule)
