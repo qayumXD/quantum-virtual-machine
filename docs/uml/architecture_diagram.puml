@@ -1,0 +1,207 @@
+@startuml QVM_Architecture_Diagram
+!theme plain
+skinparam componentStyle rectangle
+
+title Quantum Virtual Machine (QVM) - System Architecture (Pipeline)
+
+' External Interfaces
+actor "User" as User
+database "File System" as FS
+
+' Layer 1: Input Layer
+package "Layer 1: Input Layer" as L1 {
+  component "QASM 3.0 Files" as QASM3
+  component "QASM 2.0 Files" as QASM2
+  component "JSON Gate Lists" as JSON
+  component "CLI Interface" as CLI
+  component "REST API" as API
+  component "Web GUI" as GUI
+}
+
+' Layer 2: Parser Layer
+package "Layer 2: Parser Layer" as L2 {
+  component "Lark Parser\n(QASM 3.0)" as LarkParser
+  component "QASM 2.0 Parser" as QASM2Parser
+  component "JSON Parser" as JSONParser
+  component "AST Generator" as AST
+}
+
+' Layer 3: Intermediate Representation
+package "Layer 3: IR Layer" as L3 {
+  component "QuantumCircuit IR" as IR
+  component "Gate List" as GateList
+  component "Qubit Registry" as QubitReg
+  component "Classical Memory" as ClassicalMem
+}
+
+' Layer 4: Decomposer Layer
+package "Layer 4: Decomposer Layer" as L4 {
+  component "Gate Decomposer" as Decomposer
+  component "Native Gate Set\nMapper" as NativeGates
+  component "Basis Gate\nLibrary" as BasisLib
+}
+
+' Layer 5: Transpiler Layer
+package "Layer 5: Transpiler Layer" as L5 {
+  component "Qubit Mapper" as Mapper
+  component "SABRE Routing" as SABRE
+  component "Greedy Routing" as Greedy
+  component "SWAP Inserter" as SWAP
+  component "Architecture\nConstraints" as ArchConstraints
+}
+
+' Layer 6: Simulator Layer
+package "Layer 6: Simulator Layer" as L6 {
+  component "Statevector\nSimulator" as Statevector
+  component "MPS Simulator\n(Tensor Network)" as MPS
+  component "Gate Executor" as GateExec
+  component "Measurement\nEngine" as Measurement
+}
+
+' Layer 7: Output Layer
+package "Layer 7: Output Layer" as L7 {
+  component "Result Formatter" as Formatter
+  component "Visualization\nEngine" as Visualizer
+  component "QASM Exporter" as Exporter
+  component "Metrics Collector" as Metrics
+}
+
+' User interactions
+User --> CLI : Command Line
+User --> GUI : Web Browser
+User --> API : HTTP Requests
+User --> FS : Upload Files
+
+' Input Layer flows
+FS --> QASM3
+FS --> QASM2
+FS --> JSON
+CLI --> L2
+API --> L2
+GUI --> L2
+
+' Parser Layer flows
+QASM3 --> LarkParser
+QASM2 --> QASM2Parser
+JSON --> JSONParser
+LarkParser --> AST
+QASM2Parser --> AST
+JSONParser --> AST
+
+' IR Layer flows
+AST --> IR
+IR --> GateList
+IR --> QubitReg
+IR --> ClassicalMem
+
+' Decomposer Layer flows
+GateList --> Decomposer
+Decomposer --> NativeGates
+BasisLib --> NativeGates
+NativeGates --> L5
+
+' Transpiler Layer flows
+NativeGates --> Mapper
+ArchConstraints --> Mapper
+Mapper --> SABRE
+Mapper --> Greedy
+SABRE --> SWAP
+Greedy --> SWAP
+SWAP --> L6
+
+' Simulator Layer flows
+SWAP --> Statevector
+SWAP --> MPS
+Statevector --> GateExec
+MPS --> GateExec
+GateExec --> Measurement
+Measurement --> L7
+
+' Output Layer flows
+Measurement --> Formatter
+Formatter --> Visualizer
+Formatter --> Exporter
+Formatter --> Metrics
+Visualizer --> User
+Exporter --> FS
+Metrics --> User
+
+' Notes
+note right of L1
+  **Input Formats:**
+  - OpenQASM 3.0 (with control flow)
+  - OpenQASM 2.0 (legacy)
+  - JSON gate lists
+  
+  **Interfaces:**
+  - CLI: python -m src.qvm.cli
+  - API: FastAPI REST endpoints
+  - GUI: Web dashboard
+end note
+
+note right of L2
+  **Parser Features:**
+  - AST-based parsing (Lark)
+  - Syntax validation
+  - Semantic checking
+  - Control flow support (QASM 3.0)
+end note
+
+note right of L3
+  **IR Components:**
+  - Hardware-agnostic representation
+  - Gate sequence storage
+  - Qubit tracking
+  - Classical register management
+end note
+
+note right of L4
+  **Decomposition:**
+  - Converts high-level gates
+  - Maps to native gate set
+  - Preserves circuit semantics
+  - Basis gates: H, X, Y, Z, RX, RY, RZ, CNOT
+end note
+
+note right of L5
+  **Transpilation:**
+  - Qubit mapping (logical → physical)
+  - SWAP insertion for connectivity
+  - Routing algorithms: SABRE, Greedy
+  - Architecture-aware optimization
+end note
+
+note right of L6
+  **Simulation:**
+  - Statevector: Exact (≤12 qubits)
+  - MPS: Efficient (20+ qubits, low entanglement)
+  - Gate-by-gate execution
+  - Measurement sampling
+end note
+
+note right of L7
+  **Output Formats:**
+  - Probability distributions
+  - State vectors
+  - Visualizations (histograms)
+  - QASM export
+  - Performance metrics
+end note
+
+' Data flow legend
+legend right
+  **Data Flow:**
+  → : Sequential processing
+  ⇒ : Parallel options
+  
+  **Pipeline Stages:**
+  1. Input: Accept circuit from multiple sources
+  2. Parse: Convert to AST and IR
+  3. IR: Hardware-agnostic representation
+  4. Decompose: Map to native gates
+  5. Transpile: Map qubits, insert SWAPs
+  6. Simulate: Execute circuit
+  7. Output: Format and visualize results
+end legend
+
+@enduml

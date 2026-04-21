@@ -1,0 +1,211 @@
+@startuml QVM_Class_Diagram
+!theme plain
+skinparam classAttributeIconSize 0
+
+title Quantum Virtual Machine (QVM) - Class Diagram
+
+' Core IR Class
+class QuantumCircuit {
+  - num_qubits: int
+  - operations: List[Dict]
+  - classical_registers: Dict[str, int]
+  
+  + __init__(num_qubits: int)
+  + add_classical_register(name: str, size: int)
+  + add_operation(gate_name: str, qubits: list, ...)
+  + __str__(): str
+}
+
+' Parser Classes
+class OpenQASM3Parser {
+  - grammar: str
+  - parser: Lark
+  - qc: QuantumCircuit
+  - qubit_map: Dict
+  - next_qubit_idx: int
+  - _label_counter: int
+  
+  + __init__()
+  + parse(text: str): QuantumCircuit
+  - _find_declarations(node)
+  - _evaluate(node)
+  - _process_node(node, condition)
+}
+
+class QASMParser {
+  {static} + parse(operations: List, num_qubits: int): QuantumCircuit
+  {static} + parse_qasm_file(filepath: str): QuantumCircuit
+}
+
+' Simulator Classes
+class Simulator {
+  - H: ndarray
+  - X: ndarray
+  - Y: ndarray
+  - Z: ndarray
+  - I: ndarray
+  - S: ndarray
+  - T: ndarray
+  - SX: ndarray
+  
+  + __init__()
+  + simulate(circuit: QuantumCircuit, seed: int): Tuple[ndarray, Dict]
+  - _get_gate_matrix(name: str, params: list): ndarray
+  - _apply_single_qubit_gate(state, gate, target, n): ndarray
+  - _apply_cnot_gate(state, ctrl, target, n): ndarray
+  - _apply_swap_gate(state, q1, q2, n): ndarray
+  - _apply_ccx_gate(state, c1, c2, target, n): ndarray
+  - _measure_and_collapse(state, qubits, n, rng): Tuple[str, ndarray]
+  - _execute_classical_op(cop, mem)
+}
+
+class MPSSimulator {
+  - chi_max: int
+  - tensors: List[ndarray]
+  
+  + __init__(chi_max: int)
+  + simulate(circuit: QuantumCircuit): Tuple[ndarray, Dict]
+  - _initialize_mps(num_qubits: int)
+  - _apply_single_qubit_gate(gate: ndarray, target: int)
+  - _apply_two_qubit_gate(gate: ndarray, q1: int, q2: int)
+  - _contract_mps(): ndarray
+  - _truncate_svd(tensor: ndarray): ndarray
+}
+
+' Transpiler Classes
+class Transpiler {
+  - architecture: TargetArchitecture
+  - strategy: str
+  - restore_mapping: bool
+  - _distance_cache: Dict
+  
+  + __init__(target_architecture, strategy, restore_mapping)
+  + transpile(logical_circuit: QuantumCircuit): QuantumCircuit
+  - _transpile_greedy(logical_circuit): QuantumCircuit
+  - _transpile_sabre(logical_circuit): QuantumCircuit
+  - _swap_update_maps(p1, p2, qubit_map, inverse_map)
+  - _heuristic_cost(ready, qubit_map, decay): float
+  - _distance(u, v): int
+  - _restore_identity_mapping(physical_circuit, qubit_map, inverse_map)
+  - _bfs_shortest_path(start_node, end_node): List[int]
+  - _bfs_shortest_path_length(start_node, end_node): int
+}
+
+class TargetArchitecture {
+  + num_qubits: int
+  + connectivity: List[Tuple[int, int]]
+  + native_gates: List[str]
+  
+  + __init__(num_qubits, connectivity, native_gates)
+  + is_connected(q1: int, q2: int): bool
+  + get_neighbors(qubit: int): List[int]
+}
+
+' Decomposer Class
+class Decomposer {
+  - native_gates: List[str]
+  - basis_library: Dict[str, List]
+  
+  + __init__(native_gates: List[str])
+  + decompose(circuit: QuantumCircuit): QuantumCircuit
+  - _decompose_gate(gate_name: str, qubits: list, params: list): List[Dict]
+  - _is_native(gate_name: str): bool
+}
+
+' Visualization Class
+class Visualizer {
+  + {static} plot_histogram(probabilities: Dict, title: str)
+  + {static} plot_statevector(state: ndarray, title: str)
+  + {static} plot_circuit(circuit: QuantumCircuit)
+  + {static} export_image(fig, filepath: str)
+}
+
+' CLI Interface
+class CLI {
+  + {static} main(args: List[str])
+  + {static} parse_arguments(): argparse.Namespace
+  + {static} execute_circuit(filepath: str, options: Dict)
+}
+
+' API Server
+class APIServer {
+  - app: FastAPI
+  
+  + __init__()
+  + execute_circuit(request: CircuitRequest): CircuitResponse
+  + get_architectures(): List[str]
+  + get_status(): Dict
+}
+
+' Relationships
+QuantumCircuit "1" -- "*" Simulator : simulates >
+QuantumCircuit "1" -- "*" MPSSimulator : simulates >
+QuantumCircuit "1" -- "1" Transpiler : transpiles >
+QuantumCircuit "1" -- "1" Decomposer : decomposes >
+
+OpenQASM3Parser ..> QuantumCircuit : creates >
+QASMParser ..> QuantumCircuit : creates >
+
+Transpiler "1" -- "1" TargetArchitecture : uses >
+
+Simulator ..> Visualizer : uses >
+MPSSimulator ..> Visualizer : uses >
+
+CLI ..> OpenQASM3Parser : uses >
+CLI ..> Simulator : uses >
+CLI ..> Transpiler : uses >
+CLI ..> Visualizer : uses >
+
+APIServer ..> OpenQASM3Parser : uses >
+APIServer ..> Simulator : uses >
+APIServer ..> Transpiler : uses >
+
+' Notes
+note right of QuantumCircuit
+  **Core IR:**
+  - Hardware-agnostic representation
+  - Stores gate sequence
+  - Manages classical registers
+  - Supports control flow (labels, jumps)
+end note
+
+note right of Simulator
+  **Statevector Simulation:**
+  - Exact simulation (≤12 qubits)
+  - Gate-by-gate execution
+  - Classical memory integration
+  - Conditional operations support
+end note
+
+note right of MPSSimulator
+  **MPS Simulation:**
+  - Tensor network representation
+  - Efficient for low-entanglement
+  - SVD-based truncation
+  - Scales to 20+ qubits
+end note
+
+note right of Transpiler
+  **Transpilation:**
+  - Qubit mapping (logical → physical)
+  - SWAP insertion for connectivity
+  - Routing: Greedy or SABRE
+  - Optional mapping restoration
+end note
+
+note right of OpenQASM3Parser
+  **QASM 3.0 Parser:**
+  - Lark-based AST parsing
+  - Control flow support (if, for, while)
+  - Classical operations
+  - Timing and delays
+end note
+
+note bottom of TargetArchitecture
+  **Architecture Types:**
+  - Linear: 0-1-2-3-...
+  - Grid: 2D lattice
+  - Custom: User-defined connectivity
+end note
+
+@enduml

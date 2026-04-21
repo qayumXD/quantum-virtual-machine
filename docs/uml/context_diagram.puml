@@ -1,0 +1,93 @@
+@startuml QVM_Context_Diagram
+!theme plain
+skinparam componentStyle rectangle
+
+title Quantum Virtual Machine (QVM) - Context Diagram
+
+' External Actors
+actor "Quantum Algorithm\nDeveloper" as Developer
+actor "Educational\nUser" as Student
+actor "System\nAdministrator" as Admin
+
+' External Systems
+component "Web Browser" as Browser
+database "File System" as FileSystem
+cloud "External Quantum\nPlatforms\n(IBM Quantum)" as ExternalPlatform
+
+' QVM System Boundary
+package "Quantum Virtual Machine (QVM)" as QVM {
+  component "QVM Core\nSystem" as Core
+}
+
+' Input/Output flows from Developer
+Developer --> Core : Circuit Code\n(QASM/JSON)
+Developer --> Core : Configuration\nParameters
+Core --> Developer : Simulation Results
+Core --> Developer : Visualizations
+Core --> Developer : Performance Metrics
+
+' Input/Output flows from Student
+Student --> Browser : Circuit Input
+Browser --> Core : HTTP Requests
+Core --> Browser : Results & Visualizations
+Browser --> Student : Interactive Display
+
+' Input/Output flows from Admin
+Admin --> Core : System Configuration
+Core --> Admin : System Metrics\n& Logs
+
+' File System interactions
+Core --> FileSystem : Read Circuit Files\n(QASM/JSON)
+Core --> FileSystem : Write Results\n(CSV/JSON)
+Core --> FileSystem : Export Circuits\n(QASM)
+FileSystem --> Core : Circuit Data
+
+' External Platform interactions
+Core --> ExternalPlatform : Export QASM\nCircuits
+ExternalPlatform --> Core : Circuit Templates\n(Optional)
+
+' Notes
+note right of Developer
+  Primary user who:
+  - Writes quantum algorithms
+  - Tests on different architectures
+  - Analyzes transpilation results
+  - Exports to external platforms
+end note
+
+note right of Student
+  Educational user who:
+  - Learns quantum computing
+  - Uses Web GUI for visualization
+  - Experiments with circuits
+end note
+
+note right of Admin
+  System administrator who:
+  - Monitors performance
+  - Manages configurations
+  - Reviews system logs
+end note
+
+note bottom of QVM
+  **System Boundary:**
+  - Accepts: QASM 2.0, QASM 3.0, JSON circuits
+  - Processes: Parse, Transpile, Simulate
+  - Outputs: Results, Visualizations, Metrics
+  - Interfaces: CLI, REST API, Web GUI
+end note
+
+note right of FileSystem
+  **Supported Formats:**
+  Input: .qasm, .json
+  Output: .qasm, .json, .csv, .png
+end note
+
+note right of ExternalPlatform
+  **Interoperability:**
+  - OpenQASM 2.0/3.0 standard
+  - Compatible with IBM Quantum
+  - Enables cloud execution
+end note
+
+@enduml
