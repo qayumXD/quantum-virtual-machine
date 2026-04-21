@@ -1,0 +1,186 @@
+% ==============================
+% Chapter 2 – Problem Definition
+% ==============================
+
+\chapter{Problem Definition}
+% --------------------------------
+% 2.1 Problem Statement
+% --------------------------------
+
+\section{Problem Statement}
+
+The primary problem this project addresses is \textbf{hardware fragmentation} and \textbf{vendor lock-in} in the quantum computing domain. Currently, quantum hardware providers use different underlying technologies (e.g., Superconducting Qubits vs. Trapped Ions), which result in incompatible instruction sets and connectivity graphs. A developer writing code for one platform often cannot run it on another without significant manual refactoring. Furthermore, optimizing a circuit for a specific device's topology is a complex, error-prone task that requires deep knowledge of the hardware. There is a lack of lightweight, educational, and open-source runtimes that demonstrate how to abstract these complexities effectively. This project aims to solve these interoperability challenges by automating the translation process, thereby reducing development time, eliminating vendor dependencies, and lowering the barrier to entry for quantum computing education and research.
+
+
+
+% --------------------------------
+% 2.2 Proposed Solution Overview
+% --------------------------------
+
+\section{Proposed Solution Overview}
+
+The proposed system solves the hardware fragmentation problem by introducing a middleware layer—the Quantum Virtual Machine (QVM). Instead of targeting a specific device, developers write code for the QVM, which follows a three-stage pipeline: (1) \textbf{Ingestion:} The system accepts a high-level circuit (OpenQASM 3.0, 2.0, or JSON) and converts it into a standardized Intermediate Representation (IR). (2) \textbf{Transpilation:} The core engine analyzes the target backend's constraints (native gates and topology), inserts SWAP gates where necessary, and decomposes complex gates into the target's primitive basis gates. (3) \textbf{Execution:} The system either executes the circuit on its internal hybrid simulator (Statevector or MPS) for verification or outputs the compiled circuit for a specific hardware target. This approach ensures that the logic of the algorithm remains preserved while the implementation details are automatically handled by the software, achieving true "Write Once, Run Anywhere" (WORA) functionality.
+
+
+
+% --------------------------------
+% 2.3 Objectives of the Proposed System
+% --------------------------------
+
+\section{Objectives of the Proposed System}
+
+The following business objectives guide the development and evaluation of the Quantum Virtual Machine:
+
+\vspace{0.3cm}
+
+\textbf{Business Objectives (BO):}
+
+\begin{itemize}
+    \item \textbf{BO-1:} Develop a hardware-agnostic quantum execution runtime that enables developers to write quantum algorithms once and transpile them for different qubit topologies (Linear, Grid) without rewriting code.
+    
+    \item \textbf{BO-2:} Provide educational transparency into the transpilation process, showing users how logical qubits are mapped to physical ones and where SWAP gates are inserted to respect hardware constraints.
+    
+    \item \textbf{BO-3:} Implement a lightweight, standalone runtime suitable for local testing of small-scale quantum algorithms (up to 10-20 qubits) without requiring paid cloud subscriptions or enterprise dependencies.
+    
+    \item \textbf{BO-4:} Ensure interoperability by supporting OpenQASM 2.0 and 3.0 standards, making compiled circuits compatible with IBM quantum processors and other QASM-compliant platforms.
+    
+    \item \textbf{BO-5:} Automate the complex tasks of gate decomposition, qubit mapping, and circuit optimization through a robust transpilation pipeline, reducing manual effort and eliminating the need for deep hardware-specific knowledge.
+\end{itemize}
+
+
+
+% --------------------------------
+% 2.4 Scope of the System
+% --------------------------------
+
+\section{Scope of the System}
+
+The scope of this project is to develop a desktop-based Quantum Virtual Machine (QVM) using Python. The system will support the creation, compilation, and simulation of quantum circuits with a maximum capacity of 10-20 qubits depending on the simulation backend. The core functionality centers on a "Transpiler Pipeline" that accepts a high-level circuit definition (OpenQASM 3.0, 2.0, or JSON) and adapts it to specific architectural constraints (e.g., restricted connectivity). The system will support both Statevector simulation (exact linear algebra for up to 12 qubits) and MPS (Matrix Product States) simulation for low-entanglement circuits scaling to 20+ qubits. The output will include the final state vector, measurement probabilities, classical memory states, and visualized circuit diagrams. The project will \textbf{not} include pulse-level control, quantum error correction (QEC), or direct integration with real hardware APIs beyond OpenQASM string generation. The target users are quantum computing students, researchers, and educators requiring a lightweight, transparent, and educational quantum runtime environment.
+
+
+
+% --------------------------------
+% 2.5 System Architecture and Modules
+% --------------------------------
+
+\section{System Architecture and Modules}
+
+The QVM follows a strict \textbf{Pipeline Architecture} pattern, ensuring clear separation of concerns and modular extensibility. The system processes quantum programs through six sequential stages: (1) \textbf{Input Layer:} Accepts OpenQASM 3.0, 2.0, or JSON gate lists. (2) \textbf{Parser (Lark):} Generates an Abstract Syntax Tree (AST) and maps it to the internal \texttt{QuantumCircuit} Intermediate Representation (IR). (3) \textbf{Decomposer:} Normalizes high-level gates into a target-compatible native gate set. (4) \textbf{Transpiler:} Routes qubits according to the target hardware topology using Greedy or SABRE routing algorithms. (5) \textbf{Simulators:} Executes the transpiled circuit using either the \texttt{Simulator} (exact statevector evolution) or \texttt{MPSSimulator} (tensor network contraction with SVD-based truncation). (6) \textbf{Output Layer:} Returns measurement probabilities, classical memory states, and visual plots. This modular design allows independent development, testing, and optimization of each component while maintaining a clean data flow from high-level quantum code to executable results.
+
+
+
+% --------------------------------
+% 2.5.1 Module Descriptions
+% --------------------------------
+
+\subsection{Module 1: Profile Management}
+
+\textbf{Description (80–120 words)}
+
+Explain the purpose of this module. Describe user registration, 
+authentication, authorization, and profile management features. 
+Specify supported user roles.
+
+\textbf{Functional Requirements:}
+
+\begin{itemize}
+    \item FE-1: The system shall allow users to register using valid credentials.
+    \item FE-2: The system shall authenticate users before granting access.
+\end{itemize}
+
+
+
+\subsection{Module 2: Communication Module}
+
+\textbf{Description (80–120 words)}
+
+Describe how users interact within the system. Mention messaging, 
+notifications, scheduling, or real-time communication capabilities.
+
+\textbf{Functional Requirements:}
+
+\begin{itemize}
+    \item FE-1: The system shall enable secure messaging between users.
+    \item FE-2: The system shall generate real-time notifications.
+    \item FE-3: The system shall maintain communication logs.
+\end{itemize}
+
+
+
+\subsection{Module 3: Core Functional Module}
+
+\textbf{Description (80–120 words)}
+
+Explain the primary operational features that deliver the core 
+value of the system. This module should directly address the 
+problem identified in Section 2.1.
+
+\textbf{Functional Requirements:}
+
+\begin{itemize}
+    \item FE-1: The system shall process user requests efficiently.
+    \item FE-2: The system shall store and retrieve data accurately.
+    \item FE-3: The system shall generate relevant outputs based on user input.
+\end{itemize}
+
+
+
+\subsection{Module 4: Management / Admin Module}
+
+\textbf{Description (80–120 words)}
+
+Explain administrative controls, monitoring dashboards, reporting 
+tools, and configuration management features.
+
+\textbf{Functional Requirements:}
+
+\begin{itemize}
+    \item FE-1: The system shall allow administrators to manage user accounts.
+    \item FE-2: The system shall generate system usage reports.
+\end{itemize}
+
+
+
+\subsection{Module 5: Advanced / Additional Features}
+
+\textbf{Description (80–120 words)}
+
+Describe advanced capabilities such as AI-based recommendations, 
+data analytics, automation, payment gateway integration, or external 
+API integration.
+
+\textbf{Functional Requirements:}
+
+\begin{itemize}
+    \item FE-1: The system shall integrate with external APIs securely.
+    \item FE-2: The system shall provide analytics-based insights.
+\end{itemize}
+
+
+% --------------------------------
+% 2.7 Assumptions and Dependencies
+% --------------------------------
+
+\section{Assumptions and Dependencies}
+
+The following assumptions and dependencies guide the system design and operational constraints:
+
+\textbf{Assumptions:}
+\begin{itemize}
+    \item The system assumes users have basic knowledge of quantum computing concepts (qubits, gates, superposition) and familiarity with Python programming.
+    \item The system assumes quantum circuits are mathematically valid (unitary operations, proper qubit indexing) and syntactically correct according to OpenQASM specifications.
+    \item The system assumes users have access to standard desktop hardware with at least 8GB RAM for simulating circuits up to 12 qubits (Statevector) or 20+ qubits (MPS for low-entanglement cases).
+\end{itemize}
+
+\textbf{Dependencies:}
+\begin{itemize}
+    \item The system depends on Python 3.10+ and core scientific libraries (NumPy for linear algebra, NetworkX for graph-based topology mapping, Matplotlib for visualization).
+    \item The system depends on the Lark parsing library for OpenQASM 3.0 AST generation and syntax validation.
+    \item The system's interoperability depends on adherence to OpenQASM 2.0 and 3.0 standards for circuit export and compatibility with external quantum platforms (e.g., IBM Quantum).
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Chapter Summary}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This chapter defined the core problem of hardware fragmentation and vendor lock-in in quantum computing, which prevents code portability across different quantum platforms. The proposed Quantum Virtual Machine (QVM) solution was presented as a middleware layer implementing a three-stage pipeline (Ingestion, Transpilation, Execution) to achieve "Write Once, Run Anywhere" functionality. Five clear business objectives were established to guide system development, focusing on hardware agnosticism, educational transparency, lightweight operation, interoperability, and automation. The system scope was defined to cover desktop-based quantum circuit simulation (10-20 qubits) using Python, with explicit boundaries excluding pulse-level control and quantum error correction. The pipeline architecture was outlined, describing the six-stage modular design from input parsing through simulation to output generation. Finally, key assumptions regarding user knowledge and hardware requirements, along with dependencies on Python libraries and OpenQASM standards, were documented to clarify operational constraints. This chapter provides the problem foundation and conceptual solution framework that will guide the detailed software design presented in the next chapter.
