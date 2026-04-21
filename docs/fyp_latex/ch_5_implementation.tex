@@ -1,0 +1,490 @@
+\chapter{Implementation}
+
+\section{Development Environment}
+The Quantum Virtual Machine was developed using a modern Python-based development environment optimized for scientific computing and quantum algorithm development.
+
+\textbf{Programming Language:} Python 3.10+ was selected as the primary implementation language due to its extensive scientific computing ecosystem, readability, and widespread adoption in the quantum computing community. Python's dynamic typing and interactive development capabilities accelerated prototyping and testing.
+
+\textbf{Integrated Development Environment:} Visual Studio Code (VS Code) served as the primary IDE, providing intelligent code completion, integrated debugging, Git version control, and terminal access. The Python extension for VS Code enabled linting, type checking, and test discovery.
+
+\textbf{Version Control:} Git was used for version control with GitHub as the remote repository. The project followed a feature-branch workflow with descriptive commit messages. All code changes were tracked, enabling rollback and collaboration.
+
+\textbf{Package Management:} pip was used for dependency management with a requirements.txt file specifying exact versions of all dependencies. This ensures reproducible builds across different development environments.
+
+\textbf{Testing Framework:} pytest was used for automated testing with 36 unit tests covering all major components. Tests were organized by module and executed automatically before commits.
+
+\textbf{Documentation Tools:} Docstrings followed the Google Python Style Guide. Type hints were used throughout for improved code clarity and IDE support. Markdown was used for technical documentation.
+
+\textbf{Development Workflow:}
+\begin{enumerate}
+\item Write code with type hints and docstrings
+\item Run unit tests locally (pytest)
+\item Commit changes with descriptive messages
+\item Push to GitHub remote repository
+\item Review code and documentation
+\end{enumerate}
+
+\section{Core Module Implementation}
+
+\subsection{Module 1: Parser Layer}
+The parser layer is responsible for converting textual quantum circuit descriptions into the internal QuantumCircuit IR. Three parsers were implemented to support different input formats.
+
+\textbf{OpenQASM 2.0 Parser (src/qvm/parser.py):}
+Implements a basic parser for OpenQASM 2.0 files using string parsing and regular expressions. Supports standard gates (h, x, y, z, cx, measure) and qubit/classical register declarations. The parser validates syntax and creates QuantumCircuit objects with operations list.
+
+\textbf{OpenQASM 3.0 Parser (src/qvm/qasm3\_parser.py):}
+Implements a full AST-based parser using the Lark parser generator. The grammar is defined in qasm3.lark using EBNF notation. The parser performs two passes: first pass identifies declarations (qubits, classical registers), second pass processes operations. Supports advanced features including control flow (if, for, while), classical operations (AND, OR, XOR, NOT), timing (delay), and labels/jumps.
+
+\textbf{JSON Parser (src/qvm/parser.py):}
+Implements a simple parser for JSON-formatted gate lists. Each gate is represented as a dictionary with name, qubits, and optional parameters. This format is useful for programmatic circuit generation and testing.
+
+\textbf{Key Implementation Details:}
+\begin{itemize}
+\item Two-pass parsing for OpenQASM 3.0 ensures all declarations are processed before operations
+\item Recursive AST traversal handles nested control structures
+\item Error messages include line numbers and descriptive text
+\item Qubit mapping translates named registers to physical indices
+\end{itemize}
+
+\subsection{Module 2: Intermediate Representation}
+The IR module (src/qvm/ir.py) defines the QuantumCircuit class, which serves as the hardware-agnostic representation of quantum programs.
+
+\textbf{QuantumCircuit Class:}
+\begin{itemize}
+\item \textbf{Attributes:} num\_qubits (int), operations (list[dict]), classical\_registers (dict[str, int])
+\item \textbf{Methods:} add\_classical\_register(), add\_operation(), \_\_str\_\_()
+\item \textbf{Operation Structure:} Each operation is a dictionary containing name, qubits, params, condition, target\_bit, duration, label, jump\_to, classical\_op
+\end{itemize}
+
+\textbf{Design Decisions:}
+\begin{itemize}
+\item Dictionary-based operations provide flexibility for different gate types
+\item Classical registers stored separately from quantum state
+\item Validation performed in add\_operation() to catch errors early
+\item String representation enables debugging and logging
+\end{itemize}
+
+\textbf{Classical Memory Integration:}
+The IR was extended to support classical registers and conditional operations, enabling hybrid quantum-classical computation. Classical registers are declared with name and size. Operations can include conditions that check classical bit values before execution. Measurement operations specify target classical bits for storing results.
+
+\subsection{Module 3: Transpiler}
+The transpiler module (src/qvm/transpiler.py) maps logical circuits to physical hardware topologies by inserting SWAP gates to satisfy connectivity constraints.
+
+\textbf{Transpiler Class:}
+\begin{itemize}
+\item \textbf{Attributes:} target\_architecture, strategy (greedy/sabre), restore\_mapping (bool), distance\_cache (dict)
+\item \textbf{Methods:} transpile(), \_transpile\_greedy(), \_transpile\_sabre(), \_swap\_update\_maps(), \_bfs\_shortest\_path()
+\end{itemize}
+
+\textbf{Greedy BFS Routing:}
+The greedy strategy uses breadth-first search to find the shortest path between disconnected qubits. For each two-qubit gate that violates topology constraints, the algorithm:
+\begin{enumerate}
+\item Finds shortest path using BFS
+\item Inserts SWAP gates along the path
+\item Updates qubit mapping
+\item Executes the gate
+\item Optionally swaps back to restore original mapping
+\end{enumerate}
+
+\textbf{SABRE Routing:}
+The SABRE strategy uses a lookahead heuristic to minimize total SWAP count. The algorithm maintains a ready queue of two-qubit gates and evaluates the cost of each potential SWAP using a decay-weighted distance metric. Single-qubit gates are emitted immediately without routing.
+
+\textbf{Key Implementation Details:}
+\begin{itemize}
+\item Distance caching avoids redundant BFS searches
+\item Qubit mapping maintained with forward (logical→physical) and inverse (physical→logical) dictionaries
+\item Strategy pattern allows runtime selection of routing algorithm
+\item Optional mapping restoration trades circuit depth for logical consistency
+\end{itemize}
+
+\subsection{Module 4: Simulator Engines}
+Two simulation engines were implemented to handle different circuit scales and entanglement profiles.
+
+\textbf{Statevector Simulator (src/qvm/simulator.py):}
+Implements exact quantum simulation using full statevector representation. The state is stored as a complex-valued NumPy array of size $2^n$. Gates are applied using matrix-vector multiplication with Kronecker products for multi-qubit operations.
+
+\textbf{Gate Application Methods:}
+\begin{itemize}
+\item \textbf{Single-qubit gates:} Construct full operator using Kronecker products, apply via matrix-vector multiplication
+\item \textbf{CX gate:} Use index permutation for efficient application without full matrix construction
+\item \textbf{SWAP gate:} Use index permutation to exchange qubit states
+\item \textbf{CCX (Toffoli) gate:} Use index masking to flip target when both controls are 1
+\end{itemize}
+
+\textbf{Measurement with Collapse:}
+Measurements are implemented using Born rule probabilities. The algorithm:
+\begin{enumerate}
+\item Compute probability of measuring 0: $P(0) = \sum_{i: q_i=0} |\psi_i|^2$
+\item Sample outcome using random number generator
+\item Collapse statevector by zeroing amplitudes inconsistent with outcome
+\item Renormalize statevector to maintain unit norm
+\item Store result in classical memory
+\end{enumerate}
+
+\textbf{Control Flow Handling:}
+The simulator maintains a program counter (PC) and label map to support jumps and loops. Labels are pre-scanned before execution. Jump operations conditionally update the PC based on classical bit values. An operation counter prevents infinite loops by raising an error after max\_ops iterations.
+
+\textbf{MPS Simulator (src/qvm/mps\_simulator.py):}
+Implements Matrix Product State simulation for low-entanglement circuits. The quantum state is represented as a chain of tensors with bond dimension $\chi$. Single-qubit gates are applied via tensor contraction. Two-qubit gates require:
+\begin{enumerate}
+\item Contract adjacent tensors into single tensor
+\item Apply two-qubit gate matrix
+\item Perform Singular Value Decomposition (SVD)
+\item Truncate singular values to maintain bond dimension
+\item Split back into two tensors
+\end{enumerate}
+
+\textbf{Truncation Strategy:}
+The bond dimension $\chi$ controls the tradeoff between accuracy and efficiency. Small $\chi$ (16-32) enables simulation of 20+ qubits but introduces truncation error. Large $\chi$ approaches exact simulation but loses efficiency. The simulator tracks cumulative truncation error to inform users of approximation quality.
+
+\subsection{Module 5: Decomposer}
+The decomposer module (src/qvm/decomposer.py) breaks down complex gates into native gate sets supported by target architectures.
+
+\textbf{Decomposer Class:}
+\begin{itemize}
+\item \textbf{Attributes:} native\_gates (set of supported gate names)
+\item \textbf{Methods:} decompose\_circuit(), decompose\_toffoli(), decompose\_controlled\_gate()
+\end{itemize}
+
+\textbf{Toffoli Decomposition:}
+The Toffoli (CCX) gate is decomposed into 6 CX gates and 9 single-qubit gates using the standard decomposition from Nielsen \& Chuang. This enables execution on hardware that only supports CX as the native two-qubit gate.
+
+\textbf{Controlled Gate Decomposition:}
+Arbitrary controlled gates are decomposed using the general controlled-U decomposition, which expresses a controlled-U as a sequence of CX gates and single-qubit rotations.
+
+\subsection{Module 6: Visualization}
+The visualization module (src/qvm/visual.py) generates circuit diagrams and probability histograms using matplotlib.
+
+\textbf{Circuit Diagram Generation:}
+Circuits are rendered as horizontal qubit wires with gates drawn as boxes or symbols. The algorithm:
+\begin{enumerate}
+\item Draw horizontal lines for each qubit
+\item Iterate through operations in order
+\item Draw single-qubit gates as boxes on appropriate wire
+\item Draw two-qubit gates as boxes with vertical connecting lines
+\item Draw measurement operations as meter symbols
+\item Label gates with names and parameters
+\end{enumerate}
+
+\textbf{Probability Histogram:}
+Measurement probabilities are displayed as bar charts with basis states on x-axis and probabilities on y-axis. Only states with probability $> 10^{-6}$ are shown to reduce clutter.
+
+\section{Algorithm Implementation}
+
+\subsection{SABRE Routing Algorithm}
+The SABRE (SWAP-based BidirEctional heuristic search) algorithm minimizes SWAP gate count using lookahead heuristics.
+
+\textbf{Pseudocode:}
+\begin{verbatim}
+Algorithm: SABRE Routing
+Input: logical_circuit, target_architecture
+Output: physical_circuit with SWAP gates
+
+1. Initialize qubit_map = {i: i for all logical qubits}
+2. Initialize ready_queue = []
+3. Initialize op_index = 0
+
+4. Function enqueue_ready(start_idx):
+   For j from start_idx to end of operations:
+     If operation[j] is two-qubit gate:
+       Add (j, operation[j]) to ready_queue
+       Return j + 1
+     Else:
+       Emit operation[j] to physical_circuit
+   Return length(operations)
+
+5. op_index = enqueue_ready(0)
+
+6. While ready_queue is not empty:
+   op = ready_queue[0]
+   q1, q2 = op.qubits (logical)
+   p1, p2 = qubit_map[q1], qubit_map[q2]
+   
+   If architecture.is_connected(p1, p2):
+     Emit op to physical_circuit
+     Remove op from ready_queue
+     op_index = enqueue_ready(op_index)
+     Continue
+   
+   best_swap = None
+   best_cost = infinity
+   
+   For each edge (s1, s2) in architecture.connectivity:
+     Temporarily apply swap(s1, s2) to qubit_map
+     cost = heuristic_cost(ready_queue, qubit_map)
+     If cost < best_cost:
+       best_cost = cost
+       best_swap = (s1, s2)
+     Revert swap
+   
+   Emit swap(best_swap) to physical_circuit
+   Apply best_swap to qubit_map
+
+7. If restore_mapping:
+   For each logical qubit i:
+     While qubit_map[i] != i:
+       Find swap to move qubit closer to target
+       Emit swap to physical_circuit
+       Update qubit_map
+
+8. Return physical_circuit
+\end{verbatim}
+
+\textbf{Heuristic Cost Function:}
+The cost of a qubit mapping is computed as:
+$$\text{cost} = \sum_{i=0}^{\min(3, |ready|)} \text{decay}^i \cdot \text{distance}(p_1^{(i)}, p_2^{(i)})$$
+where $p_1^{(i)}, p_2^{(i)}$ are the physical qubits for the $i$-th gate in the ready queue, and decay = 0.6 weights near-term gates more heavily.
+
+\subsection{BFS Shortest Path Algorithm}
+Breadth-first search finds the shortest path between two qubits in the connectivity graph.
+
+\textbf{Pseudocode:}
+\begin{verbatim}
+Algorithm: BFS Shortest Path
+Input: start_node, end_node, connectivity_graph
+Output: shortest_path (list of nodes)
+
+1. If start_node == end_node:
+   Return [start_node]
+
+2. Build adjacency list from connectivity_graph
+
+3. Initialize queue = [(start_node, [start_node])]
+4. Initialize visited = {start_node}
+
+5. While queue is not empty:
+   node, path = queue.pop_front()
+   
+   For each neighbor in adjacency[node]:
+     If neighbor == end_node:
+       Return path + [neighbor]
+     
+     If neighbor not in visited:
+       Add neighbor to visited
+       Add (neighbor, path + [neighbor]) to queue
+
+6. Return [] (no path found)
+\end{verbatim}
+
+\textbf{Time Complexity:} $O(V + E)$ where $V$ is the number of qubits and $E$ is the number of edges in the connectivity graph.
+
+\subsection{MPS Tensor Contraction Algorithm}
+Matrix Product State simulation applies gates via tensor contractions and SVD truncation.
+
+\textbf{Pseudocode for Two-Qubit Gate:}
+\begin{verbatim}
+Algorithm: Apply Two-Qubit Gate (MPS)
+Input: tensors (list of MPS tensors), gate_matrix, qubit1, qubit2
+Output: updated tensors
+
+1. If |qubit1 - qubit2| > 1:
+   Raise error (non-adjacent qubits require SWAPs)
+
+2. Let i = min(qubit1, qubit2)
+
+3. Contract tensors[i] and tensors[i+1]:
+   theta = contract(tensors[i], tensors[i+1])
+   Shape: (bond_left, 2, 2, bond_right)
+
+4. Reshape theta to matrix:
+   theta_matrix = reshape(theta, (bond_left * 2, 2 * bond_right))
+
+5. Apply gate:
+   theta_matrix = gate_matrix @ theta_matrix
+
+6. Perform SVD:
+   U, S, Vt = SVD(theta_matrix)
+
+7. Truncate to bond dimension chi:
+   U = U[:, :chi]
+   S = S[:chi]
+   Vt = Vt[:chi, :]
+   truncation_error = sum(S[chi:])
+
+8. Reconstruct tensors:
+   tensors[i] = reshape(U, (bond_left, 2, chi))
+   tensors[i+1] = reshape(S @ Vt, (chi, 2, bond_right))
+
+9. Return tensors, truncation_error
+\end{verbatim}
+
+\textbf{Truncation Error:} The cumulative truncation error is tracked as the sum of discarded singular values across all gate applications.
+
+\section{External APIs and SDKs}
+
+\begin{table}[h]
+\centering
+\caption{External Libraries and Their Usage}
+\begin{tabular}{|p{3cm}|p{3cm}|p{7cm}|}
+\hline
+\textbf{Library} & \textbf{Version} & \textbf{Usage in QVM} \\
+\hline
+NumPy & 1.21+ & Linear algebra operations (matrix multiplication, Kronecker products, SVD), statevector storage, tensor operations \\
+\hline
+Matplotlib & 3.5+ & Circuit diagram rendering, probability histogram plotting, visualization of results \\
+\hline
+Lark & 1.1+ & OpenQASM 3.0 parsing with LALR parser, AST generation, grammar-based syntax validation \\
+\hline
+FastAPI & 0.95+ & REST API server implementation, request validation, JSON serialization, async endpoint handling \\
+\hline
+Uvicorn & 0.20+ & ASGI server for running FastAPI application, handles HTTP requests, WebSocket support \\
+\hline
+Pytest & 7.0+ & Unit testing framework, test discovery, fixtures, assertion introspection \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{NumPy Integration:}
+NumPy is the foundation of the QVM's computational engine. All quantum states are represented as NumPy arrays with dtype=complex128. Gate matrices are pre-computed as NumPy arrays and cached for efficiency. Vectorized operations (element-wise multiplication, matrix-vector products) leverage NumPy's optimized C implementations for performance.
+
+\textbf{Lark Parser Generator:}
+Lark provides a declarative approach to parsing using EBNF grammar definitions. The QVM's OpenQASM 3.0 grammar (qasm3.lark) defines the syntax rules. Lark generates an AST that the parser traverses to build the IR. The LALR parser provides good performance for the OpenQASM 3.0 grammar.
+
+\textbf{FastAPI Framework:}
+FastAPI provides automatic request validation using Pydantic models, automatic OpenAPI documentation generation, and async/await support for concurrent request handling. The QVM API defines a single /execute endpoint that accepts JSON circuit definitions and returns simulation results.
+
+\section{User Interface Implementation}
+
+\subsection{Command-Line Interface (CLI)}
+The CLI (src/qvm/cli.py) provides a terminal-based interface for executing quantum circuits.
+
+\textbf{Argument Parsing:}
+The CLI uses argparse to define command-line options:
+\begin{itemize}
+\item \textbf{input\_file:} Path to circuit file (QASM or JSON)
+\item \textbf{--nqubits:} Number of qubits (required for JSON)
+\item \textbf{--transpile:} Enable transpilation
+\item \textbf{--routing:} Routing strategy (greedy/sabre)
+\item \textbf{--no-restore-mapping:} Disable mapping restoration
+\item \textbf{--visualize:} Show plots
+\item \textbf{--seed:} RNG seed for reproducibility
+\end{itemize}
+
+\textbf{Execution Flow:}
+\begin{enumerate}
+\item Parse command-line arguments
+\item Load circuit file (detect format from extension)
+\item Parse circuit into IR
+\item Decompose complex gates
+\item Optionally transpile for target architecture
+\item Simulate circuit
+\item Display results (probabilities, classical memory)
+\item Optionally show visualizations
+\end{enumerate}
+
+\textbf{Error Handling:}
+The CLI catches exceptions at each stage and displays user-friendly error messages with context. File not found errors, parsing errors, and simulation errors are all handled gracefully with sys.exit(1).
+
+\subsection{Web API}
+The Web API (api/app.py) provides a REST interface for programmatic access.
+
+\textbf{Endpoint: POST /execute}
+\begin{itemize}
+\item \textbf{Request Body:} JSON object with circuit definition, num\_qubits, options
+\item \textbf{Response:} JSON object with statevector, probabilities, classical\_memory, execution\_time
+\item \textbf{Status Codes:} 200 (success), 400 (invalid request), 500 (execution error)
+\end{itemize}
+
+\textbf{Request Validation:}
+FastAPI automatically validates request bodies using Pydantic models. Invalid JSON or missing required fields result in automatic 422 responses with detailed error messages.
+
+\textbf{CORS Support:}
+The API includes CORS middleware to allow cross-origin requests from web browsers, enabling the web GUI to communicate with the API.
+
+\subsection{Web GUI}
+The Web GUI (web/index.html) provides an interactive browser-based interface.
+
+\textbf{Features:}
+\begin{itemize}
+\item Circuit editor with syntax highlighting
+\item Example circuits (Bell state, GHZ, Grover)
+\item Execution options (transpilation, routing strategy)
+\item Real-time result display (circuit diagram, histogram)
+\item Error message display
+\end{itemize}
+
+\textbf{Implementation:}
+The GUI is implemented as a single-page application using vanilla JavaScript. Circuit text is sent to the API via fetch() POST request. Results are rendered using HTML canvas for circuit diagrams and Chart.js for probability histograms.
+
+\textbf{Screenshots:}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{../screenshots/web_gui_main.png}
+\caption{Web GUI Main Interface}
+\label{fig:web_gui_main}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{../screenshots/cli_execution.png}
+\caption{CLI Execution Example}
+\label{fig:cli_execution}
+\end{figure}
+
+\section{Deployment}
+
+\subsection{Local Installation}
+The QVM is designed for local installation and execution without cloud dependencies.
+
+\textbf{Installation Steps:}
+\begin{enumerate}
+\item Clone repository: \texttt{git clone https://github.com/qayum/quantum-virtual-machine.git}
+\item Navigate to directory: \texttt{cd quantum-virtual-machine}
+\item Install dependencies: \texttt{pip install -r requirements.txt}
+\item Verify installation: \texttt{python -m pytest tests/}
+\end{enumerate}
+
+\textbf{Requirements:}
+\begin{itemize}
+\item Python 3.10 or higher
+\item 4 GB RAM minimum (8 GB recommended for 12-qubit circuits)
+\item 100 MB disk space
+\item Operating System: Windows, Linux, or macOS
+\end{itemize}
+
+\subsection{Running the System}
+\textbf{CLI Usage:}
+\begin{verbatim}
+# Run a QASM file
+python -m src.qvm.cli examples/bell_state.qasm --visualize
+
+# Run with transpilation
+python -m src.qvm.cli examples/grover_101.json --nqubits 3 \
+  --transpile --routing sabre --visualize
+\end{verbatim}
+
+\textbf{API Server:}
+\begin{verbatim}
+# Start server
+python -m src.qvm.server --host 127.0.0.1 --port 8000
+
+# Access GUI
+Open browser to http://127.0.0.1:8000
+\end{verbatim}
+
+\subsection{Testing}
+The QVM includes a comprehensive test suite with 36 unit tests covering all major components.
+
+\textbf{Running Tests:}
+\begin{verbatim}
+# Run all tests
+python -m pytest tests/
+
+# Run specific test file
+python -m pytest tests/test_simulator.py
+
+# Run with coverage report
+python -m pytest --cov=src/qvm tests/
+\end{verbatim}
+
+\textbf{Test Categories:}
+\begin{itemize}
+\item Parser tests: Validate QASM parsing and IR generation
+\item Simulator tests: Verify gate application and measurement
+\item Transpiler tests: Check SWAP insertion and routing
+\item Integration tests: End-to-end circuit execution
+\item Algorithm tests: Verify Bell, GHZ, Bernstein-Vazirani, Grover
+\end{itemize}
+
+\section{Summary}
+This chapter has documented the implementation of the Quantum Virtual Machine system. The development environment utilized Python 3.10+ with modern tools (VS Code, Git, pytest) for efficient development and testing. Six core modules were implemented: Parser (OpenQASM 2.0/3.0/JSON), Intermediate Representation (QuantumCircuit class), Transpiler (Greedy and SABRE routing), Simulator (Statevector and MPS engines), Decomposer (gate breakdown), and Visualization (matplotlib-based rendering). Three key algorithms were detailed with pseudocode: SABRE routing (lookahead heuristic), BFS shortest path (connectivity analysis), and MPS tensor contraction (SVD truncation). External libraries (NumPy, Matplotlib, Lark, FastAPI) were integrated for computational efficiency and API functionality. Three user interfaces were implemented: CLI (argparse-based), Web API (FastAPI REST endpoint), and Web GUI (browser-based SPA). The system supports local deployment with simple installation via pip and includes 36 automated tests for quality assurance. The implementation successfully realizes the design presented in Chapter 4, providing a complete hardware-agnostic quantum execution runtime.
