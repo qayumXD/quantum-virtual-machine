@@ -73,87 +73,91 @@ The QVM follows a strict \textbf{Pipeline Architecture} pattern, ensuring clear 
 % 2.5.1 Module Descriptions
 % --------------------------------
 
-\subsection{Module 1: Profile Management}
+\subsection{Module 1: Parser Module}
 
-\textbf{Description (80–120 words)}
+\textbf{Description}
 
-Explain the purpose of this module. Describe user registration, 
-authentication, authorization, and profile management features. 
-Specify supported user roles.
+The Parser Module serves as the entry point for quantum circuit ingestion, accepting programs in OpenQASM 2.0, OpenQASM 3.0, and JSON formats. Built on the Lark parsing toolkit, the module performs lexical analysis to tokenize input strings, syntactic analysis to construct Abstract Syntax Trees (ASTs) following formal grammar specifications, and semantic validation to ensure circuit correctness (valid qubit indices, supported gate types, proper register declarations). The parser handles advanced OpenQASM 3.0 features including classical memory operations, conditional execution, for/while loops, and timing directives. Upon successful parsing, the module generates the internal Intermediate Representation (IR) as a \texttt{QuantumCircuit} object containing structured gate sequences, qubit/classical bit registers, and metadata. Error handling provides detailed diagnostic messages with line numbers and syntax suggestions to guide users in correcting malformed circuits.
 
 \textbf{Functional Requirements:}
 
 \begin{itemize}
-    \item FE-1: The system shall allow users to register using valid credentials.
-    \item FE-2: The system shall authenticate users before granting access.
+    \item FR-1.1: The system shall parse OpenQASM 2.0 circuits with support for standard gates (H, X, Y, Z, CNOT, CZ, SWAP, Toffoli) and measurement operations.
+    \item FR-1.2: The system shall parse OpenQASM 3.0 circuits including classical memory declarations, conditional statements, and loop constructs.
+    \item FR-1.3: The system shall validate circuit syntax and report errors with line numbers and descriptive messages.
+    \item FR-1.4: The system shall generate an Intermediate Representation (IR) containing all circuit information in a standardized format.
+    \item FR-1.5: The system shall support JSON circuit format for backward compatibility with simple gate list representations.
 \end{itemize}
 
 
 
-\subsection{Module 2: Communication Module}
+\subsection{Module 2: Transpiler Module}
 
-\textbf{Description (80–120 words)}
+\textbf{Description}
 
-Describe how users interact within the system. Mention messaging, 
-notifications, scheduling, or real-time communication capabilities.
+The Transpiler Module performs hardware-aware circuit compilation, transforming logical quantum circuits into physically executable programs that respect target hardware constraints. The module accepts a hardware topology specification (linear chain, 2D grid, or custom connectivity graph) and implements sophisticated qubit routing algorithms to satisfy connectivity requirements. The core functionality includes initial qubit placement using heuristic strategies, dynamic SWAP gate insertion to enable non-adjacent qubit interactions, and optional mapping restoration to preserve logical-physical qubit correspondence. The module supports two routing strategies: Greedy BFS for fast compilation with moderate optimization, and SABRE-inspired lookahead heuristics for superior circuit depth reduction (typically 30-40\% improvement). The transpiler integrates with the Decomposer to ensure all gates are expressed in the target's native gate set before routing, producing fully executable circuits ready for simulation or hardware deployment.
 
 \textbf{Functional Requirements:}
 
 \begin{itemize}
-    \item FE-1: The system shall enable secure messaging between users.
-    \item FE-2: The system shall generate real-time notifications.
-    \item FE-3: The system shall maintain communication logs.
+    \item FR-2.1: The system shall accept hardware topology specifications defining qubit connectivity constraints.
+    \item FR-2.2: The system shall implement qubit routing algorithms (Greedy BFS and SABRE) to insert SWAP gates satisfying connectivity requirements.
+    \item FR-2.3: The system shall minimize circuit depth and SWAP gate count through lookahead heuristics and decay mechanisms.
+    \item FR-2.4: The system shall support configurable routing strategies allowing users to select optimization priorities.
+    \item FR-2.5: The system shall provide optional mapping restoration to maintain logical-physical qubit correspondence after transpilation.
 \end{itemize}
 
 
 
-\subsection{Module 3: Core Functional Module}
+\subsection{Module 3: Simulator Module}
 
-\textbf{Description (80–120 words)}
+\textbf{Description}
 
-Explain the primary operational features that deliver the core 
-value of the system. This module should directly address the 
-problem identified in Section 2.1.
+The Simulator Module provides dual quantum state evolution engines for circuit execution and validation. The Statevector Simulator implements exact quantum mechanics using full state vector representation, supporting circuits up to 12 qubits on standard hardware through NumPy-optimized linear algebra operations. Gate application employs permutation-based indexing for efficient unitary matrix multiplication, achieving near-C performance through vectorized computation. The MPS (Matrix Product State) Simulator extends scalability to 20+ qubits for low-entanglement circuits using tensor network decomposition with SVD-based compression and configurable bond dimension truncation. Both simulators support mid-circuit measurements with probabilistic state collapse, classical memory operations (bit assignment, register manipulation), and conditional gate execution based on classical bit values. The module handles measurement sampling with configurable shot counts, probability distribution computation, and state vector extraction for analysis, providing comprehensive quantum circuit execution capabilities for algorithm development and validation.
 
 \textbf{Functional Requirements:}
 
 \begin{itemize}
-    \item FE-1: The system shall process user requests efficiently.
-    \item FE-2: The system shall store and retrieve data accurately.
-    \item FE-3: The system shall generate relevant outputs based on user input.
+    \item FR-3.1: The system shall simulate quantum circuits using exact statevector evolution for up to 12 qubits.
+    \item FR-3.2: The system shall implement MPS simulation with SVD-based compression for low-entanglement circuits scaling to 20+ qubits.
+    \item FR-3.3: The system shall support mid-circuit measurements with probabilistic state collapse and classical memory updates.
+    \item FR-3.4: The system shall execute conditional gates based on classical bit values enabling hybrid quantum-classical algorithms.
+    \item FR-3.5: The system shall compute measurement probability distributions and support configurable shot-based sampling.
 \end{itemize}
 
 
 
-\subsection{Module 4: Management / Admin Module}
+\subsection{Module 4: Visualization Module}
 
-\textbf{Description (80–120 words)}
+\textbf{Description}
 
-Explain administrative controls, monitoring dashboards, reporting 
-tools, and configuration management features.
+The Visualization Module generates publication-quality graphical representations of quantum circuits and simulation results using Matplotlib. The circuit diagram renderer produces professional visualizations with proper quantum gate symbols (boxes for single-qubit gates, controlled-gate notation for multi-qubit operations), horizontal qubit lines with clear labeling, measurement indicators, and classical bit wires. The module supports customizable styling including figure dimensions, color schemes, font sizes, and export formats (PNG, PDF, SVG) for integration into presentations and publications. Measurement result visualization includes probability histogram generation with configurable bar colors, axis labels, and statistical annotations. The module handles complex circuits with multiple qubits, classical registers, and conditional operations, automatically adjusting layout for readability. Visualization aids in algorithm debugging by revealing circuit structure, supports educational demonstrations by clarifying quantum operations, and enables result presentation through clear probability distributions.
 
 \textbf{Functional Requirements:}
 
 \begin{itemize}
-    \item FE-1: The system shall allow administrators to manage user accounts.
-    \item FE-2: The system shall generate system usage reports.
+    \item FR-4.1: The system shall generate circuit diagrams with proper quantum gate symbols and qubit line representations.
+    \item FR-4.2: The system shall produce probability histograms visualizing measurement outcome distributions.
+    \item FR-4.3: The system shall support customizable styling including colors, fonts, and figure dimensions.
+    \item FR-4.4: The system shall export visualizations to multiple formats (PNG, PDF, SVG) for publication and presentation.
 \end{itemize}
 
 
 
-\subsection{Module 5: Advanced / Additional Features}
+\subsection{Module 5: CLI and Web API Module}
 
-\textbf{Description (80–120 words)}
+\textbf{Description}
 
-Describe advanced capabilities such as AI-based recommendations, 
-data analytics, automation, payment gateway integration, or external 
-API integration.
+The CLI and Web API Module provides dual user interfaces for QVM access: a command-line interface for local execution and a RESTful web service for remote access. The CLI implements a comprehensive command-line tool with argument parsing for circuit file loading, transpilation configuration (routing strategy selection, topology specification), simulation parameters (seed, shot count, max operations), and output formatting options. The interface includes extensive help documentation, error reporting with actionable suggestions, and progress indicators for long-running operations. The Web API, built on FastAPI, exposes QVM functionality through HTTP endpoints with JSON request/response formatting, automatic OpenAPI documentation generation, and asynchronous request handling for concurrent circuit execution. The accompanying web dashboard provides an interactive interface for circuit composition, parameter configuration, execution monitoring, and result visualization, demonstrating the QVM's capability as a backend service for quantum computing applications and educational platforms.
 
 \textbf{Functional Requirements:}
 
 \begin{itemize}
-    \item FE-1: The system shall integrate with external APIs securely.
-    \item FE-2: The system shall provide analytics-based insights.
+    \item FR-5.1: The system shall provide a command-line interface accepting circuit files and configuration parameters.
+    \item FR-5.2: The system shall implement a RESTful web API with JSON request/response formatting for remote circuit execution.
+    \item FR-5.3: The system shall generate automatic API documentation using OpenAPI specifications.
+    \item FR-5.4: The system shall provide an interactive web dashboard for circuit composition and result visualization.
+    \item FR-5.5: The system shall support asynchronous request handling enabling concurrent circuit execution.
 \end{itemize}
 
 
