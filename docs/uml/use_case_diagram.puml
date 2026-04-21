@@ -1,0 +1,99 @@
+@startuml QVM_Use_Case_Diagram
+!theme plain
+skinparam packageStyle rectangle
+
+title Quantum Virtual Machine (QVM) - Use Case Diagram
+
+left to right direction
+
+' Actors
+actor "Quantum Algorithm\nDeveloper" as Developer
+actor "System\nAdministrator" as Admin
+actor "Educational\nUser" as Student
+actor "External\nSystem" as External
+
+' System boundary
+rectangle "Quantum Virtual Machine (QVM)" {
+  
+  ' Core Use Cases
+  usecase "UC-1.1\nLoad Quantum Circuit" as UC11
+  usecase "UC-1.2\nParse Circuit\n(QASM/JSON)" as UC12
+  usecase "UC-1.3\nTranspile Circuit" as UC13
+  usecase "UC-1.4\nSimulate Circuit" as UC14
+  usecase "UC-1.5\nVisualize Results" as UC15
+  
+  ' Configuration Use Cases
+  usecase "UC-2.1\nConfigure Target\nArchitecture" as UC21
+  usecase "UC-2.2\nSelect Routing\nAlgorithm" as UC22
+  usecase "UC-2.3\nSet Simulation\nBackend" as UC23
+  
+  ' Export/Integration Use Cases
+  usecase "UC-3.1\nExport Circuit\n(OpenQASM)" as UC31
+  usecase "UC-3.2\nAccess via\nREST API" as UC32
+  usecase "UC-3.3\nAccess via\nWeb GUI" as UC33
+  
+  ' Administrative Use Cases
+  usecase "UC-4.1\nView System\nMetrics" as UC41
+  usecase "UC-4.2\nManage\nConfigurations" as UC42
+}
+
+' Developer relationships
+Developer --> UC11
+Developer --> UC12
+Developer --> UC13
+Developer --> UC14
+Developer --> UC15
+Developer --> UC21
+Developer --> UC22
+Developer --> UC23
+Developer --> UC31
+
+' Student relationships
+Student --> UC11
+Student --> UC14
+Student --> UC15
+Student --> UC33
+
+' Admin relationships
+Admin --> UC41
+Admin --> UC42
+
+' External System relationships
+External --> UC32
+
+' Include relationships
+UC11 ..> UC12 : <<include>>
+UC12 ..> UC13 : <<include>>
+UC13 ..> UC14 : <<include>>
+UC14 ..> UC15 : <<include>>
+
+' Extend relationships
+UC13 ..> UC21 : <<extend>>
+UC13 ..> UC22 : <<extend>>
+UC14 ..> UC23 : <<extend>>
+
+note right of Developer
+  Primary user who writes
+  quantum algorithms and
+  needs to test them on
+  different architectures
+end note
+
+note right of Student
+  Educational user learning
+  quantum computing concepts
+  through visualization
+end note
+
+note right of Admin
+  Manages system configuration
+  and monitors performance
+end note
+
+note right of External
+  External applications
+  integrating with QVM
+  via REST API
+end note
+
+@enduml
