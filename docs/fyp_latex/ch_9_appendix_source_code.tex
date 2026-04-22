@@ -1,0 +1,392 @@
+% ======================================
+% Appendix C: Source Code
+% ======================================
+
+This appendix presents the key source code files that implement the core functionality of the Quantum Virtual Machine (QVM) system. The complete source code repository is available at:
+
+\begin{center}
+\textbf{\url{https://github.com/qayum/quantum-virtual-machine}}
+\end{center}
+
+\vspace{0.5cm}
+
+\textbf{Project Information:}
+\begin{itemize}
+\item \textbf{Student 1:} Muhammad Abdul Qayyoum (CIIT/SP23-BCS-033/VHR)
+\item \textbf{Student 2:} Ahmad Faraz (CIIT/SP23-BCS-007/VHR)
+\item \textbf{Supervisor:} Assistant Prof. Mr. Farhad Mubashir
+\item \textbf{Repository:} \url{https://github.com/qayum/quantum-virtual-machine}
+\item \textbf{Branch:} main
+\item \textbf{Language:} Python 3.10+
+\item \textbf{Dependencies:} NumPy, Matplotlib, Lark, FastAPI
+\end{itemize}
+
+\vspace{0.5cm}
+
+The following sections present eight key source files that demonstrate the system's architecture and implementation. These files represent the core modules: Intermediate Representation, Parsing, Simulation, Transpilation, User Interface, Hardware Architecture, and Gate Decomposition.
+
+\clearpage
+
+\subsection{File 1: Intermediate Representation (ir.py)}
+
+\textbf{Purpose:} Defines the QuantumCircuit class that serves as the unified internal representation for quantum circuits across all input formats.
+
+\textbf{Key Features:}
+\begin{itemize}
+\item QuantumCircuit class with qubit and classical register management
+\item Support for conditional operations based on classical bit values
+\item Control flow primitives (labels and jumps) for loops and branching
+\item Classical bit operations (AND, OR, XOR, NOT, assignment)
+\item Extensible operation dictionary structure for gate metadata
+\end{itemize}
+
+\textbf{Location:} \texttt{src/qvm/ir.py}
+
+\begin{lstlisting}[language=Python, caption={Intermediate Representation Module}]
+# src/qvm/ir.py
+
+"""
+Intermediate Representation (IR) for Quantum Circuits.
+Extends the IR to support OpenQASM 3.0 classical registers and conditional operations.
+"""
+
+from typing import List, Dict, Optional, Any
+
+class QuantumCircuit:
+    def __init__(self, num_qubits: int):
+        if not isinstance(num_qubits, int) or num_qubits <= 0:
+            raise ValueError("Number of qubits must be a positive integer.")
+        self.num_qubits = num_qubits
+        self.operations = []  # List of dictionaries: gate, qubits, params, condition, target_bit
+        self.classical_registers: Dict[str, int] = {}  # name -> size
+
+    def add_classical_register(self, name: str, size: int):
+        """Declares a classical bit register."""
+        if name in self.classical_registers:
+            raise ValueError(f"Classical register '{name}' already exists.")
+        self.classical_registers[name] = size
+
+    def add_operation(self, gate_name: str, qubits: list, params: list = None, 
+                     condition: dict = None, target_bit: tuple = None, 
+                     duration: str = None, label: str = None, jump_to: str = None, 
+                     classical_op: dict = None):
+        """
+        Adds a quantum or classical operation to the circuit.
+
+        Args:
+            gate_name (str): The name (e.g., "h", "measure", "classical_op").
+            qubits (list): Target quantum bits.
+            params (list, optional): Gate parameters.
+            condition (dict, optional): {"register": str, "index": int, "value": int}
+            target_bit (tuple, optional): (register_name, index) for results.
+            duration (str, optional): Timing string.
+            label (str, optional): Label for jumps.
+            jump_to (str, optional): Target label for jumps.
+            classical_op (dict, optional): {"op": str, "target": tuple, "args": list}
+        """
+        if condition:
+            reg = condition.get("register")
+            if reg not in self.classical_registers:
+                raise ValueError(f"Unknown classical register in condition: {reg}")
+            if not (0 <= condition.get("index", 0) < self.classical_registers[reg]):
+                raise ValueError(f"Index out of bounds for classical register '{reg}'")
+
+        operation = {
+            "name": gate_name,
+            "qubits": qubits if qubits is not None else [],
+            "params": params if params is not None else [],
+            "condition": condition,
+            "target_bit": target_bit,
+            "duration": duration,
+            "label": label,
+            "jump_to": jump_to,
+            "classical_op": classical_op
+        }
+        self.operations.append(operation)
+
+    def __str__(self):
+        s = f"QuantumCircuit(num_qubits={self.num_qubits}, registers={self.classical_registers})\n"
+        for op in self.operations:
+            if op["name"] == "label":
+                s += f"  LABEL {op['label']}:\n"
+                continue
+            if op["name"] == "jump":
+                cond_str = f" IF {op['condition']}" if op['condition'] else ""
+                s += f"  JUMP {op['jump_to']}{cond_str}\n"
+                continue
+            if op["name"] == "classical_op":
+                s += f"  CLASSICAL {op['classical_op']['target']} = {op['classical_op']['op']} {op['classical_op']['args']}\n"
+                continue
+            
+            cond_str = f" IF {op['condition']}" if op['condition'] else ""
+            target_str = f" -> {op['target_bit']}" if op['target_bit'] else ""
+            dur_str = f" [{op['duration']}]" if op['duration'] else ""
+            s += f"  {op['name']}{dur_str} {op['qubits']}{cond_str}{target_str}\n"
+        return s
+\end{lstlisting}
+
+\clearpage
+
+\subsection{File 2: Hardware Architecture (architecture.py)}
+
+\textbf{Purpose:} Defines data structures for representing target quantum hardware topologies and connectivity constraints.
+
+\textbf{Key Features:}
+\begin{itemize}
+\item TargetArchitecture class for hardware specification
+\item Bidirectional connectivity validation
+\item Pre-defined architectures (linear chain, fully connected)
+\item Native gate set specification
+\item Connectivity checking for qubit pairs
+\end{itemize}
+
+\textbf{Location:} \texttt{src/qvm/architecture.py}
+
+\begin{lstlisting}[language=Python, caption={Hardware Architecture Module}]
+# src/qvm/architecture.py
+
+"""
+Defines data structures for representing target quantum hardware architectures.
+"""
+
+from typing import List, Set, Tuple
+
+class TargetArchitecture:
+    """
+    Represents the constraints of a target quantum hardware, including
+    qubit connectivity and the native gate set.
+    """
+    def __init__(self, name: str, num_qubits: int, connectivity: Set[Tuple[int, int]], 
+                 native_gates: Set[str]):
+        """
+        Initializes a new TargetArchitecture.
+
+        Args:
+            name (str): The name of the architecture (e.g., "Linear-4", "IBM-Q-5").
+            num_qubits (int): The total number of qubits in the architecture.
+            connectivity (Set[Tuple[int, int]]): A set of tuples where each tuple represents
+                                                  a physical connection between two qubits.
+                                                  Connections are assumed to be bidirectional.
+            native_gates (Set[str]): A set of gate names that are natively supported by the hardware.
+        """
+        if not isinstance(num_qubits, int) or num_qubits <= 0:
+            raise ValueError("Number of qubits must be a positive integer.")
+        
+        self.name = name
+        self.num_qubits = num_qubits
+        self.connectivity = self._validate_and_normalize_connectivity(connectivity, num_qubits)
+        self.native_gates = native_gates
+
+    def _validate_and_normalize_connectivity(self, connectivity: Set[Tuple[int, int]], 
+                                            num_qubits: int) -> Set[Tuple[int, int]]:
+        """Validates and ensures bidirectionality of connectivity."""
+        normalized = set()
+        for edge in connectivity:
+            if not (isinstance(edge, tuple) and len(edge) == 2 and
+                    isinstance(edge[0], int) and isinstance(edge[1], int) and
+                    0 <= edge[0] < num_qubits and 0 <= edge[1] < num_qubits):
+                raise ValueError(f"Invalid edge in connectivity: {edge}")
+            # Add both (u, v) and (v, u) to ensure bidirectionality and easy lookup
+            normalized.add(tuple(sorted(edge)))
+        return normalized
+
+    def is_connected(self, qubit1: int, qubit2: int) -> bool:
+        """Checks if two physical qubits are directly connected."""
+        return tuple(sorted((qubit1, qubit2))) in self.connectivity
+
+    def __str__(self):
+        return f"TargetArchitecture(name='{self.name}', num_qubits={self.num_qubits}, native_gates={self.native_gates})"
+
+# Pre-defined architectures for convenience
+def get_linear_architecture(num_qubits: int) -> TargetArchitecture:
+    """Creates a linear chain architecture."""
+    if num_qubits < 2:
+        connectivity = set()
+    else:
+        connectivity = {(i, i + 1) for i in range(num_qubits - 1)}
+    
+    # A common, minimal native gate set
+    native_gates = {"id", "rz", "sx", "x", "cx"}
+
+    return TargetArchitecture(f"Linear-{num_qubits}", num_qubits, connectivity, native_gates)
+
+def get_fully_connected_architecture(num_qubits: int) -> TargetArchitecture:
+    """Creates a fully connected (all-to-all) architecture."""
+    connectivity = set()
+    if num_qubits >= 2:
+        for i in range(num_qubits):
+            for j in range(i + 1, num_qubits):
+                connectivity.add((i, j))
+
+    native_gates = {"id", "rz", "sx", "x", "cx"}
+
+    return TargetArchitecture(f"FullyConnected-{num_qubits}", num_qubits, connectivity, native_gates)
+\end{lstlisting}
+
+\clearpage
+
+\subsection{File 3: Gate Decomposer (decomposer.py)}
+
+\textbf{Purpose:} Decomposes complex quantum gates into sequences of simpler native gates supported by the target hardware.
+
+\textbf{Key Features:}
+\begin{itemize}
+\item Toffoli (CCX) gate decomposition into single and two-qubit gates
+\item Preservation of conditional execution metadata
+\item Support for OpenQASM 3.0 control flow primitives
+\item Extensible decomposition rule system
+\item Circuit-level decomposition with classical register preservation
+\end{itemize}
+
+\textbf{Location:} \texttt{src/qvm/decomposer.py}
+
+\begin{lstlisting}[language=Python, caption={Gate Decomposition Module}]
+# src/qvm/decomposer.py
+
+"""
+Decomposes complex quantum gates into a sequence of simpler, native gates.
+Updated to preserve OpenQASM 3.0 classical metadata and control flow.
+"""
+
+from src.qvm.ir import QuantumCircuit
+
+class Decomposer:
+    """
+    A simple decomposer that can break down specific complex gates.
+    """
+    def __init__(self, native_gates: set):
+        self.native_gates = native_gates
+
+    def decompose_operation(self, op: dict) -> list:
+        """
+        Decomposes a single gate operation if it's not in the native gate set.
+        Returns a list of simpler operations.
+        """
+        gate_name = op["name"]
+        
+        # If it's a non-gate op (classical, label, etc.), it's considered native
+        if gate_name in ["classical_op", "label", "jump", "delay", "measure"]:
+            return [op]
+
+        if gate_name in self.native_gates:
+            return [op]
+
+        if gate_name == "toffoli" or gate_name == "ccx":
+            return self._decompose_toffoli(op)
+        
+        raise ValueError(f"No decomposition rule available for gate: {gate_name}")
+
+    def _decompose_toffoli(self, op: dict) -> list:
+        qubits = op["qubits"]
+        if len(qubits) != 3:
+            raise ValueError("Toffoli gate must act on 3 qubits.")
+        c1, c2, t = qubits[0], qubits[1], qubits[2]
+        
+        import numpy as np
+        pi_4 = np.pi / 4
+
+        # Preserve condition if the CCX was conditional
+        cond = op.get("condition")
+
+        decomposition = [
+            {"name": "h", "qubits": [t], "params": [], "condition": cond},
+            {"name": "cx", "qubits": [c2, t], "params": [], "condition": cond},
+            {"name": "rz", "qubits": [t], "params": [-pi_4], "condition": cond},
+            {"name": "cx", "qubits": [c1, t], "params": [], "condition": cond},
+            {"name": "rz", "qubits": [t], "params": [pi_4], "condition": cond},
+            {"name": "cx", "qubits": [c2, t], "params": [], "condition": cond},
+            {"name": "rz", "qubits": [t], "params": [-pi_4], "condition": cond},
+            {"name": "cx", "qubits": [c1, t], "params": [], "condition": cond},
+            {"name": "rz", "qubits": [c2], "params": [pi_4], "condition": cond},
+            {"name": "rz", "qubits": [t], "params": [pi_4], "condition": cond},
+            {"name": "h", "qubits": [t], "params": [], "condition": cond},
+            {"name": "cx", "qubits": [c1, c2], "params": [], "condition": cond},
+            {"name": "rz", "qubits": [c1], "params": [pi_4], "condition": cond},
+            {"name": "rz", "qubits": [c2], "params": [-pi_4], "condition": cond},
+            {"name": "cx", "qubits": [c1, c2], "params": [], "condition": cond},
+        ]
+        return decomposition
+
+    def decompose_circuit(self, circuit: QuantumCircuit) -> QuantumCircuit:
+        """
+        Decomposes all non-native gates in a circuit.
+        """
+        decomposed_circuit = QuantumCircuit(circuit.num_qubits)
+        decomposed_circuit.classical_registers = circuit.classical_registers.copy()
+        
+        for op in circuit.operations:
+            decomposed_ops = self.decompose_operation(op)
+            for new_op in decomposed_ops:
+                decomposed_circuit.add_operation(
+                    new_op["name"], 
+                    new_op.get("qubits", []), 
+                    params=new_op.get("params", []),
+                    condition=new_op.get("condition"),
+                    target_bit=new_op.get("target_bit"),
+                    duration=new_op.get("duration"),
+                    label=new_op.get("label"),
+                    jump_to=new_op.get("jump_to"),
+                    classical_op=new_op.get("classical_op")
+                )
+        return decomposed_circuit
+\end{lstlisting}
+
+\clearpage
+
+\textbf{Note:} Due to space constraints, the remaining source files (Parser, Simulator, Transpiler, CLI, and QASM3 Parser) are available in the complete repository at the URL provided above. These files implement:
+
+\begin{itemize}
+\item \textbf{parser.py} (150 lines): OpenQASM 2.0 parsing with syntax validation
+\item \textbf{simulator.py} (200 lines): Statevector simulation with classical memory and control flow
+\item \textbf{transpiler.py} (200 lines): Hardware-aware compilation with Greedy BFS and SABRE routing
+\item \textbf{cli.py} (100 lines): Command-line interface with argument parsing and visualization
+\item \textbf{qasm3\_parser.py} (300 lines): OpenQASM 3.0 parser using Lark grammar with control flow support
+\end{itemize}
+
+\vspace{1cm}
+
+\textbf{Repository Structure:}
+\begin{verbatim}
+quantum-virtual-machine/
+├── src/
+│   ├── qvm/
+│   │   ├── ir.py                 # Intermediate Representation
+│   │   ├── parser.py             # OpenQASM 2.0 Parser
+│   │   ├── qasm3_parser.py       # OpenQASM 3.0 Parser
+│   │   ├── simulator.py          # Statevector Simulator
+│   │   ├── transpiler.py         # Hardware-Aware Transpiler
+│   │   ├── decomposer.py         # Gate Decomposer
+│   │   ├── architecture.py       # Hardware Topology
+│   │   ├── visual.py             # Visualization
+│   │   ├── cli.py                # Command-Line Interface
+│   │   └── server.py             # Web API Server
+│   └── examples/
+│       └── full_pipeline.py      # Example Usage
+├── tests/                        # Unit Tests
+├── docs/                         # Documentation
+├── requirements.txt              # Python Dependencies
+└── README.md                     # Setup Instructions
+\end{verbatim}
+
+\vspace{0.5cm}
+
+\textbf{Setup Instructions:}
+\begin{enumerate}
+\item Clone repository: \texttt{git clone https://github.com/qayum/quantum-virtual-machine.git}
+\item Install dependencies: \texttt{pip install -r requirements.txt}
+\item Run CLI: \texttt{python -m src.qvm.cli examples/bell\_state.qasm}
+\item Run Web Server: \texttt{python -m src.qvm.server}
+\item Run Tests: \texttt{pytest tests/}
+\end{enumerate}
+
+\vspace{0.5cm}
+
+\textbf{System Requirements:}
+\begin{itemize}
+\item Python 3.10 or higher
+\item NumPy 1.21+ (linear algebra operations)
+\item Matplotlib 3.5+ (visualization)
+\item Lark 1.1+ (OpenQASM 3.0 parsing)
+\item FastAPI 0.95+ (web API)
+\item Uvicorn (ASGI server)
+\end{itemize}
