@@ -242,6 +242,8 @@ The functional requirements define the specific behaviors and capabilities that 
 
 \subsection{Module 1: Parsing and Input Processing}
 
+The Parsing Module is responsible for converting quantum circuit descriptions from various input formats (OpenQASM 2.0, OpenQASM 3.0, JSON) into the system's internal intermediate representation. This module validates syntax, checks semantic correctness, and ensures that all gate operations and qubit references are well-formed before execution.
+
 \begin{table}[h]
 \centering
 \caption{Functional Requirements - Parsing Module}
@@ -270,6 +272,8 @@ FR-1.8 & The system shall support qubit register declarations (qubit, qubit[n]) 
 
 \subsection{Module 2: Intermediate Representation}
 
+The Intermediate Representation (IR) Module provides a unified data structure for representing quantum circuits internally. This module supports quantum operations, classical registers, conditional execution, control flow primitives (labels and jumps), and classical bit operations, enabling the system to handle both pure quantum algorithms and hybrid quantum-classical programs.
+
 \begin{table}[h]
 \centering
 \caption{Functional Requirements - IR Module}
@@ -297,6 +301,8 @@ FR-2.8 & The system shall provide string representation of circuits for debuggin
 \end{table}
 
 \subsection{Module 3: Transpilation and Optimization}
+
+The Transpilation Module performs hardware-aware circuit compilation, mapping logical quantum circuits to physical hardware topologies with connectivity constraints. This module implements routing algorithms (Greedy BFS and SABRE) that insert SWAP gates to satisfy topology requirements while minimizing circuit depth and maintaining logical equivalence.
 
 \begin{table}[h]
 \centering
@@ -329,6 +335,8 @@ FR-3.10 & The system shall preserve single-qubit gates without modification duri
 \end{table}
 
 \subsection{Module 4: Simulation Engines}
+
+The Simulation Module executes quantum circuits using statevector evolution or tensor network methods. This module supports exact simulation for circuits up to 12 qubits using full statevector representation, and approximate simulation for larger low-entanglement circuits using Matrix Product State (MPS) decomposition with configurable bond dimensions.
 
 \begin{table}[h]
 \centering
@@ -366,6 +374,8 @@ FR-4.12 & The system shall support seeded random number generation for reproduci
 
 \subsection{Module 5: Visualization and Output}
 
+The Visualization Module generates graphical representations of quantum circuits and measurement results. This module creates circuit diagrams showing gate operations on qubit wires, probability histograms for measurement outcomes, and exports circuits to OpenQASM 2.0 format for interoperability with external quantum computing platforms.
+
 \begin{table}[h]
 \centering
 \caption{Functional Requirements - Visualization Module}
@@ -389,6 +399,8 @@ FR-5.6 & The system shall display execution statistics (circuit depth, gate coun
 \end{table}
 
 \subsection{Module 6: User Interfaces}
+
+The User Interface Module provides three access methods for interacting with the QVM system: a command-line interface for scripting and automation, a RESTful web API for programmatic access, and a browser-based graphical interface for interactive circuit composition and execution. These interfaces accommodate different user workflows from batch processing to educational exploration.
 
 \begin{table}[h]
 \centering
@@ -424,6 +436,8 @@ Non-functional requirements define the quality attributes and constraints that t
 
 \subsection{Performance Requirements}
 
+Performance requirements specify the execution speed and resource efficiency that the system must achieve. These requirements ensure that the QVM can simulate quantum circuits within acceptable time bounds on standard computing hardware, making it practical for educational use and algorithm development.
+
 \begin{table}[h]
 \centering
 \caption{Non-Functional Requirements - Performance}
@@ -445,6 +459,8 @@ NFR-1.5 & The system shall cache distance calculations to avoid redundant BFS se
 \end{table}
 
 \subsection{Reliability Requirements}
+
+Reliability requirements define the system's ability to handle errors gracefully and maintain correct operation under various conditions. These requirements ensure that the QVM validates inputs, detects potential issues like infinite loops, and provides clear diagnostic information when problems occur.
 
 \begin{table}[h]
 \centering
@@ -468,6 +484,8 @@ NFR-2.5 & The system shall achieve 95\% test coverage with automated unit tests 
 
 \subsection{Usability Requirements}
 
+Usability requirements specify the ease of use and learnability of the system for different user classes. These requirements ensure that the QVM provides clear documentation, intuitive interfaces, and helpful examples that enable users to quickly understand and effectively use the system for quantum algorithm development and education.
+
 \begin{table}[h]
 \centering
 \caption{Non-Functional Requirements - Usability}
@@ -490,6 +508,8 @@ NFR-3.5 & The web GUI shall be accessible without installation via web browser \
 
 \subsection{Portability Requirements}
 
+Portability requirements define the system's ability to run on different operating systems and integrate with external quantum computing platforms. These requirements ensure that the QVM can be deployed across Windows, Linux, and macOS environments, and can exchange circuit definitions with industry-standard tools through OpenQASM format support.
+
 \begin{table}[h]
 \centering
 \caption{Non-Functional Requirements - Portability}
@@ -509,6 +529,8 @@ NFR-4.4 & The system shall support multiple input formats (QASM 2.0, QASM 3.0, J
 \end{table}
 
 \subsection{Maintainability Requirements}
+
+Maintainability requirements specify the code quality standards and development practices that facilitate future modifications and extensions. These requirements ensure that the QVM codebase is well-documented, follows consistent coding conventions, and uses modular design principles that enable developers to understand, modify, and extend the system efficiently.
 
 \begin{table}[h]
 \centering
@@ -531,6 +553,8 @@ NFR-5.5 & The system shall follow PEP 8 Python style guidelines \\
 \end{table}
 
 \subsection{Security Requirements}
+
+Security requirements define the system's protection mechanisms against malicious inputs and resource exhaustion attacks. These requirements ensure that the QVM validates all user inputs, prevents directory traversal vulnerabilities, and implements resource limits to protect against denial-of-service attempts while maintaining usability for legitimate users.
 
 \begin{table}[h]
 \centering
