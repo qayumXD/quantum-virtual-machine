@@ -407,17 +407,44 @@ The Web GUI (web/index.html) provides an interactive browser-based interface.
 The GUI is implemented as a single-page application using vanilla JavaScript. Circuit text is sent to the API via fetch() POST request. Results are rendered using HTML canvas for circuit diagrams and Chart.js for probability histograms.
 
 \textbf{Screenshots:}
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.9\textwidth]{../screenshots/web_gui_main.png}
-\caption{Web GUI Main Interface}
-\label{fig:web_gui_main}
-\end{figure}
+
+Figure \ref{fig:web_gui_interface} shows the Web GUI main interface with the circuit editor, example circuits dropdown, and execution options. The interface provides a clean, intuitive layout for quantum circuit composition and execution.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.9\textwidth]{../screenshots/cli_execution.png}
-\caption{CLI Execution Example}
+\includegraphics[width=0.95\textwidth]{../Screenshots/RuningExapmle_WebUI01.png}
+\caption{Web GUI Main Interface - Circuit Editor and Execution Options}
+\label{fig:web_gui_interface}
+\end{figure}
+
+Figure \ref{fig:web_gui_results} displays the execution results including the circuit visualization and probability histogram. The circuit diagram shows the quantum gates applied to each qubit, while the histogram visualizes the measurement outcome distribution.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{../Screenshots/RuningExapmle_WebUI02.png}
+\caption{Web GUI Results Display - Circuit Visualization and Probability Histogram}
+\label{fig:web_gui_results}
+\end{figure}
+
+\subsection{Command-Line Interface}
+
+The CLI provides direct access to QVM functionality through terminal commands, suitable for scripting, automation, and integration with other tools.
+
+\textbf{Features:}
+\begin{itemize}
+\item File-based circuit loading (QASM, JSON)
+\item Configurable transpilation options
+\item Multiple output formats (text, JSON, visualization)
+\item Verbose mode for debugging
+\item Batch processing support
+\end{itemize}
+
+Figure \ref{fig:cli_execution} demonstrates CLI execution with multiple quantum algorithms including Bell state preparation, GHZ state generation, and other quantum circuits. The output shows circuit details, execution results, measurement probabilities, and classical memory states.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{../Screenshots/CLI_Output.png}
+\caption{CLI Execution Examples - Multiple Quantum Algorithm Executions}
 \label{fig:cli_execution}
 \end{figure}
 
