@@ -1,0 +1,21 @@
+digraph DFD_Level1 {
+    rankdir=LR;
+    node [shape=box, style=filled, fillcolor="#E6F3FF", color="#2C5F8D", fontname="Arial"];
+    edge [fontname="Arial", fontsize=10];
+    
+    user [shape=ellipse, label="User", fillcolor="#FFE6E6", color="#8B0000"];
+    browser [shape=ellipse, label="Web Browser", fillcolor="#FFE6E6", color="#8B0000"];
+    fs [shape=cylinder, label="File System", fillcolor="#FFF9E6", color="#8B6914"];
+    
+    qvm [label="Quantum Virtual Machine\n(QVM System)", shape=rect, style="rounded,filled", width=3, height=2];
+    
+    user -> qvm [label="Circuit File\n(QASM/JSON)"];
+    user -> qvm [label="Execution Parameters"];
+    qvm -> user [label="Results\n(statevector)"];
+    
+    fs -> qvm [label="Read Circuit File"];
+    qvm -> fs [label="Write Output Files"];
+    
+    browser -> qvm [label="HTTP Request\n(POST /execute)"];
+    qvm -> browser [label="HTTP Response\n(JSON)"];
+}

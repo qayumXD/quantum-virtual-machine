@@ -22,7 +22,7 @@ The QVM system architecture is organized as a layered pipeline with clear bounda
 \clearpage
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.85\textwidth]{../uml/QVM_Context_Diagram.png}
+\includegraphics[width=0.85\textwidth,height=0.8\textheight,keepaspectratio]{../uml/QVM_Context_Diagram.pdf}
 \caption{System Context Diagram}
 \label{fig:context}
 \end{figure}
@@ -35,7 +35,7 @@ The QVM follows a \textbf{7-layer pipeline architecture} as shown in Figure \ref
 \clearpage
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.75\textwidth]{../uml/QVM_Architecture_Diagram.png}
+\includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../uml/QVM_Architecture_Diagram.pdf}
 \caption{System Architecture Diagram}
 \label{fig:architecture}
 \end{figure}
@@ -65,7 +65,7 @@ Figure \ref{fig:activity_execution} shows the complete workflow from loading a c
 \clearpage
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.6\textwidth]{../uml/Activity_Circuit_Execution.png}
+\includegraphics[width=0.75\textwidth,height=0.8\textheight,keepaspectratio]{../uml/Activity_Circuit_Execution.pdf}
 \caption{Activity Diagram - Circuit Execution Flow}
 \label{fig:activity_execution}
 \end{figure}
@@ -78,7 +78,7 @@ Figure \ref{fig:activity_transpile} details the transpilation workflow, showing 
 \clearpage
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.5\textwidth]{../uml/Activity_Transpilation.png}
+\includegraphics[width=0.75\textwidth,height=0.8\textheight,keepaspectratio]{../uml/Activity_Transpilation.pdf}
 \caption{Activity Diagram - Transpilation Process}
 \label{fig:activity_transpile}
 \end{figure}
@@ -91,7 +91,7 @@ Figure \ref{fig:activity_simulate} illustrates the simulation workflow, includin
 \clearpage
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.7\textwidth]{../uml/Activity_Simulation.png}
+\includegraphics[width=0.75\textwidth,height=0.8\textheight,keepaspectratio]{../uml/Activity_Simulation.pdf}
 \caption{Activity Diagram - Simulation Process}
 \label{fig:activity_simulate}
 \end{figure}
@@ -104,7 +104,7 @@ The class diagram in Figure \ref{fig:class} shows the static structure of the QV
 \clearpage
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.9\textwidth]{../uml/QVM_Class_Diagram.png}
+\includegraphics[width=0.95\textwidth,height=0.8\textheight,keepaspectratio]{../uml/QVM_Class_Diagram.pdf}
 \caption{Class Diagram - System Structure}
 \label{fig:class}
 \end{figure}
@@ -148,7 +148,7 @@ Figure \ref{fig:seq_cli} shows the interaction sequence when a user executes a c
 \clearpage
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.85\textwidth]{../uml/Sequence_CLI_Execution.png}
+\includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../uml/Sequence_CLI_Execution.pdf}
 \caption{Sequence Diagram - CLI Execution}
 \label{fig:seq_cli}
 \end{figure}
@@ -161,7 +161,7 @@ Figure \ref{fig:seq_api} illustrates the interaction when a client submits a cir
 \clearpage
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.85\textwidth]{../uml/Sequence_API_Request.png}
+\includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../uml/Sequence_API_Request.pdf}
 \caption{Sequence Diagram - API Request}
 \label{fig:seq_api}
 \end{figure}
@@ -174,7 +174,7 @@ Figure \ref{fig:seq_transpile} shows the detailed interaction during the transpi
 \clearpage
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.7\textwidth]{../uml/Sequence_Transpilation_Detail.png}
+\includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../uml/Sequence_Transpilation_Detail.pdf}
 \caption{Sequence Diagram - Transpilation Detail}
 \label{fig:seq_transpile}
 \end{figure}
@@ -187,7 +187,7 @@ State transition diagrams model the lifecycle of key entities in the system. Fig
 \clearpage
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.8\textwidth]{../uml/State_Circuit_Lifecycle.png}
+\includegraphics[width=0.85\textwidth,height=0.8\textheight,keepaspectratio]{../uml/State_Circuit_Lifecycle.pdf}
 \caption{State Transition Diagram - Circuit Lifecycle}
 \label{fig:state}
 \end{figure}
@@ -225,7 +225,7 @@ Figure \ref{fig:dfd1} shows the high-level data flows between the QVM system and
 \clearpage
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.85\textwidth]{../uml/DFD_Level1.png}
+\includegraphics[width=0.85\textwidth,height=0.8\textheight,keepaspectratio]{../uml/DFD_Level1.pdf}
 \caption{Data Flow Diagram - Level 1 (System Level)}
 \label{fig:dfd1}
 \end{figure}
@@ -254,7 +254,7 @@ Figure \ref{fig:dfd2} shows the detailed data flows between internal modules.
 \clearpage
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.9\textwidth]{../uml/DFD_Level2.png}
+\includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../uml/DFD_Level2.pdf}
 \caption{Data Flow Diagram - Level 2 (Module Level)}
 \label{fig:dfd2}
 \end{figure}
@@ -318,8 +318,9 @@ However, this is beyond the current scope of the educational QVM system.
 The data dictionary documents the structure of key data elements in the QVM system.
 
 \subsection{QuantumCircuit IR Structure}
+This section defines the internal representation for the quantum circuit, storing the number of qubits and sequences of operations.
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{QuantumCircuit Data Structure}
 \begin{tabular}{|p{3cm}|p{2.5cm}|p{7cm}|}
@@ -336,8 +337,9 @@ classical\_registers & dict[str, int] & Mapping from register name to size \\
 \end{table}
 
 \subsection{Operation Dictionary Structure}
+The operation dictionary specifies each individual quantum or classical operation within a circuit.
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{Operation Data Structure}
 \begin{tabular}{|p{3cm}|p{2.5cm}|p{7cm}|}
@@ -366,8 +368,9 @@ classical\_op & dict | None & Classical operation specification \\
 \end{table}
 
 \subsection{Condition Dictionary Structure}
+The condition structure defines the conditions under which an operation should be conditionally executed based on classical bits.
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{Condition Data Structure}
 \begin{tabular}{|p{3cm}|p{2.5cm}|p{7cm}|}
@@ -384,8 +387,9 @@ value & int & Expected value (0 or 1) for condition to be true \\
 \end{table}
 
 \subsection{Classical Operation Dictionary Structure}
+Classical operations define operations performed on classical registers such as logical AND, OR, and XOR.
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{Classical Operation Data Structure}
 \begin{tabular}{|p{3cm}|p{2.5cm}|p{7cm}|}
@@ -402,8 +406,9 @@ args & list & Operands (tuples for register references, ints for literals) \\
 \end{table}
 
 \subsection{Target Architecture Structure}
+This structure represents the physical architecture of the hardware, including its qubit connectivity constraints.
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{TargetArchitecture Data Structure}
 \begin{tabular}{|p{3cm}|p{2.5cm}|p{7cm}|}
@@ -420,8 +425,9 @@ name & str & Architecture name (e.g., "linear\_5", "grid\_3x3") \\
 \end{table}
 
 \subsection{Simulation Results Structure}
+The simulation results capture the final execution outcomes, including the statevector and measurement probabilities.
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{Simulation Results Data Structure}
 \begin{tabular}{|p{3cm}|p{2.5cm}|p{7cm}|}

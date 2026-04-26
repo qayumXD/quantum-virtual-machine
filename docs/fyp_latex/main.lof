@@ -1,7 +1,7 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {3.1}{\ignorespaces Use Case Diagram for Quantum Virtual Machine}}{34}{figure.3.1}%
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Use Case Diagram for Quantum Virtual Machine}}{21}{figure.3.1}%
 \addvspace {10\p@ }
 \contentsline {figure}{\numberline {4.1}{\ignorespaces System Context Diagram}}{36}{figure.4.1}%
 \contentsline {figure}{\numberline {4.2}{\ignorespaces System Architecture Diagram}}{38}{figure.4.2}%
@@ -16,8 +16,8 @@
 \contentsline {figure}{\numberline {4.11}{\ignorespaces Data Flow Diagram - Level 1 (System Level)}}{54}{figure.4.11}%
 \contentsline {figure}{\numberline {4.12}{\ignorespaces Data Flow Diagram - Level 2 (Module Level)}}{55}{figure.4.12}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {5.1}{\ignorespaces Web GUI Main Interface - Circuit Editor and Execution Options}}{69}{figure.5.1}%
-\contentsline {figure}{\numberline {5.2}{\ignorespaces Web GUI Results Display - Circuit Visualization and Probability Histogram}}{70}{figure.5.2}%
-\contentsline {figure}{\numberline {5.3}{\ignorespaces CLI Execution Examples - Multiple Quantum Algorithm Executions}}{71}{figure.5.3}%
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Web GUI Main Interface - Circuit Editor and Execution Options}}{72}{figure.5.1}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Web GUI Results Display - Circuit Visualization and Probability Histogram}}{73}{figure.5.2}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces CLI Execution Examples - Multiple Quantum Algorithm Executions}}{74}{figure.5.3}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }

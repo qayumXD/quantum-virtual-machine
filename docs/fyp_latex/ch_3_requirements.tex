@@ -38,16 +38,20 @@ System Integrators & Users integrating QVM with other tools & Software engineeri
 The Quantum Virtual Machine is a comprehensive quantum circuit execution platform that implements a complete compilation and simulation pipeline. The system accepts quantum programs in multiple formats (OpenQASM 2.0, OpenQASM 3.0, JSON), transforms them through a hardware-agnostic intermediate representation, applies topology-aware transpilation, and executes them using either exact statevector simulation or efficient tensor network methods. The system provides three user interfaces (CLI, Web API, Web GUI) to accommodate different usage scenarios, from automated scripting to interactive exploration. The architecture emphasizes modularity, allowing each component (parser, transpiler, simulator) to be independently tested and upgraded.
 
 \section{Use Case Model}
+This section defines the primary interactions between the actors and the Quantum Virtual Machine system, capturing the functional requirements from a user-centric perspective.
 
 \subsection{Use Case Diagram}
-\begin{figure}[h]
+The use case diagram in Figure \ref{fig:use_case_diagram} provides a high-level visual overview of the system's functionality and the actors involved.
+
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.9\textwidth]{../uml/QVM_Use_Case_Diagram.png}
+\includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../uml/QVM_Use_Case_Diagram.pdf}
 \caption{Use Case Diagram for Quantum Virtual Machine}
 \label{fig:use_case_diagram}
 \end{figure}
 
 \subsection{Use Case Descriptions}
+The following descriptions provide detailed step-by-step flows for each use case identified in the diagram, including preconditions, main flows, and alternative paths.
 
 \textbf{UC-1.1: Parse Quantum Circuit}
 \begin{itemize}
