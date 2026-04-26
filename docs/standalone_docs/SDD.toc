@@ -1,0 +1,27 @@
+\contentsline {chapter}{\numberline {4}Software Design}{1}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Introduction}{1}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Design Methodology}{1}{section.4.2}%
+\contentsline {section}{\numberline {4.3}System Overview}{1}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Architectural Design}{3}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Activity Diagrams}{5}{section.4.5}%
+\contentsline {subsection}{\numberline {4.5.1}Circuit Execution Flow}{5}{subsection.4.5.1}%
+\contentsline {subsection}{\numberline {4.5.2}Transpilation Process}{7}{subsection.4.5.2}%
+\contentsline {subsection}{\numberline {4.5.3}Simulation Process}{9}{subsection.4.5.3}%
+\contentsline {section}{\numberline {4.6}Class Diagram}{9}{section.4.6}%
+\contentsline {section}{\numberline {4.7}Sequence Diagrams}{12}{section.4.7}%
+\contentsline {subsection}{\numberline {4.7.1}CLI Execution Flow}{12}{subsection.4.7.1}%
+\contentsline {subsection}{\numberline {4.7.2}API Request Flow}{15}{subsection.4.7.2}%
+\contentsline {subsection}{\numberline {4.7.3}Transpilation Detail}{16}{subsection.4.7.3}%
+\contentsline {section}{\numberline {4.8}State Transition Diagrams}{18}{section.4.8}%
+\contentsline {section}{\numberline {4.9}Data Flow Diagrams}{19}{section.4.9}%
+\contentsline {subsection}{\numberline {4.9.1}Level 1 DFD - System Level}{19}{subsection.4.9.1}%
+\contentsline {subsection}{\numberline {4.9.2}Level 2 DFD - Module Level}{19}{subsection.4.9.2}%
+\contentsline {section}{\numberline {4.10}Entity-Relationship Diagram}{22}{section.4.10}%
+\contentsline {section}{\numberline {4.11}Data Dictionary}{23}{section.4.11}%
+\contentsline {subsection}{\numberline {4.11.1}QuantumCircuit IR Structure}{23}{subsection.4.11.1}%
+\contentsline {subsection}{\numberline {4.11.2}Operation Dictionary Structure}{23}{subsection.4.11.2}%
+\contentsline {subsection}{\numberline {4.11.3}Condition Dictionary Structure}{23}{subsection.4.11.3}%
+\contentsline {subsection}{\numberline {4.11.4}Classical Operation Dictionary Structure}{24}{subsection.4.11.4}%
+\contentsline {subsection}{\numberline {4.11.5}Target Architecture Structure}{24}{subsection.4.11.5}%
+\contentsline {subsection}{\numberline {4.11.6}Simulation Results Structure}{24}{subsection.4.11.6}%
+\contentsline {section}{\numberline {4.12}Summary}{25}{section.4.12}%

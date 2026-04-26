@@ -1,0 +1,120 @@
+digraph StateDiagram {
+    rankdir=TB;
+    fontname="Arial";
+    fontsize=14;
+    label="Circuit Lifecycle State Transition Diagram";
+    labelloc=t;
+    labeljust=c;
+    compound=true;
+    nodesep=0.6;
+    ranksep=0.8;
+    bgcolor="white";
+    
+    node [fontname="Arial", fontsize=11, style="filled,rounded", shape=box, penwidth=1.5];
+    edge [fontname="Arial", fontsize=9, penwidth=1.2];
+
+    // Start node
+    start [shape=circle, label="", width=0.3, style=filled, fillcolor="#212121"];
+    
+    // States
+    Created [
+        label=<
+            <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="2">
+                <TR><TD><B>Created</B></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Circuit IR object created</FONT></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Operations list populated</FONT></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Registers declared</FONT></TD></TR>
+            </TABLE>
+        >,
+        fillcolor="#E8F5E9", color="#2E7D32"
+    ];
+    
+    Validated [
+        label=<
+            <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="2">
+                <TR><TD><B>Validated</B></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Semantic checks passed</FONT></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Qubit indices valid</FONT></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Registers defined</FONT></TD></TR>
+            </TABLE>
+        >,
+        fillcolor="#E3F2FD", color="#1565C0"
+    ];
+    
+    Decomposed [
+        label=<
+            <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="2">
+                <TR><TD><B>Decomposed</B></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Complex gates broken down</FONT></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Only native gates remain</FONT></TD></TR>
+            </TABLE>
+        >,
+        fillcolor="#E3F2FD", color="#1565C0"
+    ];
+    
+    Transpiled [
+        label=<
+            <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="2">
+                <TR><TD><B>Transpiled</B></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Mapped to physical qubits</FONT></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">SWAP gates inserted</FONT></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Topology constraints met</FONT></TD></TR>
+            </TABLE>
+        >,
+        fillcolor="#E3F2FD", color="#1565C0"
+    ];
+    
+    Executing [
+        label=<
+            <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="2">
+                <TR><TD><B>Executing</B></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Simulator processing ops</FONT></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Quantum state evolving</FONT></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Classical memory updating</FONT></TD></TR>
+            </TABLE>
+        >,
+        fillcolor="#FFF3E0", color="#E65100"
+    ];
+    
+    Completed [
+        label=<
+            <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="2">
+                <TR><TD><B>Completed</B></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Simulation finished</FONT></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Statevector available</FONT></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Classical memory final</FONT></TD></TR>
+            </TABLE>
+        >,
+        fillcolor="#E8F5E9", color="#2E7D32"
+    ];
+    
+    Error [
+        label=<
+            <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="2">
+                <TR><TD><B>Error</B></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Processing failed</FONT></TD></TR>
+                <TR><TD><FONT POINT-SIZE="9">Error message available</FONT></TD></TR>
+            </TABLE>
+        >,
+        fillcolor="#FFEBEE", color="#C62828"
+    ];
+    
+    // End nodes
+    end1 [shape=doublecircle, label="", width=0.3, style=filled, fillcolor="#212121"];
+    end2 [shape=doublecircle, label="", width=0.3, style=filled, fillcolor="#212121"];
+
+    // Transitions
+    start -> Created [label="Parse circuit file"];
+    Created -> Validated [label="validate()\n[succeeds]", color="#2E7D32"];
+    Created -> Error [label="validate()\n[fails: invalid index,\nundefined register]", color="#C62828", style=dashed];
+    Validated -> Decomposed [label="decompose()\n[succeeds]", color="#1565C0"];
+    Validated -> Error [label="decompose()\n[unsupported gate]", color="#C62828", style=dashed];
+    Decomposed -> Transpiled [label="transpile()\n[requested & succeeds]", color="#1565C0"];
+    Decomposed -> Executing [label="simulate()\n[no transpilation]", color="#E65100"];
+    Transpiled -> Executing [label="simulate()", color="#E65100"];
+    Transpiled -> Error [label="transpile()\n[no valid routing]", color="#C62828", style=dashed];
+    Executing -> Completed [label="[all ops executed\nsuccessfully]", color="#2E7D32"];
+    Executing -> Error [label="[runtime error:\ninfinite loop,\ninvalid operation]", color="#C62828", style=dashed];
+    Completed -> end1;
+    Error -> end2;
+}

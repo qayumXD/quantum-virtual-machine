@@ -1,0 +1,89 @@
+digraph ActivityTranspilation {
+    rankdir=TB;
+    fontname="Arial";
+    fontsize=14;
+    label="Activity Diagram — Transpilation Process";
+    labelloc=t;
+    bgcolor="white";
+    nodesep=0.4;
+    ranksep=0.5;
+    
+    node [fontname="Arial", fontsize=10, penwidth=1.5];
+    edge [fontname="Arial", fontsize=9, penwidth=1.2];
+
+    start [shape=circle, label="", width=0.3, style=filled, fillcolor="#212121"];
+    
+    node [shape=box, style="filled,rounded"];
+    
+    receiveCircuit [label="Receive Logical Circuit\n+ Target Architecture", fillcolor="#E8F5E9", color="#2E7D32"];
+    analyzeConnectivity [label="Analyze Circuit\nConnectivity Requirements", fillcolor="#E3F2FD", color="#1565C0"];
+    decomposeGates [label="Decompose Complex Gates\n(Toffoli → CX + single-qubit)", fillcolor="#FFF3E0", color="#E65100"];
+    initMapping [label="Initialize Qubit Mapping\n{logical[i] → physical[i]}", fillcolor="#E3F2FD", color="#1565C0"];
+    
+    node [shape=diamond, style=filled];
+    selectStrategy [label="Routing\nstrategy?", fillcolor="#FFF9C4", color="#F57F17"];
+    moreGates [label="More 2-qubit\ngates?", fillcolor="#FFF9C4", color="#F57F17"];
+    adjacent [label="Qubits\nadjacent?", fillcolor="#FFF9C4", color="#F57F17"];
+    restoreReq [label="Restore\nmapping?", fillcolor="#FFF9C4", color="#F57F17"];
+    
+    node [shape=box, style="filled,rounded"];
+    
+    // Greedy path
+    bfsPath [label="BFS: Find Shortest Path\nthrough Connectivity Graph", fillcolor="#FFF3E0", color="#E65100"];
+    insertSwapsGreedy [label="Insert SWAP Gates\nalong Path Edges", fillcolor="#FFF3E0", color="#E65100"];
+    applyGateG [label="Apply 2-Qubit Gate\non Adjacent Qubits", fillcolor="#E3F2FD", color="#1565C0"];
+    reverseSwaps [label="Reverse SWAPs\n(restore local mapping)", fillcolor="#FFF3E0", color="#E65100"];
+    
+    // SABRE path
+    evalCandidates [label="Evaluate All Candidate\nSWAP Edges", fillcolor="#F3E5F5", color="#6A1B9A"];
+    scoreSabre [label="Score via Heuristic Cost\n(distance + decayed lookahead)", fillcolor="#F3E5F5", color="#6A1B9A"];
+    bestSwap [label="Select & Insert\nBest SWAP", fillcolor="#F3E5F5", color="#6A1B9A"];
+    applyGateS [label="Apply 2-Qubit Gate\n(now adjacent)", fillcolor="#E3F2FD", color="#1565C0"];
+
+    // Common
+    updateMap [label="Update Qubit Mapping", fillcolor="#E3F2FD", color="#1565C0"];
+    emitDirect [label="Emit Gate Directly\n(already adjacent)", fillcolor="#E3F2FD", color="#1565C0"];
+    restoreMapping [label="Insert Reverse SWAPs\nto Restore Identity Mapping", fillcolor="#FFF3E0", color="#E65100"];
+    calcStats [label="Calculate Statistics\n(SWAP count, depth, gate counts)", fillcolor="#E8F5E9", color="#2E7D32"];
+    returnResult [label="Return Physical Circuit\n+ Transpilation Statistics", fillcolor="#E8F5E9", color="#2E7D32"];
+    
+    endNode [shape=doublecircle, label="", width=0.3, style=filled, fillcolor="#212121"];
+
+    // Flow
+    start -> receiveCircuit;
+    receiveCircuit -> analyzeConnectivity;
+    analyzeConnectivity -> decomposeGates;
+    decomposeGates -> initMapping;
+    initMapping -> selectStrategy;
+    
+    selectStrategy -> moreGates [label="Greedy / SABRE"];
+    
+    moreGates -> adjacent [label="Yes"];
+    moreGates -> restoreReq [label="No"];
+    
+    adjacent -> emitDirect [label="Yes"];
+    adjacent -> selectStrategy [label="No\n(route needed)", style=invis]; // placeholder
+    
+    // Greedy branch
+    selectStrategy -> bfsPath [label="Greedy"];
+    bfsPath -> insertSwapsGreedy;
+    insertSwapsGreedy -> applyGateG;
+    applyGateG -> reverseSwaps;
+    reverseSwaps -> updateMap;
+    
+    // SABRE branch  
+    selectStrategy -> evalCandidates [label="SABRE"];
+    evalCandidates -> scoreSabre;
+    scoreSabre -> bestSwap;
+    bestSwap -> applyGateS;
+    applyGateS -> updateMap;
+    
+    updateMap -> moreGates;
+    emitDirect -> moreGates;
+    
+    restoreReq -> restoreMapping [label="Yes"];
+    restoreReq -> calcStats [label="No"];
+    restoreMapping -> calcStats;
+    calcStats -> returnResult;
+    returnResult -> endNode;
+}

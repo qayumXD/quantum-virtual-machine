@@ -1,0 +1,124 @@
+\documentclass[12pt]{report}
+\usepackage[a4paper,
+    left=0.7in,
+    right=0.7in,
+    top=1.5in,
+    bottom=1in,
+    headheight=15pt,
+    headsep=0.5in,
+    footskip=0.5in
+]{geometry}
+\usepackage{fancyhdr}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{tocloft}
+\usepackage{booktabs}
+\usepackage{ragged2e}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{dashrule}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{pmboxdraw}
+\usepackage{float}
+\usepackage{rotating}
+\usepackage{placeins}
+\usepackage{setspace}
+\usepackage{titling}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amsmath}
+\usepackage{listings}
+
+% Listings configuration for Python code
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray}\itshape,
+  stringstyle=\color{red},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=8pt,
+  backgroundcolor=\color{white},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  frame=single,
+  tabsize=4,
+  captionpos=b,
+  breaklines=true,
+  breakatwhitespace=false,
+  escapeinside={(*@}{@*)},
+  xleftmargin=2em,
+  framexleftmargin=1.5em
+}
+
+% Chapter Formatting
+\titleformat{\chapter}[display]
+  {\centering\bfseries\fontsize{18}{20}\selectfont}
+  {Chapter \thechapter}
+  {0pt}
+  {}
+
+\titlespacing*{\chapter}
+  {0pt}
+  {0pt}
+  {12pt}
+
+% Enable deep numbering
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+% Header & Footer Setup
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small COMSATS University Islamabad}
+\fancyhead[R]{\small Software Design Document}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\begin{document}
+
+% ---- Title Page ----
+\begin{titlepage}
+\centering
+\vspace*{2cm}
+{\Large\bfseries COMSATS University Islamabad\par}
+\vspace{0.5cm}
+{\large Department of Computer Science\par}
+\vspace{2cm}
+{\Huge\bfseries Software Design Document\par}
+\vspace{0.5cm}
+{\LARGE Quantum Virtual Machine (QVM)\par}
+\vspace{1cm}
+{\large A Hardware-Agnostic Quantum Circuit Execution Platform\par}
+\vspace{2cm}
+{\large Final Year Project\par}
+\vspace{3cm}
+{\large\today\par}
+\end{titlepage}
+
+% ---- Table of Contents ----
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\listoffigures
+\newpage
+\listoftables
+
+% ---- Main Content ----
+\clearpage
+\pagenumbering{arabic}
+
+% Reset chapter counter so Chapter 4 becomes Chapter 1 in standalone doc
+% Actually, keep original numbering for cross-referenceability
+\setcounter{chapter}{3}
+
+\input{ch_4_SDD_standalone}
+
+\end{document}

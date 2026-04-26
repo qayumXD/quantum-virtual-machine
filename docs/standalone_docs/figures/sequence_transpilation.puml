@@ -1,0 +1,84 @@
+@startuml Sequence_Transpilation_Detail
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 200
+skinparam sequenceArrowThickness 1.5
+
+skinparam participant {
+    BackgroundColor #E3F2FD
+    BorderColor #1565C0
+}
+
+skinparam sequence {
+    LifeLineBorderColor #90A4AE
+    LifeLineBackgroundColor #ECEFF1
+    GroupBackgroundColor #F5F5F5
+    GroupBorderColor #BDBDBD
+}
+
+title Sequence Diagram — Transpilation Detail
+
+participant "Caller\n(CLI / API)" as Caller #E8F5E9
+participant "Transpiler" as T #FFF3E0
+participant "Decomposer" as D #FFF3E0
+participant "TargetArchitecture" as Arch #ECEFF1
+participant "Physical\nCircuit (IR)" as PC #E3F2FD
+
+Caller -> T: transpile(logical_circuit)
+activate T #FFF3E0
+
+T -> D: decompose(logical_circuit)
+activate D #FFF3E0
+D -> D: break Toffoli → CX + single-qubit
+D -> D: expand controlled gates
+D --> T: native_circuit
+deactivate D
+
+T -> PC: QuantumCircuit(arch.num_qubits)
+activate PC
+
+T -> T: initialize qubit_map\n{logical[i] → physical[i]}
+
+loop For each 2-qubit gate in circuit
+    T -> Arch: is_connected(p1, p2)?
+    activate Arch #ECEFF1
+    Arch --> T: connected / not connected
+    deactivate Arch
+
+    alt Qubits Already Adjacent
+        T -> PC: add_operation(gate, [p1, p2])
+    else Qubits Not Adjacent
+        alt Greedy Strategy
+            T -> T: BFS shortest path(p1, p2)
+            loop For each edge in path
+                T -> PC: add_operation("swap", [pi, pi+1])
+                T -> T: update qubit_map
+            end
+            T -> PC: add_operation(gate, [p1', p2'])
+            T -> T: reverse SWAPs (restore mapping)
+        else SABRE Strategy
+            T -> T: evaluate all candidate SWAPs
+            T -> T: score via heuristic_cost()\n(distance + decayed lookahead)
+            T -> T: select best SWAP
+            T -> PC: add_operation("swap", [best_s1, best_s2])
+            T -> T: update qubit_map
+        end
+    end
+end
+
+opt Restore Mapping Enabled
+    loop For each misplaced qubit
+        T -> PC: add_operation("swap", [current, target])
+        T -> T: update qubit_map
+    end
+end
+
+T --> Caller: physical_circuit + statistics
+deactivate PC
+deactivate T
+
+@enduml

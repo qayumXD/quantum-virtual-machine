@@ -1,0 +1,57 @@
+@startuml Sequence_API_Request
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 200
+skinparam sequenceArrowThickness 1.5
+
+skinparam participant {
+    BackgroundColor #E3F2FD
+    BorderColor #1565C0
+}
+
+skinparam sequence {
+    LifeLineBorderColor #90A4AE
+    LifeLineBackgroundColor #ECEFF1
+    GroupBackgroundColor #F5F5F5
+    GroupBorderColor #BDBDBD
+}
+
+title Sequence Diagram — REST API Request Flow
+
+actor "Client\nApplication" as C #E8F5E9
+participant "FastAPI\nServer" as API #E3F2FD
+participant "QASMParser" as P #E8F5E9
+participant "Simulator" as S #F3E5F5
+
+C -> API: HTTP POST /execute\n{circuit_text, num_qubits, format}
+activate API #E3F2FD
+
+API -> API: validate request schema
+
+alt Valid Request
+    API -> P: parse(circuit_text)
+    activate P #E8F5E9
+    P --> API: circuit: QuantumCircuit
+    deactivate P
+
+    API -> S: simulate(circuit, seed)
+    activate S #F3E5F5
+    S -> S: execute circuit
+    S --> API: (statevector, classical_memory)
+    deactivate S
+
+    API -> API: format results as JSON
+    API --> C: HTTP 200\n{statevector, probabilities,\nclassical_memory}
+else Invalid JSON / Schema
+    API --> C: HTTP 400\n{error: "Invalid request format"}
+else Execution Error
+    API --> C: HTTP 500\n{error: "Simulation failed: <details>"}
+end
+
+deactivate API
+
+@enduml

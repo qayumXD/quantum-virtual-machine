@@ -14,20 +14,18 @@
 \contentsline {figure}{\numberline {4.9}{\ignorespaces Activity Diagram - Transpilation Process (Part 3 of 3)}}{46}{figure.4.9}%
 \contentsline {figure}{\numberline {4.10}{\ignorespaces Activity Diagram - Simulation Process}}{48}{figure.4.10}%
 \contentsline {figure}{\numberline {4.11}{\ignorespaces Class Diagram - System Structure}}{49}{figure.4.11}%
-\contentsline {figure}{\numberline {4.12}{\ignorespaces Sequence Diagram - CLI Execution (Part 1 of 2)}}{50}{figure.4.12}%
-\contentsline {figure}{\numberline {4.13}{\ignorespaces Sequence Diagram - CLI Execution (Part 2 of 2)}}{51}{figure.4.13}%
-\contentsline {figure}{\numberline {4.14}{\ignorespaces Sequence Diagram - API Request (Part 1 of 3)}}{52}{figure.4.14}%
-\contentsline {figure}{\numberline {4.15}{\ignorespaces Sequence Diagram - API Request (Part 2 of 3)}}{52}{figure.4.15}%
-\contentsline {figure}{\numberline {4.16}{\ignorespaces Sequence Diagram - API Request (Part 3 of 3)}}{53}{figure.4.16}%
-\contentsline {figure}{\numberline {4.17}{\ignorespaces Sequence Diagram - Transpilation Detail (Part 1 of 3)}}{54}{figure.4.17}%
-\contentsline {figure}{\numberline {4.18}{\ignorespaces Sequence Diagram - Transpilation Detail (Part 2 of 3)}}{55}{figure.4.18}%
-\contentsline {figure}{\numberline {4.19}{\ignorespaces Sequence Diagram - Transpilation Detail (Part 3 of 3)}}{56}{figure.4.19}%
-\contentsline {figure}{\numberline {4.20}{\ignorespaces State Transition Diagram - Circuit Lifecycle}}{57}{figure.4.20}%
-\contentsline {figure}{\numberline {4.21}{\ignorespaces Data Flow Diagram - Level 1 (System Level)}}{59}{figure.4.21}%
-\contentsline {figure}{\numberline {4.22}{\ignorespaces Data Flow Diagram - Level 2 (Module Level)}}{60}{figure.4.22}%
+\contentsline {figure}{\numberline {4.12}{\ignorespaces Sequence Diagram - CLI Execution (Part 1 of 2)}}{52}{figure.4.12}%
+\contentsline {figure}{\numberline {4.13}{\ignorespaces Sequence Diagram - CLI Execution (Part 2 of 2)}}{53}{figure.4.13}%
+\contentsline {figure}{\numberline {4.14}{\ignorespaces Sequence Diagram - API Request (Part 1 of 2)}}{55}{figure.4.14}%
+\contentsline {figure}{\numberline {4.15}{\ignorespaces Sequence Diagram - API Request (Part 2 of 2)}}{56}{figure.4.15}%
+\contentsline {figure}{\numberline {4.16}{\ignorespaces Sequence Diagram - Transpilation Detail (Part 1 of 2)}}{58}{figure.4.16}%
+\contentsline {figure}{\numberline {4.17}{\ignorespaces Sequence Diagram - Transpilation Detail (Part 2 of 2)}}{59}{figure.4.17}%
+\contentsline {figure}{\numberline {4.18}{\ignorespaces State Transition Diagram - Circuit Lifecycle}}{60}{figure.4.18}%
+\contentsline {figure}{\numberline {4.19}{\ignorespaces Data Flow Diagram - Level 1 (System Level)}}{62}{figure.4.19}%
+\contentsline {figure}{\numberline {4.20}{\ignorespaces Data Flow Diagram - Level 2 (Module Level)}}{63}{figure.4.20}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {5.1}{\ignorespaces Web GUI Main Interface - Circuit Editor and Execution Options}}{78}{figure.5.1}%
-\contentsline {figure}{\numberline {5.2}{\ignorespaces Web GUI Results Display - Circuit Visualization and Probability Histogram}}{79}{figure.5.2}%
-\contentsline {figure}{\numberline {5.3}{\ignorespaces CLI Execution Examples - Multiple Quantum Algorithm Executions}}{80}{figure.5.3}%
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Web GUI Main Interface - Circuit Editor and Execution Options}}{81}{figure.5.1}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Web GUI Results Display - Circuit Visualization and Probability Histogram}}{82}{figure.5.2}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces CLI Execution Examples - Multiple Quantum Algorithm Executions}}{83}{figure.5.3}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }

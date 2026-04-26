@@ -1,0 +1,67 @@
+digraph DFD_Level1 {
+    rankdir=LR;
+    fontname="Arial";
+    fontsize=14;
+    label="Data Flow Diagram — Level 1 (System Level)";
+    labelloc=t;
+    labeljust=c;
+    bgcolor="white";
+    nodesep=1.0;
+    ranksep=1.5;
+    
+    node [fontname="Arial", fontsize=11, penwidth=1.5];
+    edge [fontname="Arial", fontsize=10, penwidth=1.2, color="#455A64"];
+
+    // External entities (rounded boxes)
+    user [
+        label="User\n(Developer / Student\n/ Researcher)",
+        shape=box, style="filled,rounded",
+        fillcolor="#E8F5E9", color="#2E7D32"
+    ];
+    
+    browser [
+        label="Web Browser",
+        shape=box, style="filled,rounded",
+        fillcolor="#E8F5E9", color="#2E7D32"
+    ];
+    
+    // Data stores (open-ended rectangles simulated)
+    fs [
+        label="D1  |  File System\n(Circuit Files, Output Files)",
+        shape=box, style="filled",
+        fillcolor="#F3E5F5", color="#6A1B9A"
+    ];
+    
+    config [
+        label="D2  |  Configuration\n(Architecture Definitions)",
+        shape=box, style="filled",
+        fillcolor="#F3E5F5", color="#6A1B9A"
+    ];
+
+    // Central process (circle)
+    qvm [
+        label=<
+            <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="3">
+                <TR><TD><B><FONT POINT-SIZE="13">1.0</FONT></B></TD></TR>
+                <TR><TD><B>Quantum Virtual</B></TD></TR>
+                <TR><TD><B>Machine (QVM)</B></TD></TR>
+            </TABLE>
+        >,
+        shape=ellipse, style=filled,
+        fillcolor="#E3F2FD", color="#1565C0",
+        width=2.5, height=1.5
+    ];
+
+    // Data flows
+    user -> qvm [label="Circuit File\n(QASM 2.0/3.0, JSON)", color="#2E7D32"];
+    user -> qvm [label="Execution Parameters\n(architecture, seed, backend)", color="#2E7D32"];
+    qvm -> user [label="Results\n(statevector, probabilities,\nvisualizations)", color="#E65100"];
+    
+    fs -> qvm [label="Read Circuit\nFile", color="#6A1B9A"];
+    qvm -> fs [label="Write Output\n(images, QASM export)", color="#6A1B9A"];
+    
+    config -> qvm [label="Architecture\nDefinitions", color="#6A1B9A"];
+    
+    browser -> qvm [label="HTTP POST\n/execute", color="#2E7D32"];
+    qvm -> browser [label="HTTP Response\n(JSON results)", color="#E65100"];
+}

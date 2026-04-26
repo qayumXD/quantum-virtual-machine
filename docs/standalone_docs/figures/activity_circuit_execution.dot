@@ -1,0 +1,72 @@
+digraph ActivityCircuitExecution {
+    rankdir=TB;
+    fontname="Arial";
+    fontsize=14;
+    label="Activity Diagram — Circuit Execution Flow";
+    labelloc=t;
+    bgcolor="white";
+    nodesep=0.4;
+    ranksep=0.5;
+    
+    node [fontname="Arial", fontsize=10, penwidth=1.5];
+    edge [fontname="Arial", fontsize=9, penwidth=1.2];
+
+    // Start
+    start [shape=circle, label="", width=0.3, style=filled, fillcolor="#212121"];
+    
+    // Actions (rounded boxes)
+    node [shape=box, style="filled,rounded"];
+    
+    loadFile [label="Load Circuit File\n(QASM 2.0 / 3.0 / JSON)", fillcolor="#E8F5E9", color="#2E7D32"];
+    detectFormat [label="Detect File Format", fillcolor="#E3F2FD", color="#1565C0"];
+    parseCircuit [label="Parse Circuit\n→ QuantumCircuit IR", fillcolor="#E3F2FD", color="#1565C0"];
+    validateCircuit [label="Validate Circuit\n(semantic checks)", fillcolor="#E3F2FD", color="#1565C0"];
+    
+    // Decision diamonds
+    node [shape=diamond, style=filled];
+    fileExists [label="File\nexists?", fillcolor="#FFF9C4", color="#F57F17"];
+    parseOK [label="Parse\nsucceeds?", fillcolor="#FFF9C4", color="#F57F17"];
+    transpileReq [label="Transpilation\nrequested?", fillcolor="#FFF9C4", color="#F57F17"];
+    selectBackend [label="Select\nbackend?", fillcolor="#FFF9C4", color="#F57F17"];
+    
+    // More actions
+    node [shape=box, style="filled,rounded"];
+    decompose [label="Decompose Complex Gates\n→ Native Gate Set", fillcolor="#FFF3E0", color="#E65100"];
+    transpile [label="Transpile Circuit\n(Greedy BFS / SABRE)", fillcolor="#FFF3E0", color="#E65100"];
+    simSV [label="Statevector Simulation\n(exact, ≤12 qubits)", fillcolor="#F3E5F5", color="#6A1B9A"];
+    simMPS [label="MPS Simulation\n(tensor network, 20+ qubits)", fillcolor="#F3E5F5", color="#6A1B9A"];
+    collectResults [label="Collect Results\n(statevector + classical memory)", fillcolor="#E3F2FD", color="#1565C0"];
+    visualize [label="Generate Visualizations\n(circuit diagram + histogram)", fillcolor="#FFEBEE", color="#C62828"];
+    displayResults [label="Display Results to User", fillcolor="#E8F5E9", color="#2E7D32"];
+    
+    // Error actions
+    errorFile [label="Report Error:\nFile Not Found", fillcolor="#FFEBEE", color="#C62828"];
+    errorParse [label="Report Error:\nSyntax / Semantic Error\n(line number + description)", fillcolor="#FFEBEE", color="#C62828"];
+    
+    // End
+    endNode [shape=doublecircle, label="", width=0.3, style=filled, fillcolor="#212121"];
+
+    // Flow
+    start -> loadFile;
+    loadFile -> fileExists;
+    fileExists -> detectFormat [label="Yes", color="#2E7D32"];
+    fileExists -> errorFile [label="No", color="#C62828"];
+    detectFormat -> parseCircuit;
+    parseCircuit -> parseOK;
+    parseOK -> validateCircuit [label="Yes", color="#2E7D32"];
+    parseOK -> errorParse [label="No", color="#C62828"];
+    validateCircuit -> transpileReq;
+    transpileReq -> decompose [label="Yes"];
+    transpileReq -> selectBackend [label="No"];
+    decompose -> transpile;
+    transpile -> selectBackend;
+    selectBackend -> simSV [label="Statevector"];
+    selectBackend -> simMPS [label="MPS"];
+    simSV -> collectResults;
+    simMPS -> collectResults;
+    collectResults -> visualize;
+    visualize -> displayResults;
+    displayResults -> endNode;
+    errorFile -> endNode;
+    errorParse -> endNode;
+}

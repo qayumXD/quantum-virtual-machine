@@ -1,0 +1,78 @@
+@startuml Sequence_CLI_Execution
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 200
+skinparam sequenceArrowThickness 1.5
+
+skinparam participant {
+    BackgroundColor #E3F2FD
+    BorderColor #1565C0
+    FontColor #212121
+}
+
+skinparam sequence {
+    LifeLineBorderColor #90A4AE
+    LifeLineBackgroundColor #ECEFF1
+    GroupBackgroundColor #F5F5F5
+    GroupBorderColor #BDBDBD
+}
+
+title Sequence Diagram — CLI Execution Flow
+
+actor "User" as U #E8F5E9
+participant "CLI" as CLI #E3F2FD
+participant "QASMParser /\nOpenQASM3Parser" as P #E8F5E9
+participant "QuantumCircuit\n(IR)" as IR #ECEFF1
+participant "Transpiler" as T #FFF3E0
+participant "Simulator /\nMPSSimulator" as S #F3E5F5
+participant "Visualizer" as V #FFEBEE
+
+U -> CLI: python -m qvm <circuit.qasm>\n[--arch linear_5] [--strategy sabre]
+activate CLI #E3F2FD
+
+CLI -> CLI: parse_args()
+CLI -> P: parse_file(circuit_path)
+activate P #E8F5E9
+P -> IR: QuantumCircuit(num_qubits)
+activate IR
+P -> IR: add_operation(gate, qubits, params) [×N]
+P --> CLI: circuit: QuantumCircuit
+deactivate IR
+deactivate P
+
+opt Transpilation Requested (--arch specified)
+    CLI -> T: transpile(circuit)
+    activate T #FFF3E0
+    T -> T: decompose complex gates
+    T -> T: map logical → physical qubits
+    T -> T: insert SWAP gates (BFS / SABRE)
+    T --> CLI: physical_circuit
+    deactivate T
+end
+
+CLI -> S: simulate(circuit, seed)
+activate S #F3E5F5
+S -> S: initialize |0⟩⊗n
+S -> S: apply gates (matrix ops)
+S -> S: perform measurements
+S --> CLI: (statevector, classical_memory)
+deactivate S
+
+CLI -> V: draw_circuit(circuit)
+activate V #FFEBEE
+V --> CLI: circuit_figure
+deactivate V
+
+CLI -> V: plot_probabilities(statevector)
+activate V #FFEBEE
+V --> CLI: histogram_figure
+deactivate V
+
+CLI --> U: Display results + visualizations
+deactivate CLI
+
+@enduml

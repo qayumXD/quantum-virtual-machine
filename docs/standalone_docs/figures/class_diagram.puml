@@ -1,0 +1,134 @@
+@startuml QVM_Class_Diagram
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam classFontSize 12
+skinparam classAttributeFontSize 10
+skinparam classStereotypeFontSize 10
+skinparam linetype ortho
+skinparam padding 5
+skinparam nodesep 60
+skinparam ranksep 50
+
+skinparam class {
+    BackgroundColor #E3F2FD
+    BorderColor #1565C0
+    ArrowColor #455A64
+    HeaderBackgroundColor #1565C0
+    FontColor #212121
+    HeaderFontColor #FFFFFF
+}
+
+title Quantum Virtual Machine — Class Diagram
+
+package "Intermediate Representation" #ECEFF1 {
+    class QuantumCircuit <<IR>> {
+        - num_qubits: int
+        - operations: List[dict]
+        - classical_registers: Dict[str, int]
+        + __init__(num_qubits: int)
+        + add_operation(gate_name, qubits, ...)
+        + add_classical_register(name, size)
+        + __str__(): str
+    }
+}
+
+package "Parsing Layer" #E8F5E9 {
+    class QASMParser <<Parser>> {
+        + {static} parse(circuit_desc, num_qubits): QuantumCircuit
+    }
+
+    class OpenQASM3Parser <<Parser>> {
+        - grammar: Lark
+        - circuit: QuantumCircuit
+        - declared_qubits: int
+        + parse_file(filepath): QuantumCircuit
+        - _first_pass(tree)
+        - _second_pass(tree)
+        - _process_gate(tree)
+    }
+}
+
+package "Compilation Layer" #FFF3E0 {
+    class Decomposer <<Compiler>> {
+        + decompose(circuit): QuantumCircuit
+        - _decompose_toffoli(qubits): List[dict]
+        - _decompose_ccx(qubits): List[dict]
+    }
+
+    class Transpiler <<Compiler>> {
+        - architecture: TargetArchitecture
+        - strategy: str
+        - restore_mapping: bool
+        - _distance_cache: dict
+        + transpile(logical_circuit): QuantumCircuit
+        - _transpile_greedy(circuit): QuantumCircuit
+        - _transpile_sabre(circuit): QuantumCircuit
+        - _bfs_shortest_path(start, end): List[int]
+        - _heuristic_cost(ready, map, decay): float
+        - _restore_identity_mapping(circuit, ...)
+    }
+
+    class TargetArchitecture <<Config>> {
+        - num_qubits: int
+        - connectivity: List[Tuple]
+        - name: str
+        + is_connected(q1, q2): bool
+    }
+}
+
+package "Simulation Layer" #F3E5F5 {
+    class Simulator <<Engine>> {
+        - GATES: dict
+        + simulate(circuit, seed): Tuple
+        - _apply_gate(state, gate, qubits, n)
+        - _apply_cx(state, control, target, n)
+        - _measure(state, qubit, n): Tuple
+    }
+
+    class MPSSimulator <<Engine>> {
+        - max_bond_dim: int
+        + simulate(circuit, seed): Tuple
+        - _apply_single_gate(tensors, gate, qubit)
+        - _apply_two_gate(tensors, gate, q1, q2)
+        - _svd_compress(tensors, idx)
+    }
+}
+
+package "Interface Layer" #FFEBEE {
+    class CLI <<UI>> {
+        + main()
+        - _parse_args(): Namespace
+        - _load_circuit(filepath): QuantumCircuit
+        - _execute(circuit, args)
+    }
+
+    class APIServer <<UI>> {
+        + /execute: POST
+        + /health: GET
+    }
+
+    class Visualizer <<UI>> {
+        + draw_circuit(circuit): Figure
+        + plot_probabilities(probs): Figure
+    }
+}
+
+' Relationships
+QASMParser ..> QuantumCircuit : <<creates>>
+OpenQASM3Parser ..> QuantumCircuit : <<creates>>
+Decomposer ..> QuantumCircuit : <<transforms>>
+Transpiler --> TargetArchitecture : uses
+Transpiler ..> QuantumCircuit : <<transforms>>
+Simulator ..> QuantumCircuit : <<executes>>
+MPSSimulator ..> QuantumCircuit : <<executes>>
+CLI --> QASMParser : delegates
+CLI --> OpenQASM3Parser : delegates
+CLI --> Transpiler : delegates
+CLI --> Simulator : delegates
+CLI --> Visualizer : delegates
+APIServer --> Simulator : delegates
+Visualizer ..> QuantumCircuit : <<reads>>
+
+@enduml

@@ -1,0 +1,48 @@
+digraph DFD_Level2 {
+    rankdir=LR;
+    fontname="Arial";
+    fontsize=14;
+    label="Data Flow Diagram — Level 2 (Module Level)";
+    labelloc=t;
+    labeljust=c;
+    bgcolor="white";
+    nodesep=0.8;
+    ranksep=1.2;
+    compound=true;
+    
+    node [fontname="Arial", fontsize=10, penwidth=1.5];
+    edge [fontname="Arial", fontsize=9, penwidth=1.2, color="#455A64"];
+
+    // External entities
+    user [label="User", shape=box, style="filled,rounded", fillcolor="#E8F5E9", color="#2E7D32"];
+    browser [label="Web Browser", shape=box, style="filled,rounded", fillcolor="#E8F5E9", color="#2E7D32"];
+
+    // Processes (circles/ellipses)
+    P1 [label="P1\nParse\nCircuit", shape=ellipse, style=filled, fillcolor="#E3F2FD", color="#1565C0"];
+    P2 [label="P2\nDecompose\nGates", shape=ellipse, style=filled, fillcolor="#E3F2FD", color="#1565C0"];
+    P3 [label="P3\nTranspile\nCircuit", shape=ellipse, style=filled, fillcolor="#E3F2FD", color="#1565C0"];
+    P4 [label="P4\nSimulate\nCircuit", shape=ellipse, style=filled, fillcolor="#FFF3E0", color="#E65100"];
+    P5 [label="P5\nVisualize\nResults", shape=ellipse, style=filled, fillcolor="#FFF3E0", color="#E65100"];
+    P6 [label="P6\nExport\nCircuit", shape=ellipse, style=filled, fillcolor="#FFF3E0", color="#E65100"];
+
+    // Data stores
+    D1 [label="D1 | Architecture Definitions\n(linear, grid topologies)", shape=box, style=filled, fillcolor="#F3E5F5", color="#6A1B9A"];
+    D2 [label="D2 | Gate Decomposition Rules\n(Toffoli → CX + single-qubit)", shape=box, style=filled, fillcolor="#F3E5F5", color="#6A1B9A"];
+    D3 [label="D3 | Simulation State\n(statevector, classical memory)", shape=box, style=filled, fillcolor="#F3E5F5", color="#6A1B9A"];
+
+    // Data flows
+    user -> P1 [label="Circuit Text\n(QASM/JSON)"];
+    P1 -> P2 [label="QuantumCircuit IR"];
+    P2 -> P3 [label="Native Gate\nCircuit"];
+    D2 -> P2 [label="Decomposition\nRules", style=dashed];
+    D1 -> P3 [label="Target\nTopology", style=dashed];
+    P3 -> P4 [label="Physical\nCircuit"];
+    P4 -> D3 [label="Intermediate\nState", style=dashed];
+    P4 -> P5 [label="Statevector +\nClassical Memory"];
+    P5 -> user [label="Visualizations\n(circuit diagram,\nhistogram)"];
+    P1 -> P6 [label="QuantumCircuit IR", style=dotted];
+    P6 -> user [label="OpenQASM\nString"];
+    
+    browser -> P1 [label="HTTP POST\n(JSON circuit)"];
+    P4 -> browser [label="HTTP Response\n(JSON results)"];
+}

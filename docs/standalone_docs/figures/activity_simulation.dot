@@ -1,0 +1,94 @@
+digraph ActivitySimulation {
+    rankdir=TB;
+    fontname="Arial";
+    fontsize=14;
+    label="Activity Diagram — Simulation Process";
+    labelloc=t;
+    bgcolor="white";
+    nodesep=0.5;
+    ranksep=0.5;
+    
+    node [fontname="Arial", fontsize=10, penwidth=1.5];
+    edge [fontname="Arial", fontsize=9, penwidth=1.2];
+
+    start [shape=circle, label="", width=0.3, style=filled, fillcolor="#212121"];
+    
+    node [shape=box, style="filled,rounded"];
+    
+    initState [label="Initialize Quantum State\n|0⟩⊗n (2^n complex amplitudes)", fillcolor="#E8F5E9", color="#2E7D32"];
+    initClassical [label="Initialize Classical Memory\n(all registers → 0)", fillcolor="#E8F5E9", color="#2E7D32"];
+    initPC [label="Initialize Program Counter\npc = 0, build label map", fillcolor="#E3F2FD", color="#1565C0"];
+    
+    node [shape=diamond, style=filled];
+    moreOps [label="More\noperations?", fillcolor="#FFF9C4", color="#F57F17"];
+    opType [label="Operation\ntype?", fillcolor="#FFF9C4", color="#F57F17"];
+    hasCondition [label="Has\ncondition?", fillcolor="#FFF9C4", color="#F57F17"];
+    condMet [label="Condition\nmet?", fillcolor="#FFF9C4", color="#F57F17"];
+    loopCheck [label="Infinite\nloop?", fillcolor="#FFF9C4", color="#F57F17"];
+    
+    node [shape=box, style="filled,rounded"];
+    
+    fetchOp [label="Fetch Operation\nat pc, increment pc", fillcolor="#E3F2FD", color="#1565C0"];
+    
+    // Gate operations
+    buildMatrix [label="Build Full Unitary Matrix\n(Kronecker products for\nsingle-qubit gates)", fillcolor="#F3E5F5", color="#6A1B9A"];
+    applyCX [label="Apply CX Gate\n(index permutation,\nno full matrix needed)", fillcolor="#F3E5F5", color="#6A1B9A"];
+    applyState [label="Multiply State Vector\nstate = U · state", fillcolor="#F3E5F5", color="#6A1B9A"];
+    
+    // Measurement
+    calcProbs [label="Calculate Measurement\nProbabilities |α|²", fillcolor="#FFF3E0", color="#E65100"];
+    collapse [label="Probabilistic Collapse\n(sample outcome,\nrenormalize state)", fillcolor="#FFF3E0", color="#E65100"];
+    updateClassical [label="Store Result in\nClassical Register", fillcolor="#FFF3E0", color="#E65100"];
+    
+    // Control flow
+    jumpLabel [label="Set pc = label_map[target]\n(jump / conditional jump)", fillcolor="#E3F2FD", color="#1565C0"];
+    classicalOp [label="Execute Classical Operation\n(AND, OR, XOR, NOT, ASSIGN)", fillcolor="#E3F2FD", color="#1565C0"];
+    skipOp [label="Skip Operation\n(condition not met)", fillcolor="#ECEFF1", color="#90A4AE"];
+    
+    // Results
+    calcProbsFinal [label="Calculate Final Probabilities\nfrom Statevector", fillcolor="#E8F5E9", color="#2E7D32"];
+    returnResults [label="Return\n(statevector, classical_memory)", fillcolor="#E8F5E9", color="#2E7D32"];
+    errorLoop [label="Error: Infinite Loop\nDetected (max ops exceeded)", fillcolor="#FFEBEE", color="#C62828"];
+    
+    endNode [shape=doublecircle, label="", width=0.3, style=filled, fillcolor="#212121"];
+
+    // Flow
+    start -> initState;
+    initState -> initClassical;
+    initClassical -> initPC;
+    initPC -> moreOps;
+    
+    moreOps -> fetchOp [label="Yes"];
+    moreOps -> calcProbsFinal [label="No"];
+    
+    fetchOp -> loopCheck;
+    loopCheck -> hasCondition [label="No"];
+    loopCheck -> errorLoop [label="Yes", color="#C62828"];
+    
+    hasCondition -> condMet [label="Yes"];
+    hasCondition -> opType [label="No"];
+    condMet -> opType [label="Yes"];
+    condMet -> skipOp [label="No"];
+    skipOp -> moreOps;
+    
+    opType -> buildMatrix [label="1-qubit gate"];
+    opType -> applyCX [label="CX gate"];
+    opType -> calcProbs [label="measure"];
+    opType -> jumpLabel [label="jump / label"];
+    opType -> classicalOp [label="classical_op"];
+    
+    buildMatrix -> applyState;
+    applyCX -> applyState;
+    applyState -> moreOps;
+    
+    calcProbs -> collapse;
+    collapse -> updateClassical;
+    updateClassical -> moreOps;
+    
+    jumpLabel -> moreOps;
+    classicalOp -> moreOps;
+    
+    calcProbsFinal -> returnResults;
+    returnResults -> endNode;
+    errorLoop -> endNode;
+}
