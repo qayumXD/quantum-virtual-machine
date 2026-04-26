@@ -19,24 +19,34 @@ The QVM system was designed using \textbf{Object-Oriented Design (OOD)} methodol
 \section{System Overview}
 The QVM system architecture is organized as a layered pipeline with clear boundaries between components. Figure \ref{fig:context} shows the system context, illustrating how the QVM interacts with external actors (developers, students, administrators) and external systems (file system, web browsers, IBM Quantum platform). The system accepts quantum programs through three interfaces (CLI, Web API, Web GUI) and produces results in multiple formats (statevector, probabilities, visualizations, OpenQASM export).
 
-\clearpage
-\begin{figure}[ht]
+\begin{sidewaysfigure}
 \centering
-\includegraphics[width=0.85\textwidth,height=0.8\textheight,keepaspectratio]{../uml/QVM_Context_Diagram.pdf}
+\includegraphics[width=0.95\linewidth,height=0.95\textheight,keepaspectratio]{../uml/QVM_Context_Diagram.pdf}
 \caption{System Context Diagram}
 \label{fig:context}
-\end{figure}
+\end{sidewaysfigure}
 
 The context diagram establishes the system boundary and identifies all external entities that interact with the QVM. Users provide quantum circuits as input and receive execution results as output. The system reads circuit files from the file system and can export results back to files. The web-based interfaces communicate with browsers via HTTP, and the OpenQASM export capability enables integration with external quantum platforms like IBM Quantum.
 
 \section{Architectural Design}
 The QVM follows a \textbf{7-layer pipeline architecture} as shown in Figure \ref{fig:architecture}. Each layer represents a distinct phase in the quantum program lifecycle:
 
-\clearpage
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../uml/QVM_Architecture_Diagram.pdf}
-\caption{System Architecture Diagram}
+\includegraphics[page=1,width=0.95\textwidth]{../uml/split/QVM_Architecture_Diagram.pdf}
+\caption{System Architecture Diagram (Part 1 of 3)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[page=2,width=0.95\textwidth]{../uml/split/QVM_Architecture_Diagram.pdf}
+\caption{System Architecture Diagram (Part 2 of 3)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[page=3,width=0.95\textwidth]{../uml/split/QVM_Architecture_Diagram.pdf}
+\caption{System Architecture Diagram (Part 3 of 3)}
 \label{fig:architecture}
 \end{figure}
 
@@ -62,11 +72,16 @@ Activity diagrams model the dynamic behavior of the system by showing the flow o
 \subsection{Circuit Execution Flow}
 Figure \ref{fig:activity_execution} shows the complete workflow from loading a circuit file to displaying results. The process includes error handling for invalid files and syntax errors, backend selection (Statevector vs MPS), optional transpilation, and result visualization.
 
-\clearpage
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.75\textwidth,height=0.8\textheight,keepaspectratio]{../uml/Activity_Circuit_Execution.pdf}
-\caption{Activity Diagram - Circuit Execution Flow}
+\includegraphics[page=1,width=0.95\textwidth]{../uml/split/Activity_Circuit_Execution.pdf}
+\caption{Activity Diagram - Circuit Execution Flow (Part 1 of 2)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[page=2,width=0.95\textwidth]{../uml/split/Activity_Circuit_Execution.pdf}
+\caption{Activity Diagram - Circuit Execution Flow (Part 2 of 2)}
 \label{fig:activity_execution}
 \end{figure}
 
@@ -75,11 +90,22 @@ The execution flow begins with the user providing a circuit file. The system val
 \subsection{Transpilation Process}
 Figure \ref{fig:activity_transpile} details the transpilation workflow, showing how logical circuits are mapped to physical hardware topologies. The process includes gate decomposition, qubit routing (with choice between Greedy and SABRE algorithms), SWAP insertion, and optional mapping restoration.
 
-\clearpage
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.75\textwidth,height=0.8\textheight,keepaspectratio]{../uml/Activity_Transpilation.pdf}
-\caption{Activity Diagram - Transpilation Process}
+\includegraphics[page=1,width=0.95\textwidth]{../uml/split/Activity_Transpilation.pdf}
+\caption{Activity Diagram - Transpilation Process (Part 1 of 3)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[page=2,width=0.95\textwidth]{../uml/split/Activity_Transpilation.pdf}
+\caption{Activity Diagram - Transpilation Process (Part 2 of 3)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[page=3,width=0.95\textwidth]{../uml/split/Activity_Transpilation.pdf}
+\caption{Activity Diagram - Transpilation Process (Part 3 of 3)}
 \label{fig:activity_transpile}
 \end{figure}
 
@@ -88,26 +114,24 @@ The transpilation process starts by analyzing the logical circuit's connectivity
 \subsection{Simulation Process}
 Figure \ref{fig:activity_simulate} illustrates the simulation workflow, including state initialization, gate application, measurement with collapse, and control flow handling (labels, jumps, conditionals).
 
-\clearpage
-\begin{figure}[ht]
+\begin{sidewaysfigure}
 \centering
-\includegraphics[width=0.75\textwidth,height=0.8\textheight,keepaspectratio]{../uml/Activity_Simulation.pdf}
+\includegraphics[width=0.95\linewidth,height=0.95\textheight,keepaspectratio]{../uml/Activity_Simulation.pdf}
 \caption{Activity Diagram - Simulation Process}
 \label{fig:activity_simulate}
-\end{figure}
+\end{sidewaysfigure}
 
 The simulation process initializes the quantum state to $|0\rangle^{\otimes n}$ and classical memory to zeros. It then iterates through circuit operations, applying unitary transformations for gates, performing probabilistic collapse for measurements, and updating classical memory. Control flow operations (if, while, jump) are handled by maintaining a program counter and label map. The process includes infinite loop detection to prevent runaway execution.
 
 \section{Class Diagram}
 The class diagram in Figure \ref{fig:class} shows the static structure of the QVM system, including all major classes, their attributes, methods, and relationships.
 
-\clearpage
-\begin{figure}[ht]
+\begin{sidewaysfigure}
 \centering
-\includegraphics[width=0.95\textwidth,height=0.8\textheight,keepaspectratio]{../uml/QVM_Class_Diagram.pdf}
+\includegraphics[width=0.95\linewidth,height=0.95\textheight,keepaspectratio]{../uml/QVM_Class_Diagram.pdf}
 \caption{Class Diagram - System Structure}
 \label{fig:class}
-\end{figure}
+\end{sidewaysfigure}
 
 \textbf{Core Classes:}
 
@@ -145,11 +169,16 @@ Sequence diagrams show the dynamic interactions between objects over time. The Q
 \subsection{CLI Execution Flow}
 Figure \ref{fig:seq_cli} shows the interaction sequence when a user executes a circuit via the command-line interface.
 
-\clearpage
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../uml/Sequence_CLI_Execution.pdf}
-\caption{Sequence Diagram - CLI Execution}
+\includegraphics[page=1,width=0.95\textwidth]{../uml/split/Sequence_CLI_Execution.pdf}
+\caption{Sequence Diagram - CLI Execution (Part 1 of 2)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[page=2,width=0.95\textwidth]{../uml/split/Sequence_CLI_Execution.pdf}
+\caption{Sequence Diagram - CLI Execution (Part 2 of 2)}
 \label{fig:seq_cli}
 \end{figure}
 
@@ -158,11 +187,22 @@ The sequence begins with the user invoking the CLI with a circuit file. The CLI 
 \subsection{API Request Flow}
 Figure \ref{fig:seq_api} illustrates the interaction when a client submits a circuit via the REST API.
 
-\clearpage
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../uml/Sequence_API_Request.pdf}
-\caption{Sequence Diagram - API Request}
+\includegraphics[page=1,width=0.95\textwidth]{../uml/split/Sequence_API_Request.pdf}
+\caption{Sequence Diagram - API Request (Part 1 of 3)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[page=2,width=0.95\textwidth]{../uml/split/Sequence_API_Request.pdf}
+\caption{Sequence Diagram - API Request (Part 2 of 3)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[page=3,width=0.95\textwidth]{../uml/split/Sequence_API_Request.pdf}
+\caption{Sequence Diagram - API Request (Part 3 of 3)}
 \label{fig:seq_api}
 \end{figure}
 
@@ -171,11 +211,22 @@ The client sends an HTTP POST request with a JSON circuit definition. The APISer
 \subsection{Transpilation Detail}
 Figure \ref{fig:seq_transpile} shows the detailed interaction during the transpilation process.
 
-\clearpage
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../uml/Sequence_Transpilation_Detail.pdf}
-\caption{Sequence Diagram - Transpilation Detail}
+\includegraphics[page=1,width=0.95\textwidth]{../uml/split/Sequence_Transpilation_Detail.pdf}
+\caption{Sequence Diagram - Transpilation Detail (Part 1 of 3)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[page=2,width=0.95\textwidth]{../uml/split/Sequence_Transpilation_Detail.pdf}
+\caption{Sequence Diagram - Transpilation Detail (Part 2 of 3)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[page=3,width=0.95\textwidth]{../uml/split/Sequence_Transpilation_Detail.pdf}
+\caption{Sequence Diagram - Transpilation Detail (Part 3 of 3)}
 \label{fig:seq_transpile}
 \end{figure}
 
@@ -184,8 +235,7 @@ The Transpiler receives a logical circuit and target architecture. It first invo
 \section{State Transition Diagrams}
 State transition diagrams model the lifecycle of key entities in the system. Figure \ref{fig:state} shows the state transitions for a quantum circuit as it progresses through the QVM pipeline.
 
-\clearpage
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth,height=0.8\textheight,keepaspectratio]{../uml/State_Circuit_Lifecycle.pdf}
 \caption{State Transition Diagram - Circuit Lifecycle}
@@ -222,13 +272,12 @@ State transition diagrams model the lifecycle of key entities in the system. Fig
 \subsection{Level 1 DFD - System Level}
 Figure \ref{fig:dfd1} shows the high-level data flows between the QVM system and external entities.
 
-\clearpage
-\begin{figure}[ht]
+\begin{sidewaysfigure}
 \centering
-\includegraphics[width=0.85\textwidth,height=0.8\textheight,keepaspectratio]{../uml/DFD_Level1.pdf}
+\includegraphics[width=0.95\linewidth,height=0.95\textheight,keepaspectratio]{../uml/DFD_Level1.pdf}
 \caption{Data Flow Diagram - Level 1 (System Level)}
 \label{fig:dfd1}
-\end{figure}
+\end{sidewaysfigure}
 
 \textbf{External Entities:}
 - User: Provides circuit files and execution parameters
@@ -251,13 +300,12 @@ Figure \ref{fig:dfd1} shows the high-level data flows between the QVM system and
 \subsection{Level 2 DFD - Module Level}
 Figure \ref{fig:dfd2} shows the detailed data flows between internal modules.
 
-\clearpage
-\begin{figure}[ht]
+\begin{sidewaysfigure}
 \centering
-\includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../uml/DFD_Level2.pdf}
+\includegraphics[width=0.95\linewidth,height=0.95\textheight,keepaspectratio]{../uml/DFD_Level2.pdf}
 \caption{Data Flow Diagram - Level 2 (Module Level)}
 \label{fig:dfd2}
-\end{figure}
+\end{sidewaysfigure}
 
 \textbf{Processes:}
 
