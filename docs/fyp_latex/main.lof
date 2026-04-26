@@ -1,0 +1,23 @@
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Use Case Diagram for Quantum Virtual Machine}}{34}{figure.3.1}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces System Context Diagram}}{36}{figure.4.1}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces System Architecture Diagram}}{38}{figure.4.2}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Activity Diagram - Circuit Execution Flow}}{40}{figure.4.3}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Activity Diagram - Transpilation Process}}{42}{figure.4.4}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Activity Diagram - Simulation Process}}{43}{figure.4.5}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Class Diagram - System Structure}}{44}{figure.4.6}%
+\contentsline {figure}{\numberline {4.7}{\ignorespaces Sequence Diagram - CLI Execution}}{47}{figure.4.7}%
+\contentsline {figure}{\numberline {4.8}{\ignorespaces Sequence Diagram - API Request}}{49}{figure.4.8}%
+\contentsline {figure}{\numberline {4.9}{\ignorespaces Sequence Diagram - Transpilation Detail}}{51}{figure.4.9}%
+\contentsline {figure}{\numberline {4.10}{\ignorespaces State Transition Diagram - Circuit Lifecycle}}{53}{figure.4.10}%
+\contentsline {figure}{\numberline {4.11}{\ignorespaces Data Flow Diagram - Level 1 (System Level)}}{54}{figure.4.11}%
+\contentsline {figure}{\numberline {4.12}{\ignorespaces Data Flow Diagram - Level 2 (Module Level)}}{55}{figure.4.12}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Web GUI Main Interface - Circuit Editor and Execution Options}}{69}{figure.5.1}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Web GUI Results Display - Circuit Visualization and Probability Histogram}}{70}{figure.5.2}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces CLI Execution Examples - Multiple Quantum Algorithm Executions}}{71}{figure.5.3}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }

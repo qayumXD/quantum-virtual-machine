@@ -1,0 +1,43 @@
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {1.1}{\ignorespaces Comparative Analysis of Existing Systems}}{4}{table.1.1}%
+\contentsline {table}{\numberline {1.2}{\ignorespaces Tools and Technologies Used in the Project}}{9}{table.1.2}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces User Classes and Characteristics}}{20}{table.3.1}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces Functional Requirements - Parsing Module}}{25}{table.3.2}%
+\contentsline {table}{\numberline {3.3}{\ignorespaces Functional Requirements - IR Module}}{26}{table.3.3}%
+\contentsline {table}{\numberline {3.4}{\ignorespaces Functional Requirements - Transpiler Module}}{27}{table.3.4}%
+\contentsline {table}{\numberline {3.5}{\ignorespaces Functional Requirements - Simulator Module}}{28}{table.3.5}%
+\contentsline {table}{\numberline {3.6}{\ignorespaces Functional Requirements - Visualization Module}}{29}{table.3.6}%
+\contentsline {table}{\numberline {3.7}{\ignorespaces Functional Requirements - Interface Module}}{29}{table.3.7}%
+\contentsline {table}{\numberline {3.8}{\ignorespaces Non-Functional Requirements - Performance}}{30}{table.3.8}%
+\contentsline {table}{\numberline {3.9}{\ignorespaces Non-Functional Requirements - Reliability}}{30}{table.3.9}%
+\contentsline {table}{\numberline {3.10}{\ignorespaces Non-Functional Requirements - Usability}}{31}{table.3.10}%
+\contentsline {table}{\numberline {3.11}{\ignorespaces Non-Functional Requirements - Portability}}{31}{table.3.11}%
+\contentsline {table}{\numberline {3.12}{\ignorespaces Non-Functional Requirements - Maintainability}}{32}{table.3.12}%
+\contentsline {table}{\numberline {3.13}{\ignorespaces Non-Functional Requirements - Security}}{32}{table.3.13}%
+\contentsline {table}{\numberline {3.14}{\ignorespaces Requirement Traceability Matrix}}{33}{table.3.14}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{\ignorespaces QuantumCircuit Data Structure}}{56}{table.4.1}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces Operation Data Structure}}{57}{table.4.2}%
+\contentsline {table}{\numberline {4.3}{\ignorespaces Condition Data Structure}}{57}{table.4.3}%
+\contentsline {table}{\numberline {4.4}{\ignorespaces Classical Operation Data Structure}}{58}{table.4.4}%
+\contentsline {table}{\numberline {4.5}{\ignorespaces TargetArchitecture Data Structure}}{58}{table.4.5}%
+\contentsline {table}{\numberline {4.6}{\ignorespaces Simulation Results Data Structure}}{58}{table.4.6}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{\ignorespaces External Libraries and Their Usage}}{67}{table.5.1}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {6.1}{\ignorespaces Parser Unit Tests}}{75}{table.6.1}%
+\contentsline {table}{\numberline {6.2}{\ignorespaces Simulator Unit Tests}}{75}{table.6.2}%
+\contentsline {table}{\numberline {6.3}{\ignorespaces Transpiler Unit Tests}}{76}{table.6.3}%
+\contentsline {table}{\numberline {6.4}{\ignorespaces Integration Tests}}{77}{table.6.4}%
+\contentsline {table}{\numberline {6.5}{\ignorespaces Algorithm Verification Tests}}{78}{table.6.5}%
+\contentsline {table}{\numberline {6.6}{\ignorespaces Functional Requirements Test Coverage}}{78}{table.6.6}%
+\contentsline {table}{\numberline {6.7}{\ignorespaces Statevector Simulation Performance}}{79}{table.6.7}%
+\contentsline {table}{\numberline {6.8}{\ignorespaces Transpilation Performance}}{79}{table.6.8}%
+\contentsline {table}{\numberline {6.9}{\ignorespaces MPS Simulation Performance}}{80}{table.6.9}%
+\contentsline {table}{\numberline {6.10}{\ignorespaces Security Tests}}{81}{table.6.10}%
+\contentsline {table}{\numberline {6.11}{\ignorespaces UAT Participants}}{81}{table.6.11}%
+\contentsline {table}{\numberline {6.12}{\ignorespaces UAT Scenarios and Results}}{82}{table.6.12}%
+\contentsline {table}{\numberline {6.13}{\ignorespaces Overall Test Results}}{82}{table.6.13}%
+\addvspace {10\p@ }

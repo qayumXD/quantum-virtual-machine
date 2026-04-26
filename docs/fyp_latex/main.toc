@@ -1,0 +1,146 @@
+\contentsline {chapter}{Dedication}{i}{chapter*.1}%
+\contentsline {chapter}{Acknowledgements}{ii}{chapter*.2}%
+\contentsline {chapter}{Executive Summary}{v}{chapter*.3}%
+\contentsline {chapter}{List of Abbreviations}{viii}{chapter*.4}%
+\contentsline {section}{List of Tables}{xiv}{table.0.1}%
+\contentsline {section}{List of Figures}{xvi}{table.0.1}%
+\contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Introduction}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Vision Statement}{2}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Related System Analysis}{3}{section.1.3}%
+\contentsline {section}{\numberline {1.4}Project Deliverables}{5}{section.1.4}%
+\contentsline {section}{\numberline {1.5}System Limitations / Constraints}{6}{section.1.5}%
+\contentsline {section}{\numberline {1.6}Tools and Technologies}{8}{section.1.6}%
+\contentsline {section}{\numberline {1.7}Relevance to Course Modules}{9}{section.1.7}%
+\contentsline {subsection}{\numberline {1.7.1}Programming Fundamentals}{9}{subsection.1.7.1}%
+\contentsline {subsection}{\numberline {1.7.2}Data Structures and Algorithms}{10}{subsection.1.7.2}%
+\contentsline {subsection}{\numberline {1.7.3}Database Management Systems}{10}{subsection.1.7.3}%
+\contentsline {subsection}{\numberline {1.7.4}Software Engineering}{10}{subsection.1.7.4}%
+\contentsline {subsection}{\numberline {1.7.5}Other Relevant Courses}{11}{subsection.1.7.5}%
+\contentsline {section}{\numberline {1.8}Chapter Summary}{11}{section.1.8}%
+\contentsline {chapter}{\numberline {2}Problem Definition}{12}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Problem Statement}{12}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Proposed Solution Overview}{12}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Objectives of the Proposed System}{12}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Scope of the System}{13}{section.2.4}%
+\contentsline {section}{\numberline {2.5}System Architecture and Modules}{13}{section.2.5}%
+\contentsline {subsection}{\numberline {2.5.1}Module 1: Parser Module}{14}{subsection.2.5.1}%
+\contentsline {subsection}{\numberline {2.5.2}Module 2: Transpiler Module}{14}{subsection.2.5.2}%
+\contentsline {subsection}{\numberline {2.5.3}Module 3: Simulator Module}{15}{subsection.2.5.3}%
+\contentsline {subsection}{\numberline {2.5.4}Module 4: Visualization Module}{16}{subsection.2.5.4}%
+\contentsline {subsection}{\numberline {2.5.5}Module 5: CLI and Web API Module}{16}{subsection.2.5.5}%
+\contentsline {section}{\numberline {2.6}Assumptions and Dependencies}{17}{section.2.6}%
+\contentsline {section}{\numberline {2.7}Chapter Summary}{17}{section.2.7}%
+\contentsline {chapter}{\numberline {3}Requirement Analysis}{19}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Introduction}{19}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Requirement Elicitation Techniques}{19}{section.3.2}%
+\contentsline {section}{\numberline {3.3}User Classes and Characteristics}{19}{section.3.3}%
+\contentsline {section}{\numberline {3.4}System Overview}{19}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Use Case Model}{20}{section.3.5}%
+\contentsline {subsection}{\numberline {3.5.1}Use Case Diagram}{20}{subsection.3.5.1}%
+\contentsline {subsection}{\numberline {3.5.2}Use Case Descriptions}{20}{subsection.3.5.2}%
+\contentsline {section}{\numberline {3.6}Functional Requirements}{25}{section.3.6}%
+\contentsline {subsection}{\numberline {3.6.1}Module 1: Parsing and Input Processing}{25}{subsection.3.6.1}%
+\contentsline {subsection}{\numberline {3.6.2}Module 2: Intermediate Representation}{25}{subsection.3.6.2}%
+\contentsline {subsection}{\numberline {3.6.3}Module 3: Transpilation and Optimization}{26}{subsection.3.6.3}%
+\contentsline {subsection}{\numberline {3.6.4}Module 4: Simulation Engines}{26}{subsection.3.6.4}%
+\contentsline {subsection}{\numberline {3.6.5}Module 5: Visualization and Output}{26}{subsection.3.6.5}%
+\contentsline {subsection}{\numberline {3.6.6}Module 6: User Interfaces}{26}{subsection.3.6.6}%
+\contentsline {section}{\numberline {3.7}Non-Functional Requirements}{27}{section.3.7}%
+\contentsline {subsection}{\numberline {3.7.1}Performance Requirements}{27}{subsection.3.7.1}%
+\contentsline {subsection}{\numberline {3.7.2}Reliability Requirements}{28}{subsection.3.7.2}%
+\contentsline {subsection}{\numberline {3.7.3}Usability Requirements}{28}{subsection.3.7.3}%
+\contentsline {subsection}{\numberline {3.7.4}Portability Requirements}{28}{subsection.3.7.4}%
+\contentsline {subsection}{\numberline {3.7.5}Maintainability Requirements}{29}{subsection.3.7.5}%
+\contentsline {subsection}{\numberline {3.7.6}Security Requirements}{29}{subsection.3.7.6}%
+\contentsline {section}{\numberline {3.8}External Interface Requirements}{30}{section.3.8}%
+\contentsline {subsection}{\numberline {3.8.1}User Interfaces}{30}{subsection.3.8.1}%
+\contentsline {subsection}{\numberline {3.8.2}Hardware Interfaces}{31}{subsection.3.8.2}%
+\contentsline {subsection}{\numberline {3.8.3}Software Interfaces}{31}{subsection.3.8.3}%
+\contentsline {subsection}{\numberline {3.8.4}Communication Interfaces}{32}{subsection.3.8.4}%
+\contentsline {section}{\numberline {3.9}Requirement Traceability Matrix}{32}{section.3.9}%
+\contentsline {section}{\numberline {3.10}Summary}{32}{section.3.10}%
+\contentsline {chapter}{\numberline {4}Software Design}{35}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Introduction}{35}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Design Methodology}{35}{section.4.2}%
+\contentsline {section}{\numberline {4.3}System Overview}{35}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Architectural Design}{36}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Activity Diagrams}{37}{section.4.5}%
+\contentsline {subsection}{\numberline {4.5.1}Circuit Execution Flow}{37}{subsection.4.5.1}%
+\contentsline {subsection}{\numberline {4.5.2}Transpilation Process}{39}{subsection.4.5.2}%
+\contentsline {subsection}{\numberline {4.5.3}Simulation Process}{41}{subsection.4.5.3}%
+\contentsline {section}{\numberline {4.6}Class Diagram}{43}{section.4.6}%
+\contentsline {section}{\numberline {4.7}Sequence Diagrams}{45}{section.4.7}%
+\contentsline {subsection}{\numberline {4.7.1}CLI Execution Flow}{45}{subsection.4.7.1}%
+\contentsline {subsection}{\numberline {4.7.2}API Request Flow}{46}{subsection.4.7.2}%
+\contentsline {subsection}{\numberline {4.7.3}Transpilation Detail}{48}{subsection.4.7.3}%
+\contentsline {section}{\numberline {4.8}State Transition Diagrams}{50}{section.4.8}%
+\contentsline {section}{\numberline {4.9}Data Flow Diagrams}{52}{section.4.9}%
+\contentsline {subsection}{\numberline {4.9.1}Level 1 DFD - System Level}{52}{subsection.4.9.1}%
+\contentsline {subsection}{\numberline {4.9.2}Level 2 DFD - Module Level}{54}{subsection.4.9.2}%
+\contentsline {section}{\numberline {4.10}Entity-Relationship Diagram}{55}{section.4.10}%
+\contentsline {section}{\numberline {4.11}Data Dictionary}{56}{section.4.11}%
+\contentsline {subsection}{\numberline {4.11.1}QuantumCircuit IR Structure}{56}{subsection.4.11.1}%
+\contentsline {subsection}{\numberline {4.11.2}Operation Dictionary Structure}{57}{subsection.4.11.2}%
+\contentsline {subsection}{\numberline {4.11.3}Condition Dictionary Structure}{57}{subsection.4.11.3}%
+\contentsline {subsection}{\numberline {4.11.4}Classical Operation Dictionary Structure}{57}{subsection.4.11.4}%
+\contentsline {subsection}{\numberline {4.11.5}Target Architecture Structure}{57}{subsection.4.11.5}%
+\contentsline {subsection}{\numberline {4.11.6}Simulation Results Structure}{57}{subsection.4.11.6}%
+\contentsline {section}{\numberline {4.12}Summary}{57}{section.4.12}%
+\contentsline {chapter}{\numberline {5}Implementation}{59}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Development Environment}{59}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Core Module Implementation}{59}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}Module 1: Parser Layer}{59}{subsection.5.2.1}%
+\contentsline {subsection}{\numberline {5.2.2}Module 2: Intermediate Representation}{60}{subsection.5.2.2}%
+\contentsline {subsection}{\numberline {5.2.3}Module 3: Transpiler}{61}{subsection.5.2.3}%
+\contentsline {subsection}{\numberline {5.2.4}Module 4: Simulator Engines}{61}{subsection.5.2.4}%
+\contentsline {subsection}{\numberline {5.2.5}Module 5: Decomposer}{63}{subsection.5.2.5}%
+\contentsline {subsection}{\numberline {5.2.6}Module 6: Visualization}{63}{subsection.5.2.6}%
+\contentsline {section}{\numberline {5.3}Algorithm Implementation}{63}{section.5.3}%
+\contentsline {subsection}{\numberline {5.3.1}SABRE Routing Algorithm}{63}{subsection.5.3.1}%
+\contentsline {subsection}{\numberline {5.3.2}BFS Shortest Path Algorithm}{65}{subsection.5.3.2}%
+\contentsline {subsection}{\numberline {5.3.3}MPS Tensor Contraction Algorithm}{66}{subsection.5.3.3}%
+\contentsline {section}{\numberline {5.4}External APIs and SDKs}{66}{section.5.4}%
+\contentsline {section}{\numberline {5.5}User Interface Implementation}{67}{section.5.5}%
+\contentsline {subsection}{\numberline {5.5.1}Command-Line Interface (CLI)}{67}{subsection.5.5.1}%
+\contentsline {subsection}{\numberline {5.5.2}Web API}{68}{subsection.5.5.2}%
+\contentsline {subsection}{\numberline {5.5.3}Web GUI}{69}{subsection.5.5.3}%
+\contentsline {subsection}{\numberline {5.5.4}Command-Line Interface}{70}{subsection.5.5.4}%
+\contentsline {section}{\numberline {5.6}Deployment}{70}{section.5.6}%
+\contentsline {subsection}{\numberline {5.6.1}Local Installation}{70}{subsection.5.6.1}%
+\contentsline {subsection}{\numberline {5.6.2}Running the System}{71}{subsection.5.6.2}%
+\contentsline {subsection}{\numberline {5.6.3}Testing}{72}{subsection.5.6.3}%
+\contentsline {section}{\numberline {5.7}Summary}{72}{section.5.7}%
+\contentsline {chapter}{\numberline {6}Testing and Evaluation}{74}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Testing Strategy}{74}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Unit Testing}{74}{section.6.2}%
+\contentsline {subsection}{\numberline {6.2.1}Parser Tests}{75}{subsection.6.2.1}%
+\contentsline {subsection}{\numberline {6.2.2}Simulator Tests}{75}{subsection.6.2.2}%
+\contentsline {subsection}{\numberline {6.2.3}Transpiler Tests}{76}{subsection.6.2.3}%
+\contentsline {section}{\numberline {6.3}Integration Testing}{77}{section.6.3}%
+\contentsline {section}{\numberline {6.4}System Testing}{77}{section.6.4}%
+\contentsline {subsection}{\numberline {6.4.1}Algorithm Verification Tests}{77}{subsection.6.4.1}%
+\contentsline {subsection}{\numberline {6.4.2}Functional Requirements Validation}{78}{subsection.6.4.2}%
+\contentsline {section}{\numberline {6.5}Performance Testing}{79}{section.6.5}%
+\contentsline {subsection}{\numberline {6.5.1}Simulation Performance}{79}{subsection.6.5.1}%
+\contentsline {subsection}{\numberline {6.5.2}Transpilation Performance}{79}{subsection.6.5.2}%
+\contentsline {subsection}{\numberline {6.5.3}MPS Simulation Performance}{80}{subsection.6.5.3}%
+\contentsline {section}{\numberline {6.6}Security Testing}{80}{section.6.6}%
+\contentsline {subsection}{\numberline {6.6.1}Input Validation Tests}{80}{subsection.6.6.1}%
+\contentsline {section}{\numberline {6.7}User Acceptance Testing}{81}{section.6.7}%
+\contentsline {subsection}{\numberline {6.7.1}Test Participants}{81}{subsection.6.7.1}%
+\contentsline {subsection}{\numberline {6.7.2}Test Scenarios}{81}{subsection.6.7.2}%
+\contentsline {subsection}{\numberline {6.7.3}User Feedback}{81}{subsection.6.7.3}%
+\contentsline {section}{\numberline {6.8}Test Results Summary}{82}{section.6.8}%
+\contentsline {section}{\numberline {6.9}Summary}{83}{section.6.9}%
+\contentsline {chapter}{\numberline {7}Conclusion and Future Work}{84}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Conclusion}{84}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Future Work}{85}{section.7.2}%
+\contentsline {section}{\numberline {7.3}Limitations}{86}{section.7.3}%
+\contentsline {chapter}{Appendices}{88}{appendix*.5}%
+\contentsline {section}{Appendix A – Turnitin Similarity Report}{88}{section*.6}%
+\contentsline {section}{Appendix B – AI Writing Detection Report}{89}{section*.6}%
+\contentsline {section}{Appendix C – Source Code}{90}{section*.6}%
+\contentsline {subsection}{\numberline {.0.1}File 1: Intermediate Representation (ir.py)}{91}{subsection.Alph0.0.1}%
+\contentsline {subsection}{\numberline {.0.2}File 2: Hardware Architecture (architecture.py)}{94}{subsection.Alph0.0.2}%
+\contentsline {subsection}{\numberline {.0.3}File 3: Gate Decomposer (decomposer.py)}{97}{subsection.Alph0.0.3}%

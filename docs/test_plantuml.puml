@@ -1,0 +1,16 @@
+@startuml
+title Simple QVM Architecture Test
+
+actor User
+participant "CLI" as CLI
+participant "Parser" as Parser
+participant "Simulator" as Sim
+database "Results" as Results
+
+User -> CLI: Load circuit
+CLI -> Parser: Parse QASM
+Parser -> Sim: Execute circuit
+Sim -> Results: Store results
+Results -> User: Display output
+
+@enduml
