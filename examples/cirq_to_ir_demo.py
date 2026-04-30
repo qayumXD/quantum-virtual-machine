@@ -14,7 +14,7 @@ except ImportError:
     print("Cirq is not installed. Install with: pip install cirq")
     raise SystemExit(1)
 
-from src.parser import CirqParser
+from src.qvm.parser import CirqParser
 
 
 def main():

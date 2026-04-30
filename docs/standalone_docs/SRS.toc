@@ -1,56 +1,29 @@
-\contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}%
+\contentsline {chapter}{\numberline {1}Requirement Analysis}{1}{chapter.1}%
 \contentsline {section}{\numberline {1.1}Introduction}{1}{section.1.1}%
-\contentsline {section}{\numberline {1.2}Vision Statement}{2}{section.1.2}%
-\contentsline {section}{\numberline {1.3}Related System Analysis}{3}{section.1.3}%
-\contentsline {section}{\numberline {1.4}Project Deliverables}{5}{section.1.4}%
-\contentsline {section}{\numberline {1.5}System Limitations / Constraints}{6}{section.1.5}%
-\contentsline {section}{\numberline {1.6}Tools and Technologies}{8}{section.1.6}%
-\contentsline {section}{\numberline {1.7}Relevance to Course Modules}{9}{section.1.7}%
-\contentsline {subsection}{\numberline {1.7.1}Programming Fundamentals}{9}{subsection.1.7.1}%
-\contentsline {subsection}{\numberline {1.7.2}Data Structures and Algorithms}{10}{subsection.1.7.2}%
-\contentsline {subsection}{\numberline {1.7.3}Database Management Systems}{10}{subsection.1.7.3}%
-\contentsline {subsection}{\numberline {1.7.4}Software Engineering}{10}{subsection.1.7.4}%
-\contentsline {subsection}{\numberline {1.7.5}Other Relevant Courses}{11}{subsection.1.7.5}%
-\contentsline {section}{\numberline {1.8}Chapter Summary}{11}{section.1.8}%
-\contentsline {chapter}{\numberline {2}Problem Definition}{12}{chapter.2}%
-\contentsline {section}{\numberline {2.1}Problem Statement}{12}{section.2.1}%
-\contentsline {section}{\numberline {2.2}Proposed Solution Overview}{12}{section.2.2}%
-\contentsline {section}{\numberline {2.3}Objectives of the Proposed System}{12}{section.2.3}%
-\contentsline {section}{\numberline {2.4}Scope of the System}{13}{section.2.4}%
-\contentsline {section}{\numberline {2.5}System Architecture and Modules}{13}{section.2.5}%
-\contentsline {subsection}{\numberline {2.5.1}Module 1: Parser Module}{14}{subsection.2.5.1}%
-\contentsline {subsection}{\numberline {2.5.2}Module 2: Transpiler Module}{14}{subsection.2.5.2}%
-\contentsline {subsection}{\numberline {2.5.3}Module 3: Simulator Module}{15}{subsection.2.5.3}%
-\contentsline {subsection}{\numberline {2.5.4}Module 4: Visualization Module}{16}{subsection.2.5.4}%
-\contentsline {subsection}{\numberline {2.5.5}Module 5: CLI and Web API Module}{16}{subsection.2.5.5}%
-\contentsline {section}{\numberline {2.6}Assumptions and Dependencies}{17}{section.2.6}%
-\contentsline {section}{\numberline {2.7}Chapter Summary}{17}{section.2.7}%
-\contentsline {chapter}{\numberline {3}Requirement Analysis}{19}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Introduction}{19}{section.3.1}%
-\contentsline {section}{\numberline {3.2}Requirement Elicitation Techniques}{19}{section.3.2}%
-\contentsline {section}{\numberline {3.3}User Classes and Characteristics}{19}{section.3.3}%
-\contentsline {section}{\numberline {3.4}System Overview}{19}{section.3.4}%
-\contentsline {section}{\numberline {3.5}Use Case Model}{20}{section.3.5}%
-\contentsline {subsection}{\numberline {3.5.1}Use Case Diagram}{20}{subsection.3.5.1}%
-\contentsline {subsection}{\numberline {3.5.2}Use Case Descriptions}{21}{subsection.3.5.2}%
-\contentsline {section}{\numberline {3.6}Functional Requirements}{26}{section.3.6}%
-\contentsline {subsection}{\numberline {3.6.1}Module 1: Parsing and Input Processing}{26}{subsection.3.6.1}%
-\contentsline {subsection}{\numberline {3.6.2}Module 2: Intermediate Representation}{26}{subsection.3.6.2}%
-\contentsline {subsection}{\numberline {3.6.3}Module 3: Transpilation and Optimization}{26}{subsection.3.6.3}%
-\contentsline {subsection}{\numberline {3.6.4}Module 4: Simulation Engines}{27}{subsection.3.6.4}%
-\contentsline {subsection}{\numberline {3.6.5}Module 5: Visualization and Output}{27}{subsection.3.6.5}%
-\contentsline {subsection}{\numberline {3.6.6}Module 6: User Interfaces}{27}{subsection.3.6.6}%
-\contentsline {section}{\numberline {3.7}Non-Functional Requirements}{28}{section.3.7}%
-\contentsline {subsection}{\numberline {3.7.1}Performance Requirements}{28}{subsection.3.7.1}%
-\contentsline {subsection}{\numberline {3.7.2}Reliability Requirements}{28}{subsection.3.7.2}%
-\contentsline {subsection}{\numberline {3.7.3}Usability Requirements}{28}{subsection.3.7.3}%
-\contentsline {subsection}{\numberline {3.7.4}Portability Requirements}{29}{subsection.3.7.4}%
-\contentsline {subsection}{\numberline {3.7.5}Maintainability Requirements}{29}{subsection.3.7.5}%
-\contentsline {subsection}{\numberline {3.7.6}Security Requirements}{29}{subsection.3.7.6}%
-\contentsline {section}{\numberline {3.8}External Interface Requirements}{30}{section.3.8}%
-\contentsline {subsection}{\numberline {3.8.1}User Interfaces}{30}{subsection.3.8.1}%
-\contentsline {subsection}{\numberline {3.8.2}Hardware Interfaces}{31}{subsection.3.8.2}%
-\contentsline {subsection}{\numberline {3.8.3}Software Interfaces}{32}{subsection.3.8.3}%
-\contentsline {subsection}{\numberline {3.8.4}Communication Interfaces}{32}{subsection.3.8.4}%
-\contentsline {section}{\numberline {3.9}Requirement Traceability Matrix}{33}{section.3.9}%
-\contentsline {section}{\numberline {3.10}Summary}{33}{section.3.10}%
+\contentsline {section}{\numberline {1.2}Requirement Elicitation Techniques}{1}{section.1.2}%
+\contentsline {section}{\numberline {1.3}User Classes and Characteristics}{1}{section.1.3}%
+\contentsline {section}{\numberline {1.4}System Overview}{1}{section.1.4}%
+\contentsline {section}{\numberline {1.5}Use Case Model}{2}{section.1.5}%
+\contentsline {subsection}{\numberline {1.5.1}Use Case Diagram}{2}{subsection.1.5.1}%
+\contentsline {subsection}{\numberline {1.5.2}Use Case Descriptions}{3}{subsection.1.5.2}%
+\contentsline {section}{\numberline {1.6}Functional Requirements}{8}{section.1.6}%
+\contentsline {subsection}{\numberline {1.6.1}Module 1: Parsing and Input Processing}{8}{subsection.1.6.1}%
+\contentsline {subsection}{\numberline {1.6.2}Module 2: Intermediate Representation}{8}{subsection.1.6.2}%
+\contentsline {subsection}{\numberline {1.6.3}Module 3: Transpilation and Optimization}{8}{subsection.1.6.3}%
+\contentsline {subsection}{\numberline {1.6.4}Module 4: Simulation Engines}{9}{subsection.1.6.4}%
+\contentsline {subsection}{\numberline {1.6.5}Module 5: Visualization and Output}{9}{subsection.1.6.5}%
+\contentsline {subsection}{\numberline {1.6.6}Module 6: User Interfaces}{9}{subsection.1.6.6}%
+\contentsline {section}{\numberline {1.7}Non-Functional Requirements}{10}{section.1.7}%
+\contentsline {subsection}{\numberline {1.7.1}Performance Requirements}{10}{subsection.1.7.1}%
+\contentsline {subsection}{\numberline {1.7.2}Reliability Requirements}{10}{subsection.1.7.2}%
+\contentsline {subsection}{\numberline {1.7.3}Usability Requirements}{10}{subsection.1.7.3}%
+\contentsline {subsection}{\numberline {1.7.4}Portability Requirements}{11}{subsection.1.7.4}%
+\contentsline {subsection}{\numberline {1.7.5}Maintainability Requirements}{11}{subsection.1.7.5}%
+\contentsline {subsection}{\numberline {1.7.6}Security Requirements}{11}{subsection.1.7.6}%
+\contentsline {section}{\numberline {1.8}External Interface Requirements}{12}{section.1.8}%
+\contentsline {subsection}{\numberline {1.8.1}User Interfaces}{12}{subsection.1.8.1}%
+\contentsline {subsection}{\numberline {1.8.2}Hardware Interfaces}{13}{subsection.1.8.2}%
+\contentsline {subsection}{\numberline {1.8.3}Software Interfaces}{14}{subsection.1.8.3}%
+\contentsline {subsection}{\numberline {1.8.4}Communication Interfaces}{14}{subsection.1.8.4}%
+\contentsline {section}{\numberline {1.9}Requirement Traceability Matrix}{15}{section.1.9}%
+\contentsline {section}{\numberline {1.10}Summary}{15}{section.1.10}%
