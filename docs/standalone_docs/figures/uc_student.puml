@@ -1,0 +1,52 @@
+@startuml UC_Student
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam actorStyle awesome
+skinparam usecaseBorderColor #E65100
+skinparam usecaseBackgroundColor #FFF3E0
+skinparam usecaseFontSize 10
+skinparam rectangleBorderColor #E65100
+skinparam rectangleBackgroundColor #FFF8F1
+skinparam arrowColor #455A64
+skinparam arrowThickness 1.5
+
+title Use Case Diagram — Student / Educator
+
+left to right direction
+
+actor "Student /\nEducator" as Student #FFF3E0
+
+rectangle "Quantum Virtual Machine (QVM)" {
+    usecase "UC-1.5\nVisualize\nCircuit Diagram" as UC5
+    usecase "UC-1.10\nInteract via\nWeb GUI" as UC10
+    usecase "UC-1.3\nExecute Circuit\n(Statevector)" as UC3
+
+    usecase "Compose Circuit\nvia Visual Editor" as UCsub1 #FFFDE7
+    usecase "Select Simulator\n& Architecture" as UCsub2 #FFFDE7
+    usecase "View Probability\nHistogram" as UCsub3 #FFFDE7
+    usecase "View Execution\nStatistics" as UCsub4 #FFFDE7
+}
+
+Student --> UC5
+Student --> UC10
+Student --> UC3
+
+UC10 ..> UCsub1 : <<include>>
+UC10 ..> UCsub2 : <<include>>
+UC10 ..> UCsub3 : <<extend>>
+UC10 ..> UCsub4 : <<extend>>
+UC3 ..> UC5 : <<extend>>
+
+note right of UC10
+  Precondition: QVM server is running
+  and user has a web browser
+end note
+
+note right of UC5
+  Generates matplotlib-based
+  circuit diagram on qubit wires
+end note
+
+@enduml

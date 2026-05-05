@@ -1,3 +1,4 @@
+\contentsline {chapter}{List of Abbreviations}{1}{chapter*.1}%
 \contentsline {chapter}{\numberline {4}Software Design}{1}{chapter.4}%
 \contentsline {section}{\numberline {4.1}Introduction}{1}{section.4.1}%
 \contentsline {section}{\numberline {4.2}Design Methodology}{1}{section.4.2}%
@@ -25,3 +26,4 @@
 \contentsline {subsection}{\numberline {4.11.5}Target Architecture Structure}{24}{subsection.4.11.5}%
 \contentsline {subsection}{\numberline {4.11.6}Simulation Results Structure}{24}{subsection.4.11.6}%
 \contentsline {section}{\numberline {4.12}Summary}{25}{section.4.12}%
+\contentsline {chapter}{References}{26}{chapter*.2}%

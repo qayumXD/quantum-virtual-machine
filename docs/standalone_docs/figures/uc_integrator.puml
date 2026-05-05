@@ -1,0 +1,52 @@
+@startuml UC_Integrator
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam actorStyle awesome
+skinparam usecaseBorderColor #C62828
+skinparam usecaseBackgroundColor #FFEBEE
+skinparam usecaseFontSize 10
+skinparam rectangleBorderColor #C62828
+skinparam rectangleBackgroundColor #FFF5F5
+skinparam arrowColor #455A64
+skinparam arrowThickness 1.5
+
+title Use Case Diagram — System Integrator
+
+left to right direction
+
+actor "System\nIntegrator" as Integrator #FFEBEE
+
+rectangle "Quantum Virtual Machine (QVM)" {
+    usecase "UC-1.7\nExport Circuit\nto OpenQASM" as UC7
+    usecase "UC-1.9\nExecute via\nWeb API" as UC9
+
+    usecase "Send HTTP POST\nRequest" as UCsub1 #FFFDE7
+    usecase "Receive JSON\nResponse" as UCsub2 #FFFDE7
+    usecase "Handle Error\nResponses (400/500)" as UCsub3 #FFFDE7
+    usecase "Generate QASM\nHeader & Registers" as UCsub4 #FFFDE7
+    usecase "Import into IBM\nQuantum / Qiskit" as UCsub5 #FFFDE7
+}
+
+Integrator --> UC7
+Integrator --> UC9
+
+UC9 ..> UCsub1 : <<include>>
+UC9 ..> UCsub2 : <<include>>
+UC9 ..> UCsub3 : <<extend>>
+UC7 ..> UCsub4 : <<include>>
+UC7 ..> UCsub5 : <<extend>>
+
+note right of UC9
+  Precondition: QVM server running
+  Returns: HTTP 200 JSON with
+  statevector and probabilities
+end note
+
+note right of UC7
+  Exports to OpenQASM 2.0 format
+  for external tool compatibility
+end note
+
+@enduml

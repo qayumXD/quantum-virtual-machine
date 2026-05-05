@@ -1,0 +1,53 @@
+@startuml UC_Developer
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam actorStyle awesome
+skinparam usecaseBorderColor #1565C0
+skinparam usecaseBackgroundColor #E3F2FD
+skinparam usecaseFontSize 10
+skinparam rectangleBorderColor #2E7D32
+skinparam rectangleBackgroundColor #F1F8E9
+skinparam arrowColor #455A64
+skinparam arrowThickness 1.5
+
+title Use Case Diagram — Quantum Algorithm Developer
+
+left to right direction
+
+actor "Quantum Algorithm\nDeveloper" as Dev #E8F5E9
+
+rectangle "Quantum Virtual Machine (QVM)" {
+    usecase "UC-1.1\nParse Quantum\nCircuit" as UC1
+    usecase "UC-1.2\nTranspile Circuit\nfor Target Architecture" as UC2
+    usecase "UC-1.3\nExecute Circuit\n(Statevector)" as UC3
+    usecase "UC-1.6\nVisualize Measurement\nResults" as UC6
+    usecase "UC-1.8\nExecute via\nCommand Line Interface" as UC8
+
+    usecase "Detect File Format\n(QASM 2.0 / 3.0 / JSON)" as UCsub1 #FFFDE7
+    usecase "Select Routing Strategy\n(Greedy BFS / SABRE)" as UCsub2 #FFFDE7
+    usecase "View Transpilation\nStatistics" as UCsub3 #FFFDE7
+}
+
+Dev --> UC1
+Dev --> UC2
+Dev --> UC3
+Dev --> UC6
+Dev --> UC8
+
+UC1 ..> UCsub1 : <<include>>
+UC2 ..> UCsub2 : <<include>>
+UC2 ..> UCsub3 : <<extend>>
+
+note right of UC3
+  Precondition: circuit ≤ 12 qubits
+  Returns: statevector + classical memory
+end note
+
+note right of UC2
+  Inserts SWAP gates to satisfy
+  topology connectivity constraints
+end note
+
+@enduml

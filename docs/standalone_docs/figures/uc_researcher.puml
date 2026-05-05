@@ -1,0 +1,51 @@
+@startuml UC_Researcher
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam actorStyle awesome
+skinparam usecaseBorderColor #6A1B9A
+skinparam usecaseBackgroundColor #F3E5F5
+skinparam usecaseFontSize 10
+skinparam rectangleBorderColor #6A1B9A
+skinparam rectangleBackgroundColor #FCF4FF
+skinparam arrowColor #455A64
+skinparam arrowThickness 1.5
+
+title Use Case Diagram — Researcher
+
+left to right direction
+
+actor "Researcher" as Researcher #F3E5F5
+
+rectangle "Quantum Virtual Machine (QVM)" {
+    usecase "UC-1.4\nExecute Circuit\n(MPS Simulation)" as UC4
+    usecase "UC-1.2\nTranspile Circuit\nfor Target Architecture" as UC2
+    usecase "UC-1.3\nExecute Circuit\n(Statevector)" as UC3
+
+    usecase "Configure Bond\nDimension Parameter" as UCsub1 #FFFDE7
+    usecase "View Truncation\nError Metrics" as UCsub2 #FFFDE7
+    usecase "Compare Greedy vs\nSABRE Routing" as UCsub3 #FFFDE7
+    usecase "Benchmark\nPerformance Metrics" as UCsub4 #FFFDE7
+}
+
+Researcher --> UC4
+Researcher --> UC2
+Researcher --> UC3
+
+UC4 ..> UCsub1 : <<include>>
+UC4 ..> UCsub2 : <<extend>>
+UC2 ..> UCsub3 : <<extend>>
+UC3 ..> UCsub4 : <<extend>>
+
+note right of UC4
+  Precondition: circuit has low entanglement
+  Returns: approx. statevector + SVD error
+end note
+
+note right of UCsub1
+  Bond dimension controls
+  accuracy vs. memory trade-off
+end note
+
+@enduml
