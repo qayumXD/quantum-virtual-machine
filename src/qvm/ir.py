@@ -11,7 +11,10 @@ from typing import List, Dict, Optional, Any
 try:
     import qiskit
     from qiskit import QuantumCircuit as QiskitCircuit
-    from qiskit.providers.aer import AerSimulator
+    try:
+        from qiskit_aer import AerSimulator
+    except ImportError:
+        from qiskit.providers.aer import AerSimulator
 except ImportError:  # pragma: no cover
     qiskit = None
     QiskitCircuit = None
@@ -60,21 +63,25 @@ class QuantumCircuit:
         if gate_name not in ["label", "jump", "classical_op", "delay"]:
             # Basic gate registry – extend as needed.
             GATE_SPEC = {
-                "h": 0,
-                "x": 0,
-                "y": 0,
-                "z": 0,
-                "cx": 0,
-                "cz": 0,
-                "rx": 1,
-                "ry": 1,
-                "rz": 1,
+                "h": 0, "x": 0, "y": 0, "z": 0,
+                "cx": 0, "cz": 0, "swap": 0, "ccx": 0, "toffoli": 0,
+                "id": 0, "sx": 0, "sxdg": 0, "s": 0, "sdg": 0, "t": 0, "tdg": 0,
+                "rx": 1, "ry": 1, "rz": 1, "p": 1,
                 "measure": 0,
             }
+            if not isinstance(qubits, list) or not all(isinstance(q, int) for q in qubits):
+                raise ValueError(f"Qubits must be a list of integers. Got: {qubits}")
+            
             if gate_name not in GATE_SPEC:
                 raise ValueError(f"Unsupported gate '{gate_name}'. Add it to GATE_SPEC if needed.")
-            if params is not None and len(params) != GATE_SPEC[gate_name]:
-                raise ValueError(f"Gate '{gate_name}' expects {GATE_SPEC[gate_name]} parameters.")
+            
+            if params is not None and not isinstance(params, list):
+                raise ValueError("Parameters must be a list or None.")
+
+            expected_params = GATE_SPEC[gate_name]
+            actual_params = len(params) if params else 0
+            if actual_params != expected_params:
+                raise ValueError(f"Gate '{gate_name}' expects {expected_params} parameters, got {actual_params}.")
             if not isinstance(qubits, list) or not all(isinstance(q, int) and 0 <= q < self.num_qubits for q in qubits):
                 raise ValueError(f"Qubits must be a list of integers within [0, {self.num_qubits-1}].")
         else:
@@ -128,6 +135,63 @@ class QuantumCircuit:
     # ---------------------------------------------------------------------
     # Qiskit integration helpers
     # ---------------------------------------------------------------------
+    def to_json(self) -> str:
+        import json
+        data = {
+            "num_qubits": self.num_qubits,
+            "classical_registers": self.classical_registers,
+            "operations": self.operations
+        }
+        return json.dumps(data)
+
+    @classmethod
+    def from_json(cls, json_str: str) -> "QuantumCircuit":
+        import json
+        data = json.loads(json_str)
+        qc = cls(data["num_qubits"])
+        qc.classical_registers = data["classical_registers"]
+        for op in data["operations"]:
+            if op.get("target_bit"):
+                op["target_bit"] = tuple(op["target_bit"])
+            qc.operations.append(op)
+        return qc
+
+    def to_qasm(self) -> str:
+        lines = ["OPENQASM 3.0;"]
+        lines.append(f"qubit[{self.num_qubits}] q;")
+        for name, size in self.classical_registers.items():
+            lines.append(f"bit[{size}] {name};")
+        
+        for op in self.operations:
+            name = op["name"]
+            qubits = ", ".join(f"q[{q}]" for q in op["qubits"])
+            params = ""
+            if op["params"]:
+                params = "(" + ", ".join(str(p) for p in op["params"]) + ")"
+            
+            if name == "measure":
+                cr, idx = op["target_bit"]
+                lines.append(f"{cr}[{idx}] = measure {qubits};")
+            else:
+                lines.append(f"{name}{params} {qubits};")
+        return "\n".join(lines)
+
+    @classmethod
+    def from_qasm(cls, qasm_str: str) -> "QuantumCircuit":
+        from src.qvm.qasm3_parser import OpenQASM3Parser
+        parser = OpenQASM3Parser()
+        return parser.parse(qasm_str)
+
+    @classmethod
+    def qiskit_to_cirq(cls, qiskit_circuit: "QiskitCircuit") -> "cirq.Circuit":
+        qc = cls.from_qiskit(qiskit_circuit)
+        return qc.to_cirq()
+
+    @classmethod
+    def cirq_to_qiskit(cls, cirq_circuit: "cirq.Circuit") -> "QiskitCircuit":
+        qc = cls.from_cirq(cirq_circuit)
+        return qc.to_qiskit()
+
     def to_qiskit(self) -> "QiskitCircuit | None":
         """Convert this IR to a Qiskit :class:`QuantumCircuit`.
 
@@ -135,7 +199,10 @@ class QuantumCircuit:
         """
         if qiskit is None:
             return None
-        qc = QiskitCircuit(self.num_qubits, self.classical_registers.keys())
+        from qiskit import QuantumRegister, ClassicalRegister
+        qr = QuantumRegister(self.num_qubits, "q")
+        cregs = [ClassicalRegister(size, name) for name, size in self.classical_registers.items()]
+        qc = QiskitCircuit(qr, *cregs)
         for op in self.operations:
             name = op["name"]
             qubits = op["qubits"]
@@ -148,7 +215,10 @@ class QuantumCircuit:
                 qc.cx(qubits[0], qubits[1])
             elif name == "measure":
                 cr, idx = op["target_bit"]
-                qc.measure(qubits[0], self.classical_registers[cr] - 1)
+                for creg in cregs:
+                    if creg.name == cr:
+                        qc.measure(qr[qubits[0]], creg[idx])
+                        break
             # Extend with more gates as needed.
         return qc
 
@@ -165,12 +235,19 @@ class QuantumCircuit:
         # Extract classical registers (simple flat mapping)
         for i, creg in enumerate(qiskit_circuit.cregs):
             circuit.add_classical_register(creg.name, creg.size)
-        for instr, qargs, cargs in qiskit_circuit.data:
-            name = instr.name
-            qubits = [qb.index for qb in qargs]
-            params = list(instr.params) if instr.params else None
+        for instruction in qiskit_circuit.data:
+            name = instruction.operation.name
+            qubits = [qiskit_circuit.find_bit(qb).index for qb in instruction.qubits]
+            cargs = instruction.clbits
+            params = list(instruction.operation.params) if instruction.operation.params else None
             if name == "measure" and cargs:
-                target_bit = (cargs[0].register.name, cargs[0].index)
+                cb = cargs[0]
+                regs = qiskit_circuit.find_bit(cb).registers
+                if regs:
+                    reg, idx = regs[0]
+                    target_bit = (reg.name, idx)
+                else:
+                    target_bit = ("c", qiskit_circuit.find_bit(cb).index)
                 circuit.add_operation(name, qubits, params=params, target_bit=target_bit)
             else:
                 circuit.add_operation(name, qubits, params=params)
@@ -185,7 +262,6 @@ class QuantumCircuit:
         if qc is None:
             raise RuntimeError("Failed to convert circuit to Qiskit")
         sim = AerSimulator()
-        qc.save_counts()
         result = sim.run(qc, shots=shots).result()
         return result.get_counts()
 
@@ -227,17 +303,34 @@ class QuantumCircuit:
         max_index = max(q.x for op in cirq_circuit.all_operations() for q in op.qubits)
         circuit = cls(max_index + 1)
         for op in cirq_circuit.all_operations():
-            if isinstance(op.gate, cirq.HGate):
+            if op.gate == cirq.H:
                 circuit.add_operation("h", [op.qubits[0].x])
-            elif isinstance(op.gate, cirq.XPowGate) and op.gate.exponent == 1:
+            elif op.gate == cirq.X:
                 circuit.add_operation("x", [op.qubits[0].x])
-            elif isinstance(op.gate, cirq.CNOT):
+            elif op.gate == cirq.CNOT:
                 circuit.add_operation("cx", [op.qubits[0].x, op.qubits[1].x])
             elif isinstance(op.gate, cirq.MeasurementGate):
-                # Cirq measurement key may be composite; we use a simple mapping.
                 key = op.gate.key
-                circuit.add_operation("measure", [op.qubits[0].x], target_bit=("c", 0))
+                creg = "c"
+                idx = 0
+                if key.startswith("(") and key.endswith(")"):
+                    try:
+                        inner = key[1:-1].split(",")
+                        creg = inner[0].strip("' ")
+                        idx = int(inner[1])
+                    except:
+                        pass
+                circuit.add_operation("measure", [op.qubits[0].x], target_bit=(creg, idx))
             # Extend for additional gates as needed.
+            
+        cregs_needed = {}
+        for op in circuit.operations:
+            if op["name"] == "measure":
+                cr, idx = op["target_bit"]
+                cregs_needed[cr] = max(cregs_needed.get(cr, 0), idx + 1)
+        for cr, size in cregs_needed.items():
+            circuit.add_classical_register(cr, size)
+            
         return circuit
 
     def run_cirq_simulator(self, repetitions: int = 1024) -> dict:
@@ -254,11 +347,9 @@ class QuantumCircuit:
         measurements = result.measurements
         if not measurements:
             return {}
-        # Assume a single measurement key for simplicity.
-        key = list(measurements.keys())[0]
-        bits = measurements[key]
+        keys = sorted(measurements.keys())
         counts = {}
-        for bit_arr in bits:
-            bit_str = "".join(str(b) for b in bit_arr)
+        for i in range(repetitions):
+            bit_str = "".join(str(measurements[k][i][0]) for k in keys)
             counts[bit_str] = counts.get(bit_str, 0) + 1
         return counts

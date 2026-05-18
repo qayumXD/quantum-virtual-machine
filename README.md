@@ -8,6 +8,7 @@ The QVM follows a **write once, run anywhere (WORA)** philosophy, providing an a
 
 ### Key Features:
 - **OpenQASM 3.0 Support:** Full AST-based parsing for modern quantum assembly, including control flow (`if`, `for`, `while`) and timing.
+- **Framework Interoperability:** Bidirectional conversions and simulator execution support for **Qiskit**, **Cirq**, **JSON**, and **OpenQASM 3.0**.
 - **Hybrid Simulation Engine:**
     - **Statevector:** Exact simulation for small-scale circuits ($N \le 12$).
     - **MPS (Matrix Product States):** Efficient, compressible simulation for low-entanglement circuits, scaling to 20+ qubits.

@@ -20,16 +20,15 @@ def test_add_valid_operation():
     """Tests adding valid operations to a circuit."""
     qc = QuantumCircuit(3)
     qc.add_operation("h", [0])
-    assert len(qc.operations) == 1
-    assert qc.operations[0] == {"name": "h", "qubits": [0], "params": []}
+    assert qc.operations[0] == {"name": "h", "qubits": [0], "params": [], "condition": None, "target_bit": None, "duration": None, "label": None, "jump_to": None, "classical_op": None}
 
     qc.add_operation("cx", [0, 1])
     assert len(qc.operations) == 2
-    assert qc.operations[1] == {"name": "cx", "qubits": [0, 1], "params": []}
+    assert qc.operations[1] == {"name": "cx", "qubits": [0, 1], "params": [], "condition": None, "target_bit": None, "duration": None, "label": None, "jump_to": None, "classical_op": None}
     
     qc.add_operation("rz", [2], [0.5])
     assert len(qc.operations) == 3
-    assert qc.operations[2] == {"name": "rz", "qubits": [2], "params": [0.5]}
+    assert qc.operations[2] == {"name": "rz", "qubits": [2], "params": [0.5], "condition": None, "target_bit": None, "duration": None, "label": None, "jump_to": None, "classical_op": None}
 
 def test_add_invalid_operation():
     """Tests adding invalid operations to a circuit."""
