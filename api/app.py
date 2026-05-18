@@ -17,6 +17,7 @@ from src.qvm.simulator import Simulator
 from src.qvm.mps_simulator import MPSSimulator
 from src.qvm.architecture import get_linear_architecture
 from src.qvm.visual import plot_histogram, plot_circuit
+from src.qvm.util.export import to_openqasm2
 
 
 class RunRequest(BaseModel):
@@ -29,6 +30,9 @@ class RunRequest(BaseModel):
     restore_mapping: bool = True
     engine: Literal["statevector", "mps"] = "statevector"
     seed: Optional[int] = None
+    shots: int = Field(0, description="Number of measurement samples. If 0, only pure state probabilities are calculated.")
+    noise_depol: float = Field(0.0, description="Depolarizing noise probability (0 to 1)")
+    noise_readout: float = Field(0.0, description="Readout flip probability (0 to 1)")
 
 
 class RunResponse(BaseModel):
@@ -38,6 +42,8 @@ class RunResponse(BaseModel):
     nqubits: int
     circuit_plot: Optional[str] = None # Base64 encoded PNG
     histogram_plot: Optional[str] = None # Base64 encoded PNG
+    counts: Optional[dict] = None
+    openqasm2: Optional[str] = None
 
 
 app = FastAPI(title="QVM API", version="0.2.1")
@@ -83,14 +89,30 @@ def run(req: RunRequest):
 
     # Simulation
     try:
+        counts = None
         if req.engine == "mps":
             sim = MPSSimulator()
             _, mem = sim.simulate(qc, seed=req.seed)
             probs = np.abs(sim.get_statevector())**2
+            if req.shots > 0:
+                rng = np.random.default_rng(req.seed)
+                outcomes = rng.choice(len(probs), size=req.shots, p=probs)
+                counts = {}
+                for outcome in outcomes:
+                    bitstring = format(outcome, f"0{qc.num_qubits}b")
+                    counts[bitstring] = counts.get(bitstring, 0) + 1
         else:
             sim = Simulator()
             state, mem = sim.simulate(qc, seed=req.seed)
             probs = np.abs(state)**2
+            if req.shots > 0:
+                counts = sim.sample(
+                    qc,
+                    shots=req.shots,
+                    seed=req.seed,
+                    depol_prob=req.noise_depol,
+                    readout_error=req.noise_readout
+                )
         
         # Ensure all numpy types are converted for JSON
         serializable_mem = {}
@@ -121,7 +143,9 @@ def run(req: RunRequest):
         transpiled_operations=qc.operations,
         nqubits=qc.num_qubits,
         circuit_plot=circuit_b64,
-        histogram_plot=hist_b64
+        histogram_plot=hist_b64,
+        counts=counts,
+        openqasm2=to_openqasm2(qc)
     )
 
 

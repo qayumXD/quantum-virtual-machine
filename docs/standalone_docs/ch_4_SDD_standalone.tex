@@ -437,5 +437,39 @@ execution\_time & float & Time taken for simulation (seconds) \\
 \end{tabular}
 \end{table}
 
+\section{System Interfaces (Current State)}
+The Quantum Virtual Machine provides three distinct interfaces to cater to different user workflows: an interactive Web GUI for visual exploration, a Command-Line Interface (CLI) for automation and scripting, and a RESTful API for programmatic integration. The following figures present the current implementation state of these interfaces.
+
+\subsection{Web GUI Interface}
+The Web Graphical User Interface provides an intuitive, browser-based environment designed primarily for students and educators. It features a circuit editor, execution controls, and real-time visualization of both the quantum circuit diagram and the resulting measurement probability histogram.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth,height=0.45\textheight,keepaspectratio]{figures/ScreenShots/WebUI.png}
+\caption{Current State: Web GUI Interface}
+\label{fig:current_web_gui}
+\end{figure}
+
+\subsection{Command-Line Interface (CLI)}
+The Command-Line Interface enables developers and researchers to execute quantum circuits directly from the terminal. It provides robust options for file loading, transpilation routing strategies, and detailed execution logging including statevector and classical memory outputs.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth,height=0.45\textheight,keepaspectratio]{figures/ScreenShots/CLI_usage.png}
+\caption{Current State: Command-Line Interface Execution}
+\label{fig:current_cli}
+\end{figure}
+
+\subsection{REST API Interface}
+The REST API, built with FastAPI, allows system integrators to interact with the QVM programmatically. It accepts JSON-based circuit definitions via HTTP POST requests and returns comprehensive JSON responses containing execution results and metadata.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth,height=0.45\textheight,keepaspectratio]{figures/ScreenShots/API_Usage.png}
+\caption{Current State: REST API Interaction}
+\label{fig:current_api}
+\end{figure}
+\FloatBarrier
+
 \section{Summary}
 This chapter has presented a comprehensive software design for the Quantum Virtual Machine system. The design follows object-oriented principles with a clear 7-layer pipeline architecture that separates concerns and enables modularity. The system structure was documented through multiple UML perspectives: context diagram (system boundary), architecture diagram (layered pipeline), class diagram (static structure), activity diagrams (behavioral workflows), sequence diagrams (object interactions), state diagram (circuit lifecycle), and data flow diagrams (information flow). The design emphasizes hardware abstraction through the QuantumCircuit IR, flexibility through the Strategy pattern for transpilation, and extensibility through modular components. The file-based data model provides simplicity and portability suitable for an educational quantum computing platform. The data dictionary documents the structure of all key data elements, ensuring clear understanding of the system's information architecture. This design provides a solid foundation for the implementation presented in the next chapter.

@@ -89,12 +89,12 @@ def test_transpilation_is_logically_correct():
 
     # 2. Get the expected statevector by simulating the LOGICAL circuit
     # The simulator doesn't care about connectivity, so this gives the "correct" answer.
-    expected_state = simulator.simulate(logical_qc)
+    expected_state, _ = simulator.simulate(logical_qc)
 
     # 3. Get the actual statevector by transpiling and then simulating the PHYSICAL circuit
     transpiler = Transpiler(arch)
     physical_qc = transpiler.transpile(logical_qc)
-    actual_state = simulator.simulate(physical_qc)
+    actual_state, _ = simulator.simulate(physical_qc)
 
     # 4. Assert that the results are the same (up to floating point tolerance)
     # This test will FAIL with the current transpiler implementation, proving the bug.

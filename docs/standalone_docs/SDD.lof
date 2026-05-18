@@ -11,3 +11,6 @@
 \contentsline {figure}{\numberline {4.10}{\ignorespaces State Transition Diagram — Circuit Lifecycle}}{18}{figure.4.10}%
 \contentsline {figure}{\numberline {4.11}{\ignorespaces Data Flow Diagram — Level 1 (System Level)}}{20}{figure.4.11}%
 \contentsline {figure}{\numberline {4.12}{\ignorespaces Data Flow Diagram — Level 2 (Module Level)}}{21}{figure.4.12}%
+\contentsline {figure}{\numberline {4.13}{\ignorespaces Current State: Web GUI Interface}}{26}{figure.4.13}%
+\contentsline {figure}{\numberline {4.14}{\ignorespaces Current State: Command-Line Interface Execution}}{27}{figure.4.14}%
+\contentsline {figure}{\numberline {4.15}{\ignorespaces Current State: REST API Interaction}}{28}{figure.4.15}%

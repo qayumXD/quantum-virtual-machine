@@ -25,5 +25,9 @@
 \contentsline {subsection}{\numberline {4.11.4}Classical Operation Dictionary Structure}{24}{subsection.4.11.4}%
 \contentsline {subsection}{\numberline {4.11.5}Target Architecture Structure}{24}{subsection.4.11.5}%
 \contentsline {subsection}{\numberline {4.11.6}Simulation Results Structure}{24}{subsection.4.11.6}%
-\contentsline {section}{\numberline {4.12}Summary}{25}{section.4.12}%
-\contentsline {chapter}{References}{26}{chapter*.2}%
+\contentsline {section}{\numberline {4.12}System Interfaces (Current State)}{25}{section.4.12}%
+\contentsline {subsection}{\numberline {4.12.1}Web GUI Interface}{25}{subsection.4.12.1}%
+\contentsline {subsection}{\numberline {4.12.2}Command-Line Interface (CLI)}{26}{subsection.4.12.2}%
+\contentsline {subsection}{\numberline {4.12.3}REST API Interface}{27}{subsection.4.12.3}%
+\contentsline {section}{\numberline {4.13}Summary}{28}{section.4.13}%
+\contentsline {chapter}{References}{29}{chapter*.2}%
