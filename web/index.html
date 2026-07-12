@@ -1,159 +1,391 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8" />
-  <title>QVM Web UI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 24px; max-width: 1200px; background-color: #f4f7f6; color: #333; line-height: 1.6; }
-    header { margin-bottom: 24px; border-bottom: 3px solid #007bff; padding-bottom: 12px; }
-    fieldset { margin-bottom: 20px; border: 1px solid #ccc; border-radius: 8px; background: white; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    legend { font-weight: bold; padding: 0 10px; color: #007bff; font-size: 1.1em; }
-    textarea { width: 100%; min-height: 200px; font-family: 'Consolas', 'Monaco', monospace; padding: 12px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
-    .row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px; }
-    .row > label { flex: 1 1 200px; font-size: 0.9em; font-weight: 600; }
-    input[type="number"], select, input[type="text"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px; }
-    .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 20px; }
-    .viz-panel { background: white; padding: 15px; border-radius: 8px; border: 1px solid #eee; text-align: center; }
-    .viz-panel img { max-width: 100%; height: auto; border-radius: 4px; }
-    pre { background: #272822; color: #f8f8f2; padding: 15px; border-radius: 6px; overflow: auto; max-height: 250px; font-size: 0.85em; }
-    button { background-color: #007bff; color: white; border: none; padding: 12px 30px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 1em; transition: background 0.2s; }
-    button:hover { background-color: #0056b3; }
-    #status { font-weight: bold; margin-left: 15px; }
-    .data-card { background: #fff; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; margin-bottom: 15px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QVM Simulator - IDE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-base: #0d1117;
+            --bg-panel: #161b22;
+            --border-color: #30363d;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent: #2f81f7;
+            --accent-hover: #1f6feb;
+            --btn-text: #ffffff;
+            --code-bg: #0d1117;
+            --font-ui: 'Inter', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        [data-theme="light"] {
+            --bg-base: #ffffff;
+            --bg-panel: #f6f8fa;
+            --border-color: #d0d7de;
+            --text-main: #24292f;
+            --text-muted: #57606a;
+            --accent: #0969da;
+            --accent-hover: #0349b4;
+            --code-bg: #f6f8fa;
+            --btn-text: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-ui);
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 48px;
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 16px;
+            font-size: 14px;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        button {
+            font-family: var(--font-ui);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 4px;
+            padding: 4px 12px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-panel);
+            color: var(--text-main);
+            transition: all 0.2s;
+        }
+
+        button.primary {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            color: var(--btn-text);
+        }
+
+        button.primary:hover {
+            background-color: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+
+        button:hover:not(.primary) {
+            background-color: var(--border-color);
+        }
+
+        /* Layout */
+        .workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .panel-left {
+            border-right: 1px solid var(--border-color);
+            flex: 1;
+        }
+
+        .panel-right {
+            flex: 1;
+            background-color: var(--bg-base);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            height: 36px;
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Editor */
+        .editor-container {
+            flex: 1;
+            padding: 16px;
+            background-color: var(--code-bg);
+            overflow-y: auto;
+        }
+
+        textarea.code-editor {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-family: var(--font-code);
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+        }
+
+        /* Right Side Content */
+        .results-container {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .card {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: var(--bg-panel);
+            padding: 16px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        /* Config */
+        .config-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        select, input[type="number"] {
+            background-color: var(--bg-base);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: var(--font-code);
+            font-size: 12px;
+            outline: none;
+        }
+
+        /* Charts */
+        .chart-wrapper {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+
+    </style>
 </head>
 <body>
-  <header>
-    <h1>Quantum Virtual Machine (QVM)</h1>
-    <p>Educational Quantum Simulator with OpenQASM 3.0 & Hybrid MPS Support</p>
-  </header>
 
-  <div class="row">
-    <div style="flex: 2;">
-      <fieldset>
-        <legend>Circuit Definition</legend>
-        <div class="row">
-          <label>Simulation Engine
-            <select id="engine">
-              <option value="statevector">Statevector (Exact)</option>
-              <option value="mps">MPS (Large-Scale / Compressed)</option>
-            </select>
-          </label>
-          <label>Seed (Optional)
-            <input id="seed" type="number" placeholder="Random">
-          </label>
+    <div class="navbar">
+        <div class="nav-left">
+            <span>QVM v0.3</span>
+            <span style="color: var(--text-muted); font-weight: 400;">Workspace</span>
         </div>
-        <textarea id="circuit-input">OPENQASM 3.0;
-qubit[2] q;
-bit[2] c;
+        <div class="nav-right">
+            <button onclick="toggleTheme()">Toggle Theme</button>
+            <button class="primary" onclick="runSimulation()">Run Simulation</button>
+        </div>
+    </div>
 
+    <div class="workspace">
+        <!-- Left Panel: Editor -->
+        <div class="panel panel-left">
+            <div class="panel-header">OpenQASM 3.0 Editor</div>
+            <div class="editor-container">
+                <textarea class="code-editor" id="qasmInput" spellcheck="false">OPENQASM 3.0;
+include "stdgates.inc";
+
+qubit[3] q;
+bit[3] c;
+
+// GHZ State
 h q[0];
 cx q[0], q[1];
+cx q[1], q[2];
+
+// Measurement
 c[0] = measure q[0];
-c[1] = measure q[1];</textarea>
-        <div style="margin-top: 15px;">
-          <button id="run-btn">Run Simulation</button>
-          <span id="status"></span>
+c[1] = measure q[1];
+c[2] = measure q[2];</textarea>
+            </div>
         </div>
-      </fieldset>
+
+        <!-- Right Panel: Results & Config -->
+        <div class="panel panel-right">
+            <div class="panel-header">Configuration & Results</div>
+            <div class="results-container">
+                
+                <div class="card">
+                    <div class="card-title">Run Configuration</div>
+                    <div class="config-row">
+                        <label>Engine</label>
+                        <select id="engineSelect">
+                            <option value="statevector">Statevector (Local)</option>
+                            <option value="density_matrix">Density Matrix (Noise)</option>
+                        </select>
+                    </div>
+                    <div class="config-row">
+                        <label>Shots</label>
+                        <input type="number" id="shotsInput" value="1000" min="1" max="10000">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Probability Distribution</div>
+                    <div class="chart-wrapper">
+                        <canvas id="probChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card" id="logsCard" style="display: none;">
+                    <div class="card-title">Execution Logs</div>
+                    <pre id="runLogs" style="font-family: var(--font-code); font-size: 12px; color: var(--text-muted); white-space: pre-wrap;"></pre>
+                </div>
+
+            </div>
+        </div>
     </div>
 
-    <div style="flex: 1;">
-      <fieldset>
-        <legend>Transpiler Settings</legend>
-        <label><input id="transpile" type="checkbox"> Enable Transpilation</label>
-        <br><br>
-        <label>Routing Strategy
-          <select id="routing">
-            <option value="sabre">SABRE (Heuristic)</option>
-            <option value="greedy">Greedy (BFS)</option>
-          </select>
-        </label>
-        <br>
-        <label><input id="restore-mapping" type="checkbox" checked> Restore Logical Mapping</label>
-      </fieldset>
-      
-      <div class="data-card">
-        <strong>Classical Memory</strong>
-        <pre id="mem-output">{}</pre>
-      </div>
-    </div>
-  </div>
+    <script>
+        // API Base URL (change this to Render URL once deployed)
+        const API_URL = "http://127.0.0.1:8000";
 
-  <div class="results-grid">
-    <div class="viz-panel">
-      <strong>Circuit Visualization</strong>
-      <div id="circuit-viz"><p class="small">Run to generate diagram</p></div>
-    </div>
-    <div class="viz-panel">
-      <strong>Probability Histogram</strong>
-      <div id="hist-viz"><p class="small">Run to generate plot</p></div>
-    </div>
-  </div>
+        let probChart = null;
 
-  <fieldset>
-    <legend>Raw Output & IR</legend>
-    <div class="row">
-      <div style="flex: 1;">
-        <strong>Probabilities</strong>
-        <pre id="prob-output">[]</pre>
-      </div>
-      <div style="flex: 1;">
-        <strong>Transpiled Operations</strong>
-        <pre id="ops-output">[]</pre>
-      </div>
-    </div>
-  </fieldset>
-
-  <script>
-    const runBtn = document.getElementById("run-btn");
-    const statusEl = document.getElementById("status");
-
-    runBtn.onclick = async () => {
-      statusEl.textContent = "⚙️ Executing...";
-      statusEl.style.color = "#666";
-      
-      const payload = {
-        source_type: "qasm", // We default to QASM for the editor
-        engine: document.getElementById("engine").value,
-        transpile: document.getElementById("transpile").checked,
-        routing: document.getElementById("routing").value,
-        restore_mapping: document.getElementById("restore-mapping").checked,
-        seed: document.getElementById("seed").value ? Number(document.getElementById("seed").value) : null,
-        qasm: document.getElementById("circuit-input").value
-      };
-
-      try {
-        const resp = await fetch("/run", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        
-        const data = await resp.json();
-        if (!resp.ok) throw new Error(data.detail || "Server error");
-
-        // 1. Update Data
-        document.getElementById("prob-output").textContent = JSON.stringify(data.probabilities, null, 2);
-        document.getElementById("mem-output").textContent = JSON.stringify(data.classical_memory, null, 2);
-        document.getElementById("ops-output").textContent = JSON.stringify(data.transpiled_operations, null, 2);
-
-        // 2. Update Visualizations
-        if (data.circuit_plot) {
-            document.getElementById("circuit-viz").innerHTML = `<img src="data:image/png;base64,${data.circuit_plot}">`;
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                Chart.defaults.color = '#57606a';
+                Chart.defaults.borderColor = '#d0d7de';
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                Chart.defaults.color = '#8b949e';
+                Chart.defaults.borderColor = '#30363d';
+            }
+            if(probChart) probChart.update();
         }
-        if (data.histogram_plot) {
-            document.getElementById("hist-viz").innerHTML = `<img src="data:image/png;base64,${data.histogram_plot}">`;
+
+        // Initialize Chart.js defaults
+        Chart.defaults.color = '#8b949e';
+        Chart.defaults.borderColor = '#30363d';
+        Chart.defaults.font.family = "'JetBrains Mono', monospace";
+
+        function renderChart(counts) {
+            const ctx = document.getElementById('probChart').getContext('2d');
+            
+            if (probChart) {
+                probChart.destroy();
+            }
+
+            const labels = Object.keys(counts).sort();
+            const data = labels.map(l => counts[l]);
+            
+            // Accent color based on theme
+            const accentColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#2f81f7' : '#0969da';
+
+            probChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Counts',
+                        data: data,
+                        backgroundColor: accentColor,
+                        borderRadius: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: Chart.defaults.borderColor } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
         }
-        
-        statusEl.textContent = "✅ Success";
-        statusEl.style.color = "green";
-      } catch (err) {
-        statusEl.textContent = "❌ " + err.message;
-        statusEl.style.color = "red";
-      }
-    };
-  </script>
+
+        async function runSimulation() {
+            const qasm = document.getElementById('qasmInput').value;
+            const engine = document.getElementById('engineSelect').value;
+            const shots = parseInt(document.getElementById('shotsInput').value);
+            const logsEl = document.getElementById('runLogs');
+            const logsCard = document.getElementById('logsCard');
+
+            logsCard.style.display = 'block';
+            logsEl.innerText = "Submitting circuit to QVM Backend...\n";
+
+            try {
+                const response = await fetch(`${API_URL}/run`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        source_type: "qasm",
+                        qasm: qasm,
+                        engine: engine,
+                        shots: shots
+                    })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || 'Simulation failed');
+                }
+
+                const data = await response.json();
+                logsEl.innerText += `Simulation successful.\nTime taken: ${data.execution_time_ms || '<1'}ms\nEngine: ${engine}\nShots: ${shots}\nQubits: ${data.nqubits}`;
+                
+                renderChart(data.counts);
+
+            } catch (error) {
+                logsEl.innerText += `\nError: ${error.message}`;
+            }
+        }
+    </script>
 </body>
 </html>
