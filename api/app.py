@@ -20,8 +20,21 @@ from src.qvm.visual import plot_histogram, plot_circuit
 from src.qvm.util.export import to_openqasm2
 from src.qvm.noise import NoiseChannel, NoiseModel, DeviceBackend
 from src.qvm.observable import Hamiltonian
+from src.qvm.observable import Hamiltonian
 
+import os
+from dotenv import load_dotenv
+from supabase import create_client, Client
+import time
 
+load_dotenv()
+
+supabase_url: str = os.environ.get("SUPABASE_URL", "")
+supabase_key: str = os.environ.get("SUPABASE_KEY", "")
+supabase: Client | None = None
+
+if supabase_url and supabase_key:
+    supabase = create_client(supabase_url, supabase_key)
 class RunRequest(BaseModel):
     source_type: Literal["json", "qasm"] = Field("json", description="Input format")
     circuit: Optional[List[dict]] = Field(None, description="Gate list when source_type=json")
@@ -54,6 +67,16 @@ class RunResponse(BaseModel):
     noise_summary: Optional[str] = None
 
 
+class CircuitSaveRequest(BaseModel):
+    name: str
+    description: Optional[str] = None
+    qasm_code: str
+    category: Literal['algorithm', 'error_correction', 'benchmark', 'educational', 'custom']
+    tags: List[str] = []
+    num_qubits: int
+    num_gates: int = 0
+    expected_output: Optional[dict] = None
+
 app = FastAPI(title="QVM API", version="0.3.0")
 
 # Serve static web client
@@ -68,6 +91,49 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/circuits")
+def list_circuits(category: Optional[str] = None):
+    """Retrieve circuit library from Supabase."""
+    if supabase is None:
+        return {"error": "Supabase not configured"}
+    
+    query = supabase.table("circuit_library").select("*").order("created_at", desc=True)
+    if category:
+        query = query.eq("category", category)
+        
+    try:
+        res = query.execute()
+        return {"circuits": res.data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/circuits")
+def save_circuit(req: CircuitSaveRequest):
+    """Save a new circuit to the library."""
+    if supabase is None:
+        return {"error": "Supabase not configured"}
+        
+    try:
+        res = supabase.table("circuit_library").insert(req.model_dump()).execute()
+        return {"status": "success", "data": res.data[0]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/history")
+def list_history(limit: int = 10):
+    """Retrieve recent simulation runs from Supabase."""
+    if supabase is None:
+        return {"error": "Supabase not configured"}
+        
+    try:
+        res = supabase.table("simulation_runs").select("id,created_at,engine,num_qubits,num_gates,shots,execution_time_ms").order("created_at", desc=True).limit(limit).execute()
+        return {"history": res.data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def fig_to_base64(fig):
@@ -153,7 +219,7 @@ def run(req: RunRequest):
     except Exception as e:
         print(f"Viz error: {e}") # Non-fatal
 
-    return RunResponse(
+    response = RunResponse(
         probabilities=list(map(float, probs)),
         classical_memory=serializable_mem,
         transpiled_operations=qc.operations,
@@ -165,6 +231,29 @@ def run(req: RunRequest):
         expectation_value=exp_val,
         noise_summary=noise_summary,
     )
+
+    # Log to Supabase
+    if supabase is not None:
+        try:
+            run_data = {
+                "circuit_qasm": req.qasm if req.source_type == "qasm" else "json",
+                "num_qubits": qc.num_qubits,
+                "num_gates": len(qc.operations),
+                "engine": req.engine,
+                "shots": req.shots,
+                "seed": req.seed,
+                "transpiled": req.transpile,
+                "device_backend": req.device_backend,
+                "probabilities": list(map(float, probs)),
+                "counts": counts,
+                "expectation_value": exp_val,
+                "classical_memory": serializable_mem
+            }
+            supabase.table("simulation_runs").insert(run_data).execute()
+        except Exception as e:
+            print(f"Supabase logging error: {e}")
+
+    return response
 
 
 def _build_noise_model(req: RunRequest, num_qubits: int) -> Optional[NoiseModel]:
