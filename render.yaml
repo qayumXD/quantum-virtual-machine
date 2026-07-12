@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: qvm-api
+    env: docker
+    region: singapore
+    plan: free
+    branch: main
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
