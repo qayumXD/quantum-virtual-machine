@@ -2,10 +2,12 @@
 
 """
 Intermediate Representation (IR) for Quantum Circuits.
-Extends the IR to support OpenQASM 3.0 classical registers and conditional operations.
+Extends the IR to support OpenQASM 3.0 classical registers, conditional operations,
+and parameterized circuits for variational algorithms (VQE, QAOA).
 """
 
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Set
+from src.qvm.parameter import Parameter, ParameterExpression, is_parameterized, resolve_param
 
 # Optional imports for external backends – they are loaded lazily so the core library works without them.
 try:
@@ -67,6 +69,7 @@ class QuantumCircuit:
                 "cx": 0, "cz": 0, "swap": 0, "ccx": 0, "toffoli": 0,
                 "id": 0, "sx": 0, "sxdg": 0, "s": 0, "sdg": 0, "t": 0, "tdg": 0,
                 "rx": 1, "ry": 1, "rz": 1, "p": 1,
+                "rxx": 1, "rzz": 1, "cp": 1,
                 "measure": 0,
             }
             if not isinstance(qubits, list) or not all(isinstance(q, int) for q in qubits):
@@ -82,6 +85,14 @@ class QuantumCircuit:
             actual_params = len(params) if params else 0
             if actual_params != expected_params:
                 raise ValueError(f"Gate '{gate_name}' expects {expected_params} parameters, got {actual_params}.")
+            # Validate param types: allow float, int, Parameter, ParameterExpression
+            if params:
+                for p_val in params:
+                    if not isinstance(p_val, (int, float, Parameter, ParameterExpression)):
+                        raise ValueError(
+                            f"Parameter values must be int, float, Parameter, or ParameterExpression. "
+                            f"Got: {type(p_val)}"
+                        )
             if not isinstance(qubits, list) or not all(isinstance(q, int) and 0 <= q < self.num_qubits for q in qubits):
                 raise ValueError(f"Qubits must be a list of integers within [0, {self.num_qubits-1}].")
         else:
@@ -110,6 +121,44 @@ class QuantumCircuit:
             "classical_op": classical_op
         }
         self.operations.append(operation)
+
+    # -----------------------------------------------------------------
+    # Parameterized circuit support
+    # -----------------------------------------------------------------
+    @property
+    def parameters(self) -> Set[Parameter]:
+        """Return the set of all unbound Parameters used in this circuit."""
+        params = set()
+        for op in self.operations:
+            for p_val in op.get("params", []):
+                if isinstance(p_val, Parameter):
+                    params.add(p_val)
+                elif isinstance(p_val, ParameterExpression):
+                    params.update(p_val.parameters)
+        return params
+
+    def bind_parameters(self, bindings: Dict[Parameter, float]) -> "QuantumCircuit":
+        """Return a new circuit with all parameters substituted with concrete values.
+
+        Raises ValueError if any parameter is left unbound.
+        """
+        new_qc = QuantumCircuit(self.num_qubits)
+        new_qc.classical_registers = dict(self.classical_registers)
+        for op in self.operations:
+            new_op = dict(op)
+            if op.get("params"):
+                new_params = []
+                for p_val in op["params"]:
+                    new_params.append(resolve_param(p_val, bindings))
+                new_op["params"] = new_params
+            new_qc.operations.append(new_op)
+
+        # Verify no unbound parameters remain
+        remaining = new_qc.parameters
+        if remaining:
+            names = ", ".join(p.name for p in remaining)
+            raise ValueError(f"Unbound parameters remain after binding: {names}")
+        return new_qc
 
     def __str__(self):
         """Human‑readable representation of the circuit."""
