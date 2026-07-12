@@ -5,6 +5,7 @@ import base64
 import numpy as np
 import matplotlib.pyplot as plt
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -78,6 +79,14 @@ class CircuitSaveRequest(BaseModel):
     expected_output: Optional[dict] = None
 
 app = FastAPI(title="QVM API", version="0.3.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Serve static web client
 app.mount("/web", StaticFiles(directory="web"), name="web")
