@@ -7,6 +7,7 @@ Uses SVD-based compression to maintain a compact state representation.
 
 import numpy as np
 from src.qvm.ir import QuantumCircuit
+from src.qvm.parameter import resolve_param
 
 class MPSSimulator:
     def __init__(self, max_bond_dim: int = 16):
@@ -14,7 +15,12 @@ class MPSSimulator:
         # Basis gate matrices
         self.H = (1/np.sqrt(2)) * np.array([[1, 1], [1, -1]], dtype=complex)
         self.X = np.array([[0, 1], [1, 0]], dtype=complex)
+        self.Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
+        self.Z = np.array([[1, 0], [0, -1]], dtype=complex)
         self.I = np.array([[1, 0], [0, 1]], dtype=complex)
+        self.SX = 0.5 * np.array([[1+1j, 1-1j], [1-1j, 1+1j]], dtype=complex)
+        self.S = np.array([[1, 0], [0, 1j]], dtype=complex)
+        self.T = np.array([[1, 0], [0, np.exp(1j * np.pi / 4)]], dtype=complex)
 
     def simulate(self, circuit: QuantumCircuit, seed: int = None) -> tuple[list, dict]:
         """
@@ -31,11 +37,14 @@ class MPSSimulator:
             qubits = op["qubits"]
             params = op["params"]
 
-            if name in ["h", "x", "y", "z", "rx", "ry", "rz", "p", "id"]:
+            if name in ["h", "x", "y", "z", "rx", "ry", "rz", "p", "id",
+                        "sx", "sxdg", "s", "sdg", "t", "tdg"]:
                 gate = self._get_gate_matrix(name, params)
                 self._apply_single_qubit(qubits[0], gate)
             elif name == "cx":
                 self._apply_cx(qubits[0], qubits[1])
+            elif name == "cz":
+                self._apply_cz(qubits[0], qubits[1])
             elif name == "swap":
                 self._apply_swap(qubits[0], qubits[1])
             elif name == "measure":
@@ -71,15 +80,24 @@ class MPSSimulator:
         return outcome
 
     def _get_gate_matrix(self, name, params):
-        # Re-using logic from statevector simulator for simplicity
         if name == "h": return self.H
         if name == "x": return self.X
+        if name == "y": return self.Y
+        if name == "z": return self.Z
         if name == "id": return self.I
-        angle = params[0] if params else 0
+        if name == "sx": return self.SX
+        if name == "sxdg": return self.SX.conj().T
+        if name == "s": return self.S
+        if name == "sdg": return self.S.conj().T
+        if name == "t": return self.T
+        if name == "tdg": return self.T.conj().T
+        # Resolve symbolic parameters
+        angle = resolve_param(params[0]) if params else 0
         if name == "rx": return np.array([[np.cos(angle/2), -1j*np.sin(angle/2)], [-1j*np.sin(angle/2), np.cos(angle/2)]])
         if name == "ry": return np.array([[np.cos(angle/2), -np.sin(angle/2)], [np.sin(angle/2), np.cos(angle/2)]])
-        if name == "rz" or name == "p": return np.array([[1, 0], [0, np.exp(1j*angle)]])
-        return self.I
+        if name == "rz": return np.array([[np.exp(-1j*angle/2), 0], [0, np.exp(1j*angle/2)]])
+        if name == "p": return np.array([[1, 0], [0, np.exp(1j*angle)]])
+        raise ValueError(f"Unknown gate in MPS simulator: {name}")
 
     def _apply_single_qubit(self, q, gate):
         # Contract tensor with gate: (L, p, R) * (p_new, p) -> (L, p_new, R)
@@ -152,6 +170,39 @@ class MPSSimulator:
         self.tensors[idx1] = (u[:, :dim] * s[:dim]).reshape(L1, p2, dim)
         self.tensors[idx2] = vh[:dim, :].reshape(dim, p1, R2)
 
+    def _apply_cz(self, ctrl, target):
+        """Apply CZ gate using CX decomposition: H-CX-H."""
+        if abs(ctrl - target) != 1:
+            raise ValueError("MPSSimulator currently only supports nearest-neighbor CZ gates.")
+        # CZ = (I ⊗ H) · CX · (I ⊗ H)
+        self._apply_single_qubit(target, self.H)
+        self._apply_cx(ctrl, target)
+        self._apply_single_qubit(target, self.H)
+
+    def sample(self, circuit: QuantumCircuit, shots: int = 1024,
+               seed: int = None) -> dict:
+        """Run the circuit multiple times and collect measurement statistics.
+
+        Each shot re-runs the full simulation for correct probabilistic behavior.
+        """
+        if shots <= 0:
+            raise ValueError("shots must be a positive integer")
+
+        rng = np.random.default_rng(seed)
+        counts: dict[str, int] = {}
+
+        for _ in range(shots):
+            run_seed = int(rng.integers(0, 2**31 - 1))
+            tensors, mem = self.simulate(circuit, seed=run_seed)
+            sv = self.get_statevector()
+            probs = np.abs(sv) ** 2
+            probs = probs / probs.sum()  # Renormalize
+            outcome = rng.choice(len(probs), p=probs)
+            bitstring = format(outcome, f"0{circuit.num_qubits}b")
+            counts[bitstring] = counts.get(bitstring, 0) + 1
+
+        return counts
+
     def get_statevector(self) -> np.ndarray:
         """Contracts the full MPS to return a standard statevector (for small N)."""
         res = self.tensors[0]
@@ -172,7 +223,7 @@ if __name__ == "__main__":
     qc.add_operation("cx", [1, 2]) # Bell state spread out
     
     sim = MPSSimulator()
-    tensors = sim.simulate(qc)
+    tensors, mem = sim.simulate(qc)
     sv = sim.get_statevector()
     print("MPS Statevector (GHZ-ish):", np.round(sv, 3))
     # Expected: 1/sqrt(2) (|000> + |111>) -> [0.707, 0, 0, 0, 0, 0, 0, 0.707]
