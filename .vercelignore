@@ -1,7 +1,7 @@
-api/
-src/
-tests/
-requirements.txt
-Dockerfile
-render.yaml
-*.py
+/api/
+/src/
+/tests/
+/requirements.txt
+/Dockerfile
+/render.yaml
+/*.py
