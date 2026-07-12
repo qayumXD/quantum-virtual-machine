@@ -30,6 +30,7 @@ export default function RootLayout({
             </div>
             <nav className="flex items-center gap-4 text-sm font-medium">
               <Link href="/" className="text-text-muted hover:text-text-main transition-colors">Workspace</Link>
+              <Link href="/history" className="text-text-muted hover:text-text-main transition-colors">History</Link>
               <Link href="/docs" className="text-text-muted hover:text-text-main transition-colors flex items-center gap-1.5">
                 <Book size={14} /> Documentation
               </Link>
