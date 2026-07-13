@@ -80,10 +80,10 @@ export default function HistoryPage() {
                     </td>
                     <td className="px-4 py-3 font-mono">{run.num_qubits}</td>
                     <td className="px-4 py-3 font-mono">{run.num_gates}</td>
-                    <td className="px-4 py-3 font-mono text-text-muted">{run.shots.toLocaleString()}</td>
+                    <td className="px-4 py-3 font-mono text-text-muted">{(run.shots || 0).toLocaleString()}</td>
                     <td className="px-4 py-3 font-mono text-right flex items-center justify-end gap-1.5">
                       <Clock size={12} className="text-text-muted" />
-                      {run.execution_time_ms.toFixed(1)}ms
+                      {(run.execution_time_ms || 0).toFixed(1)}ms
                     </td>
                   </tr>
                 ))}
