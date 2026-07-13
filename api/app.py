@@ -1,6 +1,7 @@
 # FastAPI backend for QVM with OpenQASM 3.0, MPS, Noise Models, and VQA
 
 import io
+import os
 import base64
 import numpy as np
 import matplotlib.pyplot as plt
@@ -88,13 +89,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve static web client
-app.mount("/web", StaticFiles(directory="web"), name="web")
+# Serve static web client if a compiled static build exists
+if os.path.exists("web/out"):
+    app.mount("/web", StaticFiles(directory="web/out"), name="web")
 
 
 @app.get("/")
 def root():
-    return FileResponse("web/index.html")
+    return {
+        "status": "Quantum Virtual Machine (QVM) API is active",
+        "version": "0.4.0",
+        "frontend": "https://quantum-virtual-machine.vercel.app",
+        "endpoints": {
+            "/health": "GET - check API health",
+            "/run": "POST - run simulation program",
+            "/circuits": "GET - list available circuits",
+            "/history": "GET - retrieve execution logs"
+        }
+    }
 
 
 @app.get("/health")
