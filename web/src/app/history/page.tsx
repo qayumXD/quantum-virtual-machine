@@ -22,7 +22,11 @@ export default function HistoryPage() {
     fetch("https://quantum-virtual-machine.onrender.com/history?limit=50")
       .then((res) => res.json())
       .then((data) => {
-        if (data.history) setHistory(data.history);
+        if (Array.isArray(data.history)) {
+          setHistory(data.history);
+        } else {
+          console.error("Backend returned invalid history format:", data);
+        }
       })
       .catch((err) => console.error("Failed to load history", err))
       .finally(() => setLoading(false));
