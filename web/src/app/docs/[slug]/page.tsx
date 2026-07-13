@@ -1,8 +1,12 @@
 import fs from 'fs';
 import path from 'path';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import 'katex/dist/katex.min.css';
 
 // Required for Static Export to know which pages to generate
 export async function generateStaticParams() {
@@ -32,7 +36,12 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
       </div>
       <div className="flex-1 overflow-y-auto p-8">
         <div className="prose">
-          <ReactMarkdown>{content}</ReactMarkdown>
+          <ReactMarkdown 
+            remarkPlugins={[remarkGfm, remarkMath]} 
+            rehypePlugins={[rehypeKatex]}
+          >
+            {content}
+          </ReactMarkdown>
         </div>
       </div>
     </div>

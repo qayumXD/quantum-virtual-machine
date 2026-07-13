@@ -69,4 +69,10 @@
   .prose code { @apply bg-bg-panel px-1.5 py-0.5 rounded font-mono text-sm border border-border-color; }
   .prose pre code { @apply bg-transparent p-0 border-0; }
   .prose blockquote { @apply border-l-4 border-accent pl-4 italic text-text-muted mb-4; }
+  .prose table { @apply w-full border-collapse mb-6 text-sm border border-border-color; }
+  .prose th { @apply px-4 py-2 bg-bg-panel border border-border-color font-semibold text-left text-text-muted uppercase tracking-wider text-xs; }
+  .prose td { @apply px-4 py-2 border border-border-color; }
+  .prose tr:nth-child(even) { @apply bg-bg-panel/30; }
+  .prose a { @apply text-accent hover:text-accent-hover underline transition-colors; }
+  .prose hr { @apply border-t border-border-color my-8; }
 }
