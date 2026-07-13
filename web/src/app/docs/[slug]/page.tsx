@@ -39,6 +39,14 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
           <ReactMarkdown 
             remarkPlugins={[remarkGfm, remarkMath]} 
             rehypePlugins={[rehypeKatex]}
+            components={{
+              p: ({node, children, ...props}) => <div className="mb-4" {...props}>{children}</div>,
+              a: ({node, href, children, ...props}) => (
+                <a href={href} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline" {...props}>
+                  {children}
+                </a>
+              )
+            }}
           >
             {content}
           </ReactMarkdown>
