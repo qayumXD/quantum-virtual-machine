@@ -77,8 +77,13 @@ fractions keep their named gates (`Z**0.25` → `t`).
 | Partially-bound symbolic expression export | `QVMConversionError` suggesting `bind_parameters()` |
 | Multi-qubit Cirq measurement | `QVMConversionError` (IR maps one qubit → one classical bit per measure) |
 
-For Qiskit circuits built outside the vocabulary, transpile onto the basis
-set before importing:
+**Multi-controlled gates are lowered automatically** during import:
+`mcx`, `mcx_gray`, `c3x`, `c4x`, `ccz`/`mcz`, `mcphase`/`mcu1`, `mcry`,
+`mcrz`, `mcrx` map onto exact basis-gate constructions (half-angle CX
+recursions + projector split; validated against Qiskit's reference
+unitaries for up to 5 controls).
+
+For anything else foreign you can transpile onto the basis set yourself:
 
 ```python
 from qiskit import transpile
