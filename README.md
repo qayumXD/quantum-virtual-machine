@@ -113,7 +113,7 @@ Notes:
 - **Multi-controlled gates** (`mcx`, `mcphase`, `mcry`, `mcrz`, `ccz`, ...) are lowered *exactly* into basis gates during import — Grover oracles built with native `mcx` just work.
 - Anything else outside the vocabulary fails loudly with a message listing the supported set (or pass `transpile_foreign=True` to auto-transpile via Qiskit).
 
-Full details: [`docs/guides/INTEROP.md`](docs/guides/INTEROP.md)
+Full details: [`docs/guides/INTEROP.md`](https://github.com/qayumXD/quantum-virtual-machine/main/docs/guides/INTEROP.md)
 
 ---
 
@@ -145,9 +145,9 @@ Validation is eager: malformed arities (`cx` on one qubit), measurements into un
 | Engine | Use case | Notes |
 |---|---|---|
 | `Simulator` (statevector) | Exact amplitudes, N ≲ 12–16 | In-place tensor-stride kernels, full classical memory + label/jump control flow, stochastic Kraus noise trajectories |
-| `MPSSimulator` | Low-entanglement circuits, 20+ qubits | SVD evolution with exact SWAP-routing of long-range gates — see [benchmark](docs/reports/benchmark_2026-08-24.md): GHZ-24 in 1.6 ms |
+| `MPSSimulator` | Low-entanglement circuits, 20+ qubits | SVD evolution with exact SWAP-routing of long-range gates — see [benchmark](https://github.com/qayumXD/quantum-virtual-machine/main/docs/reports/benchmark_2026-08-24.md): GHZ-24 in 1.6 ms |
 
-Noise modeling supports depolarizing, amplitude damping, and phase damping channels plus device profiles (`fake_5q`, `fake_7q`, `ideal`). For a candid assessment of scaling limits beyond this range, see [`docs/production_readiness_analysis.md`](docs/production_readiness_analysis.md).
+Noise modeling supports depolarizing, amplitude damping, and phase damping channels plus device profiles (`fake_5q`, `fake_7q`, `ideal`). For a candid assessment of scaling limits beyond this range, see [`docs/production_readiness_analysis.md`](https://github.com/qayumXD/quantum-virtual-machine/main/docs/production_readiness_analysis.md).
 
 ---
 
@@ -161,12 +161,12 @@ python -m benchmarks.run_audit --all          # 20-algorithm audit corpus (QASM/
 
 ## Tutorials
 
-Executable notebooks in [`tutorials/`](tutorials/) — each one is run by CI so it cannot rot:
+Executable notebooks in [`tutorials/`](https://github.com/qayumXD/quantum-virtual-machine/main/tutorials/) — each one is run by CI so it cannot rot:
 
-1. [`01_hello_bell.ipynb`](tutorials/01_hello_bell.ipynb) — ingest QASM, simulate, export to Qiskit & Cirq, cross-check with Aer
-2. [`02_teleportation.ipynb`](tutorials/02_teleportation.ipynb) — dynamic circuits: mid-circuit measurement + classical feedback
-3. [`03_grover_search.ipynb`](tutorials/03_grover_search.ipynb) — Grover in OpenQASM 3 validated against ideal amplitudes
-4. [`04_vqe_in_30_lines.ipynb`](tutorials/04_vqe_in_30_lines.ipynb) — H₂ ground state via VQE
+1. [`01_hello_bell.ipynb`](https://github.com/qayumXD/quantum-virtual-machine/main/tutorials/01_hello_bell.ipynb) — ingest QASM, simulate, export to Qiskit & Cirq, cross-check with Aer
+2. [`02_teleportation.ipynb`](https://github.com/qayumXD/quantum-virtual-machine/main/tutorials/02_teleportation.ipynb) — dynamic circuits: mid-circuit measurement + classical feedback
+3. [`03_grover_search.ipynb`](https://github.com/qayumXD/quantum-virtual-machine/main/tutorials/03_grover_search.ipynb) — Grover in OpenQASM 3 validated against ideal amplitudes
+4. [`04_vqe_in_30_lines.ipynb`](https://github.com/qayumXD/quantum-virtual-machine/main/tutorials/04_vqe_in_30_lines.ipynb) — H₂ ground state via VQE
 
 The interop suite verifies probability agreement across QVM, Qiskit, and Cirq for every gate in the vocabulary, round-trip structural preservation, and that unsupported inputs raise rather than corrupt. The audit corpus runs textbook-to-industry algorithms end-to-end and cross-validates against native simulators — see [`docs/reports/algorithm_audit_2026-08-24.md`](docs/reports/algorithm_audit_2026-08-24.md).
 
