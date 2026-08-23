@@ -7,6 +7,10 @@ Updated to preserve OpenQASM 3.0 classical metadata and control flow.
 
 from qvm.ir import QuantumCircuit
 from qvm.exceptions import UnsupportedGateError
+from qvm import synthesis
+
+# Multi-controlled macros lowered via qvm.synthesis
+_MACROS = {"mcx", "mcz", "mcp", "mcry", "mcrz", "mcrx"}
 
 class Decomposer:
     """
@@ -25,6 +29,12 @@ class Decomposer:
         # If it's a non-gate op (classical, label, etc.), it's considered native
         if gate_name in ["classical_op", "label", "jump", "delay", "measure", "barrier"]:
             return [op]
+
+        if gate_name in _MACROS:
+            from qvm.parameter import resolve_param
+            params = [float(resolve_param(p)) for p in (op.get("params") or [])]
+            return [dict(sub, condition=op.get("condition"), target_bit=op.get("target_bit"))
+                    for sub in synthesis.lower_macro(gate_name, op["qubits"], params)]
 
         if gate_name in self.native_gates:
             return [op]

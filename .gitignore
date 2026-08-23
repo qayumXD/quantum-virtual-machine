@@ -45,6 +45,10 @@ build/
 .pytest_cache/
 htmlcov/
 .coverage
+wheelhouse/
+
+# Legacy local backups (superseded by web/)
+web_backup/
 
 # Specific to this project (QVM)
 *.png # Ignore histogram images

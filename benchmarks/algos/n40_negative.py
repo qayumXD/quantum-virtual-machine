@@ -57,19 +57,24 @@ measure q -> c;
     except Exception as e:
         results["n02_qasm2_register_measure"] = ("FAIL", f"raised {type(e).__name__}: {str(e)[:50]}")
 
-    # n03: 4-qubit controlled gate beyond vocabulary ceiling
+    # n03 (promoted to positive): multi-controlled gates now import via exact
+    # lowering — verify semantics survive the round trip into QVM.
     try:
         from qiskit import QuantumCircuit as QK
+        from qiskit.quantum_info import Statevector as QKSv
+        import numpy as _np
         qk = QK(5)
-        qk.mcx([0, 1, 2], 3)
+        qk.h(0); qk.mcx([0, 1, 2, 3], 4)
         from qvm.ir import QuantumCircuit
-        try:
-            QuantumCircuit.from_qiskit(qk)
-            results["n03_mcx4_ceiling"] = ("FAIL", "mcx imported silently!")
-        except UnsupportedGateError as e:
-            results["n03_mcx4_ceiling"] = ("PASS", str(e)[:70])
+        qc = QuantumCircuit.from_qiskit(qk)
+        st, _ = __import__("qvm.simulator", fromlist=["Simulator"]).Simulator().simulate(qc)
+        got = _np.abs(st) ** 2
+        ref = _np.asarray(QKSv.from_instruction(qk).probabilities(), float)
+        ok = _np.allclose(got, ref, atol=1e-9)
+        results["n03_mcx_lowering"] = ("PASS" if ok else "FAIL",
+                                       "5-qubit mcx matches qiskit" if ok else "probability mismatch")
     except ImportError:
-        results["n03_mcx4_ceiling"] = ("SKIP", "qiskit missing")
+        results["n03_mcx_lowering"] = ("SKIP", "qiskit missing")
 
     # n04: malformed arity rejected at construction (not at simulation)
     from qvm.ir import QuantumCircuit as QC

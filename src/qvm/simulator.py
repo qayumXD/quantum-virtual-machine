@@ -44,6 +44,7 @@ class Simulator:
         raise UnsupportedGateError(f"Unknown single-qubit gate: {name}")
 
     def simulate(self, circuit: QuantumCircuit, seed: int = None, max_ops: int = 1_000_000) -> tuple[np.ndarray, dict]:
+        circuit = circuit.lowered()   # expand mcx/mcz/mcp/mcry/mcrz/mcrx macros
         num_qubits = circuit.num_qubits
         state = np.zeros(2**num_qubits, dtype=complex)
         state[0] = 1.0
@@ -435,6 +436,7 @@ class Simulator:
         After each gate, applies the corresponding noise channel from the
         noise model using stochastic Kraus trajectories.
         """
+        circuit = circuit.lowered()   # expand multi-controlled macros
         num_qubits = circuit.num_qubits
         state = np.zeros(2**num_qubits, dtype=complex)
         state[0] = 1.0

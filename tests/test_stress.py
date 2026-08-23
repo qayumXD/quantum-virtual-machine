@@ -440,17 +440,29 @@ class TestMPSSimulatorStress:
         metrics: PerformanceMetrics = perf["metrics"]
         assert metrics.wall_clock_time_sec < 2.0, "MPS 1000-op HEA simulation should execute within 2 seconds"
 
-    def test_mps_simulator_non_nearest_neighbor_bottleneck_handling(self):
-        """Verify that MPSSimulator cleanly rejects non-nearest-neighbor two-qubit gates."""
+    def test_mps_simulator_non_nearest_neighbor_now_routed(self):
+        """Long-range two-qubit gates are SWAP-routed exactly (v0.4 feature).
+
+        The old behavior raised 'nearest-neighbor only'; the engine now
+        routes via swaps and must agree with the dense statevector engine.
+        """
+        import numpy as _np
         qc = QuantumCircuit(5)
         qc.add_operation("h", [0], [])
         qc.add_operation("cx", [0, 4], [])  # Non-adjacent: |0 - 4| = 4 != 1
 
-        mps = MPSSimulator()
-        with pytest.raises(ValueError) as exc_info:
-            mps.simulate(qc)
+        from qvm.simulator import Simulator as _Dense
+        st, _ = _Dense().simulate(qc)
+        ref = _np.abs(st) ** 2
 
-        assert "nearest-neighbor" in str(exc_info.value).lower()
+        mps = MPSSimulator(max_bond_dim=64)
+        mps.simulate(qc)
+        sv = mps.get_statevector()
+        got = _np.abs(sv) ** 2
+        got = got / got.sum()
+
+        assert _np.allclose(got, ref, atol=1e-9)
+        assert abs(got[0] - 0.5) < 1e-9 and abs(got[0b10001] - 0.5) < 1e-9
 
     def test_mps_vs_statevector_small_baseline_consistency(self):
         """Verify that MPS and Statevector produce identical measurement statistics on small circuits."""

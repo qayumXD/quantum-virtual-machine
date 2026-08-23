@@ -18,6 +18,7 @@ from qvm.exceptions import (
     UnsupportedGateError,
     MissingBackendError,
 )
+from qvm import synthesis
 
 # Optional imports for external backends – they are loaded lazily so the core library works without them.
 try:
@@ -74,6 +75,8 @@ class QuantumCircuit:
             raise ValueError("Gate name must be a non-empty string.")
         if gate_name not in ["label", "jump", "classical_op", "delay"]:
             # Gate registry: name -> expected parameter count.
+            # Multi-controlled macros (mcx/mcz/mcp/mcry/...) are validated
+            # here and lowered to basis gates by QuantumCircuit.lowered().
             GATE_SPEC = {
                 "h": 0, "x": 0, "y": 0, "z": 0,
                 "cx": 0, "cz": 0, "swap": 0, "ccx": 0, "toffoli": 0,
@@ -81,9 +84,14 @@ class QuantumCircuit:
                 "rx": 1, "ry": 1, "rz": 1, "p": 1,
                 "rxx": 1, "rzz": 1, "cp": 1,
                 "measure": 0, "barrier": 0,
+                "mcx": 0, "mcz": 0, "mcp": 1,
+                "mcry": 1, "mcrz": 1, "mcrx": 1,
             }
+            _MACRO_ALIASES = {"mcphase": "mcp", "mcu1": "mcp"}
+            gate_name = _MACRO_ALIASES.get(gate_name, gate_name)
             # Gate registry: name -> exact number of qubits the gate acts on.
-            # measure/barrier act on one or more qubits (variable arity).
+            # measure/barrier act on one or more qubits (variable arity);
+            # multi-controlled macros act on >= 2 (controls + target).
             GATE_ARITY = {
                 "h": 1, "x": 1, "y": 1, "z": 1, "id": 1,
                 "sx": 1, "sxdg": 1, "s": 1, "sdg": 1, "t": 1, "tdg": 1,
@@ -101,6 +109,14 @@ class QuantumCircuit:
             if gate_name in ("measure", "barrier"):
                 if len(qubits) < 1:
                     raise ValueError(f"Gate '{gate_name}' requires at least one target qubit.")
+            elif gate_name in ("mcx", "mcz", "mcp", "mcry", "mcrz", "mcrx"):
+                if len(qubits) < 2:
+                    raise ValueError(
+                        f"Gate '{gate_name}' requires at least one control and a "
+                        f"target qubit (>= 2 qubits), got {qubits}"
+                    )
+                if len(set(qubits)) != len(qubits):
+                    raise ValueError(f"Gate '{gate_name}' requires distinct qubits, got {qubits}")
             else:
                 arity = GATE_ARITY[gate_name]
                 if len(qubits) != arity:
@@ -208,6 +224,50 @@ class QuantumCircuit:
             raise ValueError(f"Unbound parameters remain after binding: {names}")
         return new_qc
 
+    # Multi-controlled macro names (canonical forms after aliasing).
+    _MACRO_GATES = frozenset({"mcx", "mcz", "mcp", "mcry", "mcrz", "mcrx"})
+
+    def lowered(self) -> "QuantumCircuit":
+        """Return an equivalent circuit with multi-controlled macros
+        (``mcx`` / ``mcz`` / ``mcp`` / ``mcry`` / ``mcrz`` / ``mcrx``)
+        expanded into the basis vocabulary.
+
+        Returns ``self`` unchanged when no macros are present.  Classical
+        conditions and metadata on a macro are propagated to every generated
+        sub-operation.  Symbolic parameters must be bound first.
+        """
+        from qvm import synthesis
+
+        if not any(op["name"] in self._MACRO_GATES for op in self.operations):
+            return self
+
+        out = QuantumCircuit(self.num_qubits)
+        out.classical_registers = dict(self.classical_registers)
+        for op in self.operations:
+            if op["name"] not in self._MACRO_GATES:
+                out.operations.append(dict(op))
+                continue
+            try:
+                params = [float(resolve_param(p)) for p in (op.get("params") or [])]
+                sub_ops = synthesis.lower_macro(op["name"], op["qubits"], params)
+            except QVMError:
+                raise
+            except (TypeError, ValueError) as exc:
+                raise QVMConversionError(
+                    f"Cannot lower '{op['name']}': {exc}. "
+                    f"Bind symbolic parameters before lowering."
+                ) from exc
+            for sub in sub_ops:
+                out.add_operation(
+                    sub["name"],
+                    list(sub["qubits"]),
+                    params=list(sub["params"]),
+                    condition=op.get("condition"),
+                    target_bit=op.get("target_bit"),
+                    label=op.get("label"),
+                )
+        return out
+
     def __str__(self):
         """Human‑readable representation of the circuit."""
         s = f"QuantumCircuit(num_qubits={self.num_qubits}, registers={self.classical_registers})\n"
@@ -310,6 +370,20 @@ class QuantumCircuit:
         raise QVMConversionError(
             f"Unsupported parameter type for {framework} export: {type(p).__name__}"
         )
+
+    @classmethod
+    def _transpile_to_basis(cls, qk_circuit: "QiskitCircuit") -> "QiskitCircuit":
+        """Lower any Qiskit circuit onto the supported basis set using
+        Qiskit's own compiler. Requires the [qiskit] extra."""
+        if qiskit is None:
+            raise MissingBackendError("Qiskit is not installed.")
+        from qiskit import transpile
+        basis = sorted(
+            set(cls._PARAMLESS_1Q) | set(cls._ONE_PARAM_1Q)
+            | set(cls._PARAMLESS_2Q) | set(cls._ONE_PARAM_2Q)
+            | {"ccx", "measure"}
+        )
+        return transpile(qk_circuit, basis_gates=basis, optimization_level=0)
 
     @classmethod
     def _import_param(cls, value) -> "float | Parameter | ParameterExpression":
@@ -435,6 +509,14 @@ class QuantumCircuit:
                 getattr(qc, name)(params[0], qs[0], qs[1])
             elif name == "ccx":
                 qc.ccx(qs[0], qs[1], qs[2])
+            elif name in ("mcx", "mcz", "mcp", "mcry", "mcrz", "mcrx"):
+                controls, target = qs[:-1], qs[-1]
+                if name == "mcx":
+                    qc.mcx(controls, target)
+                elif name == "mcz":
+                    qc.mcz(controls, target)
+                else:
+                    getattr(qc, name)(params[0], *controls, target)
             else:
                 supported = sorted(
                     self._PARAMLESS_1Q | self._ONE_PARAM_1Q | self._PARAMLESS_2Q
@@ -447,14 +529,20 @@ class QuantumCircuit:
         return qc
 
     @classmethod
-    def from_qiskit(cls, qiskit_circuit: "QiskitCircuit") -> "QuantumCircuit":
+    def from_qiskit(cls, qiskit_circuit: "QiskitCircuit",
+                    transpile_foreign: bool = False) -> "QuantumCircuit":
         """Create a :class:`QuantumCircuit` from a Qiskit circuit.
+
+        Multi-controlled gates (``mcx``, ``mcphase``, ``mcry``, ``ccz``, ...)
+        are lowered exactly into the basis vocabulary during import.
+
+        Args:
+            transpile_foreign: when True, circuits containing other foreign
+                gates are first passed through ``qiskit.transpile`` onto the
+                supported basis set instead of raising UnsupportedGateError.
 
         Only the supported basis-gate vocabulary is accepted; anything else
         raises :class:`UnsupportedGateError` instead of being silently dropped.
-        Transpile the Qiskit circuit onto the basis set first when needed::
-
-            transpile(qk_circuit, basis_gates=[...], optimization_level=0)
 
         Note: Qiskit's ``global_phase`` attribute is ignored (physically
         unobservable).
@@ -555,10 +643,24 @@ class QuantumCircuit:
                 circuit.add_operation("ccx", qubits)
             elif raw_name in known:
                 circuit.add_operation(raw_name, qubits, params=get_params() or None)
+            elif raw_name in synthesis.QISKIT_MC_ALIASES:
+                # Multi-controlled family: lower exactly into the vocabulary.
+                params = [float(p) for p in get_params()]
+                for sub in synthesis.lower_macro(raw_name, qubits, params):
+                    circuit.add_operation(
+                        sub["name"], list(sub["qubits"]),
+                        params=list(sub["params"]) or None,
+                    )
             else:
+                if transpile_foreign:
+                    lowered = cls._transpile_to_basis(qiskit_circuit)
+                    return cls.from_qiskit(lowered, transpile_foreign=False)
                 raise UnsupportedGateError(
                     f"Qiskit gate '{operation.name}' cannot be imported into QVM IR. "
-                    f"Supported basis gates: {sorted(known | {'measure', 'barrier', 'delay'})}."
+                    f"Supported basis gates: "
+                    f"{sorted(known | {'measure', 'barrier', 'delay'})}; multi-controlled "
+                    f"macros ({sorted(synthesis.QISKIT_MC_ALIASES)}) are lowered automatically. "
+                    f"Pass transpile_foreign=True to auto-transpile anything else."
                 )
         return circuit
 
