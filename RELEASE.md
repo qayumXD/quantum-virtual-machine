@@ -1,57 +1,62 @@
 # Release Guide
 
-How to publish QVM to PyPI. Artifacts are built with `python -m build` and
-validated with `twine check` before anything touches a package index.
+Releases are **automated**: pushing a tag `v*` runs tests + the audit corpus,
+builds distributions, twine-checks them, publishes to PyPI, and attaches the
+artifacts to a GitHub release.
 
 ## One-time setup
 
-1. Create accounts (username `__token__` auth):
-   - https://pypi.org  → account + API token (scope: project after first upload)
-   - https://test.pypi.org → separate account + API token
-2. Store tokens locally (never in the repo):
+1. PyPI API token scoped to this project
+   (pypi.org → Account settings → API tokens → *Add token* → scope:
+   `quantum-virtual-machine`).
+2. Store it as an Actions secret:
 
    ```bash
-   cat > ~/.pypirc <<'EOF'
-   [distutils]
-   index-servers = pypi testpypi
-   [testpypi]
-   repository = https://test.pypi.org/legacy/
-   username = __token__
-   password = pypi-XXXXXXXXXXXXXXXX
-   [pypi]
-   username = __token__
-   password = pypi-YYYYYYYYYYYYYYYY
-   EOF
-   chmod 600 ~/.pypirc
+   gh secret set PYPI_TOKEN --body "pypi-..."
    ```
 
-## Release flow
+## Cutting a release
 
 ```bash
-# 0) clean tree, tagged commit
-git status --short            # must be empty
-git tag -a vX.Y.Z -m "..." && git push origin main --tags
+# 0) clean tree on main, all green locally
+git status --short && pytest -q
 
-# 1) build + validate
-python -m build
-python -m twine check dist/*
+# 1) bump version in pyproject.toml (+ api/app.py /health payload)
+sed -i 's/^version = ".*"/version = "X.Y.Z"/' pyproject.toml
+sed -i 's/"version": ".*",/"version": "X.Y.Z",/' api/app.py
+git commit -am "chore: bump version to X.Y.Z"
 
-# 2) dry-run on TestPyPI
-python -m twine upload --repository testpypi dist/*
-pip install --index-url https://test.pypi.org/simple/ \
-    --extra-index-url https://pypi.org/simple \
-    "quantum-virtual-machine[all]"     # extras pull real deps from PyPI
-
-# 3) smoke-test the TestPyPI wheel in a fresh venv, then promote
-python -m twine upload dist/*
-
-# 4) GitHub release
-gh release create vX.Y.Z --title "vX.Y.Z — ..." --notes-file RELEASE_NOTES.md
+# 2) tag and push — CI does the rest
+git tag -a vX.Y.Z -m "..."
+git push origin main --tags
 ```
+
+The [Release workflow](.github/workflows/release.yml) then:
+
+1. runs the unit suite + 20-algorithm audit on Python 3.12,
+2. builds sdist + wheel, `twine check`,
+3. uploads to PyPI using the `PYPI_TOKEN` secret,
+4. attaches both artifacts to the auto-generated GitHub release.
+
+Watch it: `gh run watch` (or the Actions tab). Manual trigger (build-only,
+no publish): `gh workflow run Release`.
+
+## Manual fallback
+
+If automation must be bypassed, artifacts can be built and uploaded by hand:
+
+```bash
+python -m build && python -m twine check dist/*
+twine upload dist/*        # uses ~/.pypirc
+```
+
+Only upload artifacts built from a tagged, clean commit (`dist/` is gitignored).
 
 ## Notes
 
-- Only upload artifacts built from a tagged, clean commit (`dist/` is gitignored).
-- First PyPI upload claims the project name; add collaborators under
-  *Account settings → Publishing → Projects* afterwards.
-- Yank policy: broken release → `twine yank` rather than delete, so pins keep resolving.
+- First upload of a new major/minor claims that version line; yank broken
+  builds with `twine yank` rather than deleting so pins keep resolving.
+- Consider upgrading to PyPA **Trusted Publishing** (OIDC, no token at all):
+  pypi.org → project → Publishing → add trusted publisher
+  (`qayumXD/quantum-virtual-machine`, workflow `release.yml`), then swap the
+  upload step to `pypa/gh-action-pypi-publish@release/v1`.
