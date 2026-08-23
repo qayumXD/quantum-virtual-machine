@@ -4,7 +4,7 @@
 Export functions for converting QuantumCircuit objects to other formats.
 """
 
-from src.qvm.ir import QuantumCircuit
+from qvm.ir import QuantumCircuit
 
 def to_openqasm2(circuit: QuantumCircuit) -> str:
     """
@@ -66,7 +66,7 @@ def to_openqasm2(circuit: QuantumCircuit) -> str:
 
 # Example Usage
 if __name__ == "__main__":
-    from src.qvm.ir import QuantumCircuit
+    from qvm.ir import QuantumCircuit
 
     # Create a sample circuit
     qc = QuantumCircuit(3)

@@ -8,8 +8,8 @@ import pytest
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-from src.qvm.visual import plot_histogram, plot_circuit
-from src.qvm.ir import QuantumCircuit
+from qvm.visual import plot_histogram, plot_circuit
+from qvm.ir import QuantumCircuit
 
 # Use a non-interactive backend for testing to avoid GUI windows
 matplotlib.use("Agg")

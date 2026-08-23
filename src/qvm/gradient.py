@@ -13,10 +13,10 @@ import numpy as np
 from typing import List, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from src.qvm.ir import QuantumCircuit
-    from src.qvm.simulator import Simulator
-    from src.qvm.observable import Hamiltonian
-    from src.qvm.parameter import Parameter
+    from qvm.ir import QuantumCircuit
+    from qvm.simulator import Simulator
+    from qvm.observable import Hamiltonian
+    from qvm.parameter import Parameter
 
 
 def parameter_shift_gradient(

@@ -102,7 +102,7 @@ if __name__ == "__main__":
         print(f"Generated Grover circuit for target '{args.target}'.")
         print(f"Saved to {args.output}")
         print(f"\nTo run:")
-        print(f"python -m src.qvm.cli {args.output} --nqubits {len(args.target)}")
+        print(f"python -m qvm.cli {args.output} --nqubits {len(args.target)}")
         
     except ValueError as e:
         print(f"Error: {e}")

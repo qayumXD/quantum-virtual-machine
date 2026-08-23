@@ -9,12 +9,12 @@ An example demonstrating the full QVM pipeline:
 """
 
 import numpy as np
-from src.qvm.ir import QuantumCircuit
-from src.qvm.parser import QASMParser
-from src.qvm.architecture import get_linear_architecture
-from src.qvm.transpiler import Transpiler
-from src.qvm.simulator import Simulator
-from src.qvm.util.export import to_openqasm2
+from qvm.ir import QuantumCircuit
+from qvm.parser import QASMParser
+from qvm.architecture import get_linear_architecture
+from qvm.transpiler import Transpiler
+from qvm.simulator import Simulator
+from qvm.util.export import to_openqasm2
 
 def main():
     print("--- QVM Full Pipeline Example ---")

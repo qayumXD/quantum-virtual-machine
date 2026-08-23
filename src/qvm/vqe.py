@@ -13,14 +13,14 @@ import numpy as np
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, TYPE_CHECKING
 
-from src.qvm.parameter import Parameter
-from src.qvm.observable import Hamiltonian
-from src.qvm.simulator import Simulator
-from src.qvm.gradient import parameter_shift_gradient
+from qvm.parameter import Parameter
+from qvm.observable import Hamiltonian
+from qvm.simulator import Simulator
+from qvm.gradient import parameter_shift_gradient
 
 if TYPE_CHECKING:
-    from src.qvm.ir import QuantumCircuit
-    from src.qvm.noise import NoiseModel
+    from qvm.ir import QuantumCircuit
+    from qvm.noise import NoiseModel
 
 
 @dataclass
@@ -38,9 +38,9 @@ class VQE:
     """Variational Quantum Eigensolver.
 
     Usage:
-        from src.qvm.parameter import Parameter
-        from src.qvm.observable import Hamiltonian
-        from src.qvm.ir import QuantumCircuit
+        from qvm.parameter import Parameter
+        from qvm.observable import Hamiltonian
+        from qvm.ir import QuantumCircuit
 
         # Define ansatz
         theta = Parameter("theta")

@@ -12,9 +12,9 @@ from collections import deque
 import math
 from typing import List, Tuple
 
-from src.qvm.ir import QuantumCircuit
-from src.qvm.architecture import TargetArchitecture, get_linear_architecture
-from src.qvm.parser import QASMParser
+from qvm.ir import QuantumCircuit
+from qvm.architecture import TargetArchitecture, get_linear_architecture
+from qvm.parser import QASMParser
 
 
 class Transpiler:

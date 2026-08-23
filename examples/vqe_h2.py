@@ -25,11 +25,11 @@ import os
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.qvm.parameter import Parameter
-from src.qvm.observable import Hamiltonian, PauliOp
-from src.qvm.simulator import Simulator
-from src.qvm.vqe import VQE
-from src.qvm.ir import QuantumCircuit
+from qvm.parameter import Parameter
+from qvm.observable import Hamiltonian, PauliOp
+from qvm.simulator import Simulator
+from qvm.vqe import VQE
+from qvm.ir import QuantumCircuit
 
 
 def build_h2_hamiltonian() -> Hamiltonian:

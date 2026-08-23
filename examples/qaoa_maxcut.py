@@ -26,8 +26,8 @@ import os
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.qvm.qaoa import QAOA
-from src.qvm.simulator import Simulator
+from qvm.qaoa import QAOA
+from qvm.simulator import Simulator
 
 
 def main():

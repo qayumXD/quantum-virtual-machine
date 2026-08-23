@@ -6,7 +6,7 @@ try:
 except ImportError:  # pragma: no cover
     qiskit = None
 
-from src.qvm.ir import QuantumCircuit
+from qvm.ir import QuantumCircuit
 
 @pytest.fixture
 def sample_circuit():

@@ -1,8 +1,8 @@
 # tests/test_decomposer.py
 
 import pytest
-from src.qvm.ir import QuantumCircuit
-from src.qvm.decomposer import Decomposer
+from qvm.ir import QuantumCircuit
+from qvm.decomposer import Decomposer
 
 def test_decompose_native_gate():
     """Tests that a native gate is not decomposed."""

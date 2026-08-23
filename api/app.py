@@ -12,17 +12,17 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Literal, Dict
 
-from src.qvm.parser import QASMParser, OpenQASM2Parser
-from src.qvm.qasm3_parser import OpenQASM3Parser
-from src.qvm.transpiler import Transpiler
-from src.qvm.simulator import Simulator
-from src.qvm.mps_simulator import MPSSimulator
-from src.qvm.architecture import get_linear_architecture
-from src.qvm.visual import plot_histogram, plot_circuit
-from src.qvm.util.export import to_openqasm2
-from src.qvm.noise import NoiseChannel, NoiseModel, DeviceBackend
-from src.qvm.observable import Hamiltonian
-from src.qvm.observable import Hamiltonian
+from qvm.parser import QASMParser, OpenQASM2Parser
+from qvm.qasm3_parser import OpenQASM3Parser
+from qvm.transpiler import Transpiler
+from qvm.simulator import Simulator
+from qvm.mps_simulator import MPSSimulator
+from qvm.architecture import get_linear_architecture
+from qvm.visual import plot_histogram, plot_circuit
+from qvm.util.export import to_openqasm2
+from qvm.noise import NoiseChannel, NoiseModel, DeviceBackend
+from qvm.observable import Hamiltonian
+from qvm.observable import Hamiltonian
 
 import os
 from dotenv import load_dotenv

@@ -14,11 +14,11 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from src.qvm.parameter import Parameter, ParameterExpression, is_parameterized, resolve_param
-from src.qvm.observable import PauliOp, Hamiltonian, pauli_z, pauli_x, zz_interaction
-from src.qvm.noise import NoiseChannel, NoiseModel, DeviceBackend
-from src.qvm.ir import QuantumCircuit
-from src.qvm.simulator import Simulator
+from qvm.parameter import Parameter, ParameterExpression, is_parameterized, resolve_param
+from qvm.observable import PauliOp, Hamiltonian, pauli_z, pauli_x, zz_interaction
+from qvm.noise import NoiseChannel, NoiseModel, DeviceBackend
+from qvm.ir import QuantumCircuit
+from qvm.simulator import Simulator
 
 
 # ============================================================
@@ -421,7 +421,7 @@ class TestMPSSimulatorFixes:
     """Test that MPS simulator now handles all gates correctly."""
 
     def test_mps_y_gate(self):
-        from src.qvm.mps_simulator import MPSSimulator
+        from qvm.mps_simulator import MPSSimulator
         qc = QuantumCircuit(1)
         qc.add_operation("y", [0])
         sim = MPSSimulator()
@@ -431,7 +431,7 @@ class TestMPSSimulatorFixes:
         assert abs(sv[1] - 1j) < 1e-10
 
     def test_mps_z_gate(self):
-        from src.qvm.mps_simulator import MPSSimulator
+        from qvm.mps_simulator import MPSSimulator
         qc = QuantumCircuit(1)
         qc.add_operation("h", [0])
         qc.add_operation("z", [0])
@@ -443,7 +443,7 @@ class TestMPSSimulatorFixes:
         np.testing.assert_allclose(sv, expected, atol=1e-10)
 
     def test_mps_s_gate(self):
-        from src.qvm.mps_simulator import MPSSimulator
+        from qvm.mps_simulator import MPSSimulator
         qc = QuantumCircuit(1)
         qc.add_operation("x", [0])  # |1⟩
         qc.add_operation("s", [0])  # S|1⟩ = i|1⟩
@@ -453,7 +453,7 @@ class TestMPSSimulatorFixes:
         assert abs(sv[1] - 1j) < 1e-10
 
     def test_mps_cz_gate(self):
-        from src.qvm.mps_simulator import MPSSimulator
+        from qvm.mps_simulator import MPSSimulator
         qc = QuantumCircuit(2)
         qc.add_operation("x", [0])
         qc.add_operation("x", [1])
@@ -465,7 +465,7 @@ class TestMPSSimulatorFixes:
         assert abs(sv[3] - (-1.0)) < 1e-10
 
     def test_mps_sample(self):
-        from src.qvm.mps_simulator import MPSSimulator
+        from qvm.mps_simulator import MPSSimulator
         qc = QuantumCircuit(2)
         qc.add_operation("h", [0])
         qc.add_operation("cx", [0, 1])

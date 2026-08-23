@@ -6,8 +6,8 @@ Uses SVD-based compression to maintain a compact state representation.
 """
 
 import numpy as np
-from src.qvm.ir import QuantumCircuit
-from src.qvm.parameter import resolve_param
+from qvm.ir import QuantumCircuit
+from qvm.parameter import resolve_param
 
 class MPSSimulator:
     def __init__(self, max_bond_dim: int = 16):

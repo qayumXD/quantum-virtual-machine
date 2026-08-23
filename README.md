@@ -1,163 +1,192 @@
 # Quantum Virtual Machine (QVM)
 
-A lightweight, educational Quantum Virtual Machine (QVM) implemented in Python. This project demonstrates the full lifecycle of a quantum program: from high-level circuit definition and hardware-agnostic intermediate representation (IR) to hardware-specific transpilation and hybrid simulation (Statevector/MPS).
+A Python quantum computing toolkit that works like a classical toolchain: **install it, point it at a circuit, run it**. QVM ingests quantum programs (OpenQASM 3.0 / 2.0 / JSON / Qiskit / Cirq), transpiles them onto hardware topologies, simulates them exactly, and exports them anywhere else — through one canonical Intermediate Representation.
 
-## 🚀 Overview (v0.2)
+```
+QASM 3 ──┐                              ┌──► QVM Statevector / MPS simulation
+QASM 2 ──┤   ┌────────────────┐         ├──► QVM Transpiler (Greedy / SABRE routing)
+JSON  ───┼──►│    QVM IR      │─────────┼──► Qiskit  (export · Aer backend)
+Qiskit ──┘   │  (the pivot)   │         └──► Cirq     (export · Cirq simulator)
+Cirq  ──────►└────────────────┘
+```
 
-The QVM follows a **write once, run anywhere (WORA)** philosophy, providing an abstraction layer that allows quantum algorithms to be defined once and then adapted for different hardware architectures.
+**v0.4 highlights**
 
-### Key Features:
-- **OpenQASM 3.0 Support:** Full AST-based parsing for modern quantum assembly, including control flow (`if`, `for`, `while`) and timing.
-- **Framework Interoperability:** Bidirectional conversions and simulator execution support for **Qiskit**, **Cirq**, **JSON**, and **OpenQASM 3.0**.
-- **Hybrid Simulation Engine:**
-    - **Statevector:** Exact simulation for small-scale circuits ($N \le 12$).
-    - **MPS (Matrix Product States):** Efficient, compressible simulation for low-entanglement circuits, scaling to 20+ qubits.
-- **Active Feedback Loop:** Real-time synchronization between classical registers and quantum state (Classical Shadowing).
-- **Advanced Transpiler:** Automatically maps logical circuits to physical hardware, supporting Greedy and SABRE routing.
-- **Interactive Web UI:** Modern FastAPI-powered dashboard for composing and executing quantum programs.
-
----
-
-## 🏗️ Project Architecture
-
-The system follows a strict **Pipeline Architecture**:
-
-1.  **Input:** OpenQASM 3.0, 2.0, or JSON gate lists.
-2.  **Parser (Lark):** Generates an AST and maps it to the internal `QuantumCircuit` IR.
-3.  **Decomposer:** Normalizes high-level gates into a target-compatible native set.
-4.  **Transpiler:** Routes qubits according to the target hardware topology.
-5.  **Simulators:** 
-    - `Simulator`: Exact statevector evolution.
-    - `MPSSimulator`: Tensor network contraction with SVD-based truncation.
-6.  **Output:** Probabilities, classical memory states, and visual plots.
+- Installable package (`pip install`) with a `qvm` CLI entry point
+- Strict framework interop: unsupported operations **raise**, they are never silently dropped
+- Full bidirectional gate coverage between QVM ↔ Qiskit ↔ Cirq (22-gate vocabulary)
+- Domain exception hierarchy (`QVMError` root) for reliable error handling
+- In-place O(2^N) statevector kernels, configurable execution budgets, cached QASM3 parser
 
 ---
 
-## 🛠️ Installation & Setup
+## Installation
 
-### Prerequisites
-- Python 3.10+
-- `pip` (Python package manager)
+Requires **Python ≥ 3.9**. The core depends only on `numpy` and `lark`; everything else is opt-in:
 
-### Installation
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/qayum/quantum-virtual-machine.git
-    cd quantum-virtual-machine
-    ```
-2.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
----
-
-## 💻 Usage
-
-### 1. Web Interface (GUI) - Recommended
-The easiest way to explore the QVM features is through the web dashboard.
-
-**Start the server:**
 ```bash
-python -m src.qvm.server --host 127.0.0.1 --port 8000
+pip install quantum-virtual-machine              # lean core: parse, transpile, simulate
+pip install "quantum-virtual-machine[qiskit]"    # + Qiskit & Aer interop
+pip install "quantum-virtual-machine[cirq]"      # + Cirq interop
+pip install "quantum-virtual-machine[viz]"       # + matplotlib visualizations
+pip install "quantum-virtual-machine[server]"    # + FastAPI dashboard stack
+pip install "quantum-virtual-machine[dev]"       # + pytest and dev tooling
 ```
-Access the GUI at: `http://127.0.0.1:8000`
 
-### 2. Command Line Interface (CLI)
-**Run an OpenQASM 3.0 file:**
+From source (development):
+
 ```bash
-python -m src.qvm.cli test_shadow.qasm
+git clone https://github.com/qayumXD/quantum-virtual-machine.git
+cd quantum-virtual-machine
+pip install -e ".[dev]"
 ```
 
-**Run with Transpilation & Sabre Routing:**
+Optional backends degrade gracefully: calling an interop API without the matching extra raises `MissingBackendError` with the exact `pip install` command to fix it.
+
+---
+
+## Quickstart
+
+### CLI
+
 ```bash
-python -m src.qvm.cli examples/bell_state.json --nqubits 2 --transpile --routing sabre
+qvm circuit.qasm                                   # simulate a QASM file
+qvm circuit.json --nqubits 4                       # simulate a JSON gate list
+qvm bell.qasm --shots 1024 --seed 42               # shot-based sampling
+qvm bell.qasm --transpile --routing sabre          # route onto linear topology
+qvm bell.qasm --device fake_5q                     # hardware noise profile
+qvm vqe_circuit.json --nqubits 2 --expectation ZZ  # Pauli expectation value
+```
+
+### Python API
+
+```python
+from qvm.parser import OpenQASM2Parser
+from qvm.transpiler import Transpiler
+from qvm.simulator import Simulator
+from qvm.architecture import get_linear_architecture
+
+qc = OpenQASM2Parser.parse(open("examples/bell_state.qasm").read())
+
+arch = get_linear_architecture(qc.num_qubits)
+qc = Transpiler(arch, strategy="sabre").transpile(qc)
+
+state, classical_memory = Simulator().simulate(qc)
+print((abs(state) ** 2).round(3))
+```
+
+### Framework bridge
+
+```python
+import cirq, qiskit
+from qvm.ir import QuantumCircuit
+
+circuit = cirq.Circuit(cirq.H(cirq.LineQubit(0)), cirq.CNOT.on(cirq.LineQubit(0), cirq.LineQubit(1)))
+qk_circuit = QuantumCircuit.cirq_to_qiskit(circuit)   # Cirq → QVM IR → Qiskit
 ```
 
 ---
 
-## 📂 Directory Structure
+## Framework interoperability
 
-- `src/qvm/`: Core logic (IR, Parsers, Simulators, Transpiler).
-- `api/`: FastAPI backend implementation.
-- `web/`: Frontend static dashboard.
-- `docs/`: Technical design docs, implementation logs, and research.
-- `tests/`: Automated test suite (Pytest).
+All conversions go through the QVM IR pivot (N+M converters instead of N×M). The interop layer is governed by two guarantees:
 
----
+1. **No silent drops.** Every operation either converts faithfully or raises `UnsupportedGateError` naming the offending gate. A conversion that returns means the returned circuit *is* your circuit.
+2. **Physical equivalence.** Exported circuits reproduce QVM's measurement probability distributions (validated by a triple-engine test suite: QVM vs Qiskit vs Cirq).
 
-## 📄 License
-[Insert License Information Here]
+Supported vocabulary:
 
----
+| Class | Gates |
+|---|---|
+| 1-qubit, no parameters | `h`, `x`, `y`, `z`, `s`, `sdg`, `t`, `tdg`, `sx`, `sxdg`, `id` |
+| 1-qubit, 1 angle | `rx(θ)`, `ry(θ)`, `rz(θ)`, `p(λ)` |
+| 2-qubit, no parameters | `cx`, `cz`, `swap` |
+| 2-qubit, 1 angle | `rxx(θ)`, `rzz(θ)`, `cp(λ)` |
+| 3-qubit | `ccx` |
+| Ancillary | `measure`, `barrier`, `delay` |
 
-## 🎨 Visual Overview
+Notes:
 
-<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
-    <div style="flex:1;min-width:300px;max-width:520px;padding:12px;background:#0f172a;color:#e6f0ff;border-radius:8px"> 
-        <h3 style="margin-top:0;color:#bfe3ff">Feature Maturity</h3>
-        <svg viewBox="0 0 300 120" width="100%" height="120" role="img" aria-label="feature maturity bar chart">
-            <rect x="10" y="20" width="80" height="20" fill="#60a5fa" />
-            <text x="100" y="35" font-size="12" fill="#e6f0ff">OpenQASM 3.0 parsing (complete)</text>
-            <rect x="10" y="50" width="60" height="20" fill="#34d399" />
-            <text x="100" y="65" font-size="12" fill="#e6f0ff">Statevector simulator</text>
-            <rect x="10" y="80" width="50" height="20" fill="#f59e0b" />
-            <text x="100" y="95" font-size="12" fill="#e6f0ff">MPS simulator</text>
-        </svg>
-    </div>
+- **Parameters**: symbolic parameters survive conversion (Qiskit `Parameter` ↔ QVM `Parameter` ↔ Cirq sympy symbols). Fully-bound expressions export as floats; partially-bound ones raise `QVMConversionError` until you call `bind_parameters()`.
+- **Measurements**: Cirq keys use the canonical `"register[index]"` format; legacy tuple-string keys are still parsed on import.
+- **Global phase** is not represented in the IR and is therefore not preserved (physically unobservable, same convention as OpenQASM).
+- Anything outside the vocabulary — control flow, arbitrary unitaries, exotic gates — fails loudly with a message listing the supported set.
 
-    <div style="flex:1;min-width:300px;max-width:520px;padding:12px;background:#081029;color:#f0fff4;border-radius:8px">
-        <h3 style="margin-top:0;color:#c7f9d4">Simulator Scaling (example)</h3>
-        <svg viewBox="0 0 320 140" width="100%" height="140" role="img" aria-label="simulator scaling line chart">
-            <polyline fill="none" stroke="#60a5fa" stroke-width="2" points="20,120 70,100 120,85 170,70 220,60 270,58" />
-            <text x="22" y="128" font-size="10" fill="#c7f9d4">2</text>
-            <text x="72" y="128" font-size="10" fill="#c7f9d4">4</text>
-            <text x="122" y="128" font-size="10" fill="#c7f9d4">8</text>
-            <text x="172" y="128" font-size="10" fill="#c7f9d4">12</text>
-            <text x="222" y="128" font-size="10" fill="#c7f9d4">16</text>
-            <text x="272" y="128" font-size="10" fill="#c7f9d4">20</text>
-            <text x="10" y="12" font-size="11" fill="#c7f9d4">Memory / compute (rel.)</text>
-        </svg>
-    </div>
-</div>
+Full details: [`docs/guides/INTEROP.md`](docs/guides/INTEROP.md)
 
 ---
 
-## 🧾 Example QASM Outputs (Qiskit & Cirq)
+## Error handling
 
-Below are short example logs to show how QASM from different frontends looks when fed to the QVM pipeline.
+Every QVM error derives from one base class, so callers can catch broadly or narrowly:
 
-**Qiskit-style QASM (trimmed):**
-
-```qasm
-OPENQASM 2.0;
-include "qelib1.inc";
-qreg q[2];
-creg c[2];
-h q[0];
-cx q[0],q[1];
-measure q -> c;
+```python
+from qvm.exceptions import (
+    QVMError,               # root
+    QVMParseError,          # syntax / grammar failures        (ValueError)
+    QVMCompilationError,    # routing / decomposition / conversion failures
+    UnsupportedGateError,   # gate outside a subsystem's vocabulary
+    QVMConversionError,     # unfaithful-or-impossible format conversion
+    MissingBackendError,    # optional Qiskit/Cirq extra not installed (ImportError)
+    QVMRuntimeError,        # simulation failures               (RuntimeError)
+    QVMResourceLimitError,  # op-budget breaches                (RuntimeError)
+)
 ```
 
-**Cirq-style (pseudo-output / converted):**
+Concrete classes also inherit the built-in shown in parentheses, so existing `except ValueError` / `except RuntimeError` code keeps working during migration.
 
-```qasm
-// Cirq circuit converted to OpenQASM (example)
-OPENQASM 2.0;
-qreg q[3];
-h q[0];
-cx q[0],q[1];
-ry(1.5708) q[2];
-```
+Validation is eager: malformed arities (`cx` on one qubit), measurements into undeclared registers, and unknown gates all fail at circuit-construction time — never mid-simulation.
 
 ---
 
-## 🔎 Quick Visual Notes
+## Simulation engines
 
-<div style="background:#fff7ed;border-left:4px solid #f59e0b;padding:10px;border-radius:6px;margin:8px 0">
-    <strong style="color:#92400e">Tip:</strong> These inline SVG charts are lightweight and render on GitHub. For interactive charts, we can add a small HTML/JS demo in `web/` and link to it.
-</div>
+| Engine | Use case | Notes |
+|---|---|---|
+| `Simulator` (statevector) | Exact amplitudes, N ≲ 12–16 | In-place tensor-stride kernels, full classical memory + label/jump control flow, stochastic Kraus noise trajectories |
+| `MPSSimulator` | Low-entanglement circuits, 20+ qubits | Bond-dimension-truncated SVD evolution |
 
-<div style="background:#eef2ff;border-left:4px solid #6366f1;padding:10px;border-radius:6px;margin:8px 0">
-    <strong style="color:#1e3a8a">Logs:</strong> If you want live execution logs (e.g., Qiskit/Cirq transpile output), we can add a `docs/logs/` directory with sample runs or auto-generate them during CI.
-</div>
+Noise modeling supports depolarizing, amplitude damping, and phase damping channels plus device profiles (`fake_5q`, `fake_7q`, `ideal`). For a candid assessment of scaling limits beyond this range, see [`docs/production_readiness_analysis.md`](docs/production_readiness_analysis.md).
+
+---
+
+## Testing
+
+```bash
+pytest                                        # whole unit + interop suite
+pytest tests/test_interop_roundtrip.py -v     # interop guarantees (triple-engine equivalence)
+python -m benchmarks.run_audit --all          # 19-algorithm audit corpus (QASM/Qiskit/Cirq/VQE/QAOA)
+```
+
+The interop suite verifies probability agreement across QVM, Qiskit, and Cirq for every gate in the vocabulary, round-trip structural preservation, and that unsupported inputs raise rather than corrupt. The audit corpus runs textbook-to-industry algorithms end-to-end and cross-validates against native simulators — see [`docs/reports/algorithm_audit_2026-08-24.md`](docs/reports/algorithm_audit_2026-08-24.md).
+
+---
+
+## Project layout
+
+```
+quantum-virtual-machine/
+├── pyproject.toml            # packaging, extras, console script
+├── src/qvm/                  # the installable `qvm` package
+│   ├── ir.py                 # QuantumCircuit IR + framework converters
+│   ├── parser.py             # QASM 2.0 + JSON ingestion
+│   ├── qasm3_parser.py       # OpenQASM 3.0 (Lark LALR, module-cached)
+│   ├── transpiler.py         # Greedy / SABRE routing
+│   ├── decomposer.py         # gate decomposition passes
+│   ├── simulator.py          # dense statevector engine
+│   ├── mps_simulator.py      # tensor-network engine
+│   ├── noise.py              # Kraus channels & noise models
+│   ├── observable.py         # Hamiltonians / Pauli expectations
+│   ├── vqe.py / qaoa.py / gradient.py / parameter.py
+│   ├── cli.py                # `qvm` command
+│   ├── exceptions.py         # domain error hierarchy
+│   └── util/export.py        # exporters
+├── api/app.py                # optional FastAPI service
+├── web/                      # optional Next.js dashboard
+├── tests/                    # pytest suite (incl. interop + stress)
+└── docs/                     # design docs, guides, readiness analysis
+```
+
+## License
+
+MIT — see distribution metadata.

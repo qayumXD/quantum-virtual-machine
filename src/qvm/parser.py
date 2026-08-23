@@ -5,7 +5,7 @@ Parser for converting a simple circuit description into the Intermediate Represe
 """
 
 from typing import List, Dict, Any
-from src.qvm.ir import QuantumCircuit
+from qvm.ir import QuantumCircuit
 
 class QASMParser:
     """
@@ -70,6 +70,8 @@ class OpenQASM2Parser:
 
         num_qubits = None
         qc = None
+        cregs: Dict[str, int] = {}          # name -> size (QASM2 allows several)
+        default_creg = "c"                  # fallback when no creg is declared
 
         for line in lines:
             if line.lower().startswith("openqasm") or line.lower().startswith("include"):
@@ -82,11 +84,19 @@ class OpenQASM2Parser:
                 raise ValueError("qreg must be declared before gates")
 
             if line.lower().startswith("creg"):
-                # creg ignored for now
+                # creg name[size];
+                body = line.split(None, 1)[1]
+                name = body.split("[", 1)[0].strip()
+                size = int(body.split("[", 1)[1].split("]", 1)[0])
+                qc.add_classical_register(name, size)
+                cregs[name] = size
+                default_creg = name
                 continue
             if line.lower().startswith("measure"):
-                q, c = OpenQASM2Parser._parse_measure(line)
-                qc.add_operation("measure", [q], [])
+                triples = OpenQASM2Parser._parse_measure(line, num_qubits, cregs, default_creg)
+                for qubit_idx, reg_name, bit_idx in triples:
+                    qc.add_operation("measure", [qubit_idx],
+                                     target_bit=(reg_name, bit_idx))
                 continue
             gate_name, qubits, params = OpenQASM2Parser._parse_gate(line)
             if gate_name not in OpenQASM2Parser.SUPPORTED_GATES:
@@ -110,14 +120,45 @@ class OpenQASM2Parser:
         return size
 
     @staticmethod
-    def _parse_measure(line: str) -> tuple[int, int]:
-        # measure q[0] -> c[0];
-        parts = line.replace("measure", "").replace(" ", "").split("->")
+    def _parse_measure(line: str, num_qubits: int, cregs: Dict[str, int], default_creg: str):
+        """Parse a measure statement into concrete (qubit, creg, bit) triples.
+
+        Supported forms::
+
+            measure q[0] -> c[1];    single qubit → single classical bit
+            measure q -> c;          full register → full register
+        """
+        parts = line.replace("measure", "", 1).split("->")
         if len(parts) != 2:
-            raise ValueError("Invalid measure syntax")
-        q = OpenQASM2Parser._parse_qubit(parts[0])
-        c = OpenQASM2Parser._parse_qubit(parts[1])
-        return q, c
+            raise ValueError(f"Invalid measure syntax: {line!r}")
+        lhs = parts[0].strip()
+        rhs = parts[1].strip()
+
+        # Source side
+        if "[" in lhs:
+            src = [int(lhs.split("[", 1)[1].split("]", 1)[0])]
+        else:
+            src = list(range(num_qubits))
+
+        # Destination side
+        if "[" in rhs:
+            cname = rhs.split("[", 1)[0].strip()
+            base = int(rhs.split("[", 1)[1].split("]", 1)[0])
+            if len(src) != 1:
+                raise ValueError(f"Invalid measure mapping: {line!r}")
+            dests = [(cname, base)]
+        else:
+            cname = rhs
+            size = cregs.get(cname)
+            if size is None:
+                raise ValueError(f"measure targets undeclared classical register '{cname}'")
+            if size < len(src):
+                raise ValueError(
+                    f"register measure mismatch: {len(src)} qubits -> {cname}[{size}]"
+                )
+            dests = [(cname, i) for i in range(len(src))]
+
+        return [(q, d[0], d[1]) for q, d in zip(src, dests)]
 
     @staticmethod
     def _parse_gate(line: str) -> tuple[str, List[int], List[float]]:

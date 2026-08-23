@@ -1,11 +1,11 @@
 # tests/test_transpiler.py
 
 import pytest
-from src.qvm.ir import QuantumCircuit
-from src.qvm.parser import QASMParser
-from src.qvm.architecture import get_linear_architecture
-from src.qvm.transpiler import Transpiler
-from src.qvm.simulator import Simulator
+from qvm.ir import QuantumCircuit
+from qvm.parser import QASMParser
+from qvm.architecture import get_linear_architecture
+from qvm.transpiler import Transpiler
+from qvm.simulator import Simulator
 import numpy as np
 
 def test_transpile_on_connected_arch():
@@ -17,7 +17,7 @@ def test_transpile_on_connected_arch():
     logical_qc = QASMParser.parse(circuit_desc, 3)
     
     # On a fully connected architecture, the physical circuit should be identical
-    from src.qvm.architecture import get_fully_connected_architecture
+    from qvm.architecture import get_fully_connected_architecture
     arch = get_fully_connected_architecture(3)
     transpiler = Transpiler(arch)
     physical_qc = transpiler.transpile(logical_qc)
@@ -65,7 +65,7 @@ def test_transpile_no_path():
     logical_qc = QASMParser.parse(circuit_desc, 4)
     
     # A disconnected architecture
-    from src.qvm.architecture import TargetArchitecture
+    from qvm.architecture import TargetArchitecture
     arch = TargetArchitecture("Disconnected-4", 4, {(0, 1), (2, 3)}, {"cx"})
     transpiler = Transpiler(arch)
     

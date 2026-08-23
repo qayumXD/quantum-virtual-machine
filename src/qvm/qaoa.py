@@ -12,13 +12,13 @@ import numpy as np
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 
-from src.qvm.parameter import Parameter
-from src.qvm.observable import Hamiltonian, PauliOp
-from src.qvm.simulator import Simulator
-from src.qvm.ir import QuantumCircuit
+from qvm.parameter import Parameter
+from qvm.observable import Hamiltonian, PauliOp
+from qvm.simulator import Simulator
+from qvm.ir import QuantumCircuit
 
 if TYPE_CHECKING:
-    from src.qvm.noise import NoiseModel
+    from qvm.noise import NoiseModel
 
 
 @dataclass

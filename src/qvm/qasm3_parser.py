@@ -2,32 +2,87 @@
 from lark import Lark, Tree, Token
 import os
 import numpy as np
-from src.qvm.ir import QuantumCircuit
+from qvm.ir import QuantumCircuit
+
+# Module-level cached parser — compiled once on import, reused for every parse call.
+# Eliminates the ~30ms per-call overhead of re-reading the grammar file and
+# recompiling the LALR(1) table on every instantiation.
+_GRAMMAR_PATH = os.path.join(os.path.dirname(__file__), "qasm3.lark")
+with open(_GRAMMAR_PATH, "r") as _f:
+    _GRAMMAR = _f.read()
+_CACHED_PARSER = Lark(_GRAMMAR, start="start", parser="lalr")
 
 class OpenQASM3Parser:
     def __init__(self):
-        grammar_path = os.path.join(os.path.dirname(__file__), "qasm3.lark")
-        with open(grammar_path, "r") as f:
-            self.grammar = f.read()
-        self.parser = Lark(self.grammar, start="start", parser="lalr")
+        self.parser = _CACHED_PARSER  # use the shared cached parser
         self._label_counter = 0
         self.qc = None
         self.qubit_map = {}
         self.next_qubit_idx = 0
 
+    @staticmethod
+    def _preprocess(text: str) -> str:
+        """Strip constructs the grammar does not model.
+
+        ``include "stdgates.inc";`` is dropped: the standard-gate library
+        corresponds exactly to QVM's built-in GATE_SPEC registry, so the
+        declarations it would import are already known.  Single-line
+        comments are left for Lark to handle.
+        """
+        kept = []
+        for line in text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("include ") and stripped.endswith(";"):
+                continue
+            kept.append(line)
+        return "\n".join(kept)
+
     def parse(self, text: str) -> QuantumCircuit:
+        text = self._preprocess(text)
         tree = self.parser.parse(text)
         self.qc = None
         self.qubit_map = {}
         self.next_qubit_idx = 0
         self._label_counter = 0
-        
-        # 1. First pass: Declarations
-        self._find_declarations(tree)
-        
+
+        # 1. First pass: collect ALL qubit and bit declarations before building the circuit.
+        #    This fixes the ordering bug where bit[n] c; appearing before qubit[n] q; would
+        #    be silently dropped because self.qc was still None.
+        qubit_decls = []  # list of (name, size)
+        bit_decls = []    # list of (name, size)
+        self._collect_declarations(tree, qubit_decls, bit_decls)
+
+        # Build the QuantumCircuit from all qubit declarations
+        total_qubits = sum(size for _, size in qubit_decls)
+        self.qc = QuantumCircuit(max(total_qubits, 1))
+        offset = 0
+        for name, size in qubit_decls:
+            self.qubit_map[name] = (offset, size)
+            offset += size
+
+        # Register all classical registers
+        for name, size in bit_decls:
+            self.qc.add_classical_register(name, size)
+
         # 2. Second pass: Operations
         self._process_node(tree, None)
         return self.qc
+
+    def _collect_declarations(self, node, qubit_decls, bit_decls):
+        """Recursively collect all register declarations without building the circuit."""
+        if not isinstance(node, Tree):
+            return
+        if node.data == "qubit_decl":
+            size, name = int(node.children[0]), str(node.children[1])
+            qubit_decls.append((name, size))
+        elif node.data == "bit_decl":
+            size, name = int(node.children[0]), str(node.children[1])
+            bit_decls.append((name, size))
+        elif node.data == "bit_single_decl":
+            name = str(node.children[0])
+            bit_decls.append((name, 1))
+        for child in node.children:
+            self._collect_declarations(child, qubit_decls, bit_decls)
 
     def _find_declarations(self, node):
         if not isinstance(node, Tree): return
@@ -133,10 +188,22 @@ class OpenQASM3Parser:
             label_id = self._label_counter
             self._label_counter += 1
             start_label = f"while_start_{label_id}"
+            end_label = f"while_end_{label_id}"
+
+            # Correct while-loop: CHECK condition first, then execute body
+            # Structure: LABEL(start) -> JUMP_IF_NOT(cond, end) -> BODY -> JUMP(start) -> LABEL(end)
+            # We model "jump if condition FALSE" by inverting the condition value
+            inverted_condition = dict(condition)
+            inverted_condition["value"] = 1 - condition["value"]  # flip 0<->1 for the exit jump
+
             self.qc.add_operation("label", [], label=start_label)
+            # Jump to end if condition is NOT met (pre-check)
+            self.qc.add_operation("jump", [], condition=inverted_condition, jump_to=end_label)
             for stmt in program_block.children:
                 self._process_node(stmt, current_condition)
-            self.qc.add_operation("jump", [], condition=condition, jump_to=start_label)
+            # Unconditional jump back to start
+            self.qc.add_operation("jump", [], jump_to=start_label)
+            self.qc.add_operation("label", [], label=end_label)
             return
         
         elif node.data == "delay_call":

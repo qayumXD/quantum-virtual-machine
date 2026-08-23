@@ -63,7 +63,7 @@ if __name__ == "__main__":
         print(f"Generated Bernstein-Vazirani circuit for secret '{args.secret}' with {n_qubits} qubits.")
         print(f"Saved to {args.output}")
         print(f"\nTo run this circuit:")
-        print(f"python -m src.qvm.cli {args.output} --nqubits {n_qubits}")
+        print(f"python -m qvm.cli {args.output} --nqubits {n_qubits}")
         
     except ValueError as e:
         print(f"Error: {e}")

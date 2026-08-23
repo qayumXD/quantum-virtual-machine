@@ -6,8 +6,9 @@ advanced control flow (labels/jumps), expectation values, and per-gate noise.
 """
 
 import numpy as np
-from src.qvm.ir import QuantumCircuit
-from src.qvm.parameter import resolve_param, is_parameterized
+from qvm.ir import QuantumCircuit
+from qvm.parameter import resolve_param, is_parameterized
+from qvm.exceptions import UnsupportedGateError, QVMResourceLimitError
 
 class Simulator:
     def __init__(self):
@@ -40,9 +41,9 @@ class Simulator:
         if name == "ry": return np.array([[np.cos(angle/2), -np.sin(angle/2)], [np.sin(angle/2), np.cos(angle/2)]])
         if name == "rz": return np.array([[np.exp(-1j*angle/2), 0], [0, np.exp(1j*angle/2)]])
         if name == "p": return np.array([[1, 0], [0, np.exp(1j*angle)]])
-        raise ValueError(f"Unknown gate: {name}")
+        raise UnsupportedGateError(f"Unknown single-qubit gate: {name}")
 
-    def simulate(self, circuit: QuantumCircuit, seed: int = None, max_ops: int = 10000) -> tuple[np.ndarray, dict]:
+    def simulate(self, circuit: QuantumCircuit, seed: int = None, max_ops: int = 1_000_000) -> tuple[np.ndarray, dict]:
         num_qubits = circuit.num_qubits
         state = np.zeros(2**num_qubits, dtype=complex)
         state[0] = 1.0
@@ -60,7 +61,10 @@ class Simulator:
         ops_executed = 0
         while pc < len(circuit.operations):
             if ops_executed > max_ops:
-                raise RuntimeError(f"Exceeded maximum operations limit ({max_ops}). Potential infinite loop.")
+                raise QVMResourceLimitError(
+                    f"Exceeded maximum operations limit ({max_ops}). "
+                    f"Potential infinite loop. Pass max_ops=<budget> to raise the limit."
+                )
             
             op = circuit.operations[pc]
             ops_executed += 1
@@ -115,6 +119,21 @@ class Simulator:
                     if len(qubits) != 3:
                         raise ValueError("Gate ccx must act on three qubits.")
                     state = self._apply_ccx_gate(state, qubits[0], qubits[1], qubits[2], num_qubits)
+                elif name == "rzz":
+                    if len(qubits) != 2:
+                        raise ValueError("Gate rzz must act on two qubits.")
+                    state = self._apply_rzz_gate(state, qubits[0], qubits[1],
+                                                 float(resolve_param(params[0])), num_qubits)
+                elif name == "rxx":
+                    if len(qubits) != 2:
+                        raise ValueError("Gate rxx must act on two qubits.")
+                    state = self._apply_rxx_gate(state, qubits[0], qubits[1],
+                                                 float(resolve_param(params[0])), num_qubits)
+                elif name == "cp":
+                    if len(qubits) != 2:
+                        raise ValueError("Gate cp must act on two qubits.")
+                    state = self._apply_cp_gate(state, qubits[0], qubits[1],
+                                                float(resolve_param(params[0])), num_qubits)
                 elif name == "measure":
                     if not qubits:
                         raise ValueError("Measure requires a target qubit.")
@@ -124,15 +143,16 @@ class Simulator:
                         classical_memory[reg_name][reg_idx] = int(bit_str[0])
                 elif name == "delay":
                     pass
+                elif name == "barrier":
+                    pass
                 elif name == "classical_op":
                     self._execute_classical_op(op["classical_op"], classical_memory)
                 else:
-                    raise ValueError(f"Unsupported gate operation: {name}")
+                    raise UnsupportedGateError(f"Unsupported gate operation: {name}")
                 
                 pc += 1
-            except Exception as e:
-                print(f"DEBUG: Error at PC {pc}, Op: {op}")
-                raise e
+            except Exception:
+                raise
 
         return state, classical_memory
 
@@ -158,12 +178,17 @@ class Simulator:
         mem[target_reg][target_idx] = res
 
     def _apply_single_qubit_gate(self, state, gate, target, n):
-        op_list = [self.I] * n
-        op_list[n - 1 - target] = gate
-        full_op = op_list[0]
-        for i in range(1, n):
-            full_op = np.kron(full_op, op_list[i])
-        return full_op @ state
+        """Apply a single-qubit gate using in-place tensor stride — O(2^N) time, O(1) extra memory.
+
+        Replaces the O(4^N) Kronecker product approach. Reshapes the statevector
+        into (2^(n-1-target), 2, 2^target), applies the 2x2 gate over the
+        middle axis, then restores the flat shape.
+        """
+        shape = (2 ** (n - 1 - target), 2, 2 ** target)
+        sv = state.reshape(shape)
+        # Batch matrix multiply: sv[:, :, :] = gate @ sv along the qubit axis
+        sv = np.einsum("ij,kjl->kil", gate, sv)
+        return sv.reshape(-1)
 
     def _apply_cnot_gate(self, state, ctrl, target, n):
         indices = np.arange(2**n)
@@ -194,6 +219,33 @@ class Simulator:
         result[mask] = -result[mask]
         return result
 
+    def _apply_rzz_gate(self, state, q0, q1, theta, n):
+        """Apply RZZ(θ) = exp(-iθ Z⊗Z / 2): phase e^{-iθ} on |11⟩, e^{iθ} on |10⟩/|01⟩.
+
+        Implemented exactly as CX · RZ_target(θ) · CX (O(2^N), no dense matrix).
+        """
+        state = self._apply_cnot_gate(state, q0, q1, n)
+        rz = self._get_gate_matrix("rz", [theta])
+        state = self._apply_single_qubit_gate(state, rz, q1, n)
+        return self._apply_cnot_gate(state, q0, q1, n)
+
+    def _apply_rxx_gate(self, state, q0, q1, theta, n):
+        """Apply RXX(θ) = exp(-iθ X⊗X / 2) via basis change: H⊗H · RZZ(θ) · H⊗H."""
+        h = self._get_gate_matrix("h", [])
+        state = self._apply_single_qubit_gate(state, h, q0, n)
+        state = self._apply_single_qubit_gate(state, h, q1, n)
+        state = self._apply_rzz_gate(state, q0, q1, theta, n)
+        state = self._apply_single_qubit_gate(state, h, q0, n)
+        return self._apply_single_qubit_gate(state, h, q1, n)
+
+    def _apply_cp_gate(self, state, q0, q1, lam, n):
+        """Apply CP(λ) = diag(1, 1, 1, e^{iλ}): phase flip on the |11⟩ subspace."""
+        indices = np.arange(2**n)
+        mask = ((indices >> q0) & 1 == 1) & ((indices >> q1) & 1 == 1)
+        result = state.copy()
+        result[mask] *= np.exp(1j * lam)
+        return result
+
     def get_probabilities(self, statevector: np.ndarray) -> np.ndarray:
         """Calculates measurement probabilities from a statevector."""
         return np.abs(statevector)**2
@@ -206,7 +258,7 @@ class Simulator:
 
         Args:
             circuit: A QuantumCircuit (must have all parameters bound).
-            observable: A Hamiltonian object from src.qvm.observable.
+            observable: A Hamiltonian object from qvm.observable.
             seed: Optional RNG seed.
 
         Returns:
@@ -268,6 +320,12 @@ class Simulator:
             return self.sample_with_collapse(circuit, shots=shots, seed=seed,
                                              noise_model=noise_model)
 
+        # Dynamic circuits (mid-circuit measurement, classical feedback,
+        # control flow) require a fresh trajectory per shot: the fast path's
+        # single collapsed state would otherwise be resampled N times.
+        if self._is_dynamic(circuit):
+            return self.sample_with_collapse(circuit, shots=shots, seed=seed)
+
         if shots <= 0:
             raise ValueError("shots must be a positive integer")
         if not 0 <= depol_prob <= 1:
@@ -302,6 +360,25 @@ class Simulator:
             counts[measured_bits] = counts.get(measured_bits, 0) + 1
 
         return counts
+
+    @staticmethod
+    def _is_dynamic(circuit: QuantumCircuit) -> bool:
+        """True if the circuit needs per-shot trajectories.
+
+        A circuit is dynamic when it contains any conditional operation,
+        control flow, or a measurement that is followed by further
+        operations (mid-circuit measurement).
+        """
+        last_executable = -1
+        for i, op in enumerate(circuit.operations):
+            if op["name"] != "barrier":
+                last_executable = i
+        for i, op in enumerate(circuit.operations):
+            if op["name"] == "measure" and i < last_executable:
+                return True
+            if op.get("condition") or op["name"] in ("jump", "classical_op"):
+                return True
+        return False
 
     def sample_with_collapse(self, circuit: QuantumCircuit, shots: int = 1024,
                              seed: int | None = None, noise_model=None) -> dict:
@@ -352,7 +429,7 @@ class Simulator:
         return counts
 
     def _simulate_with_noise(self, circuit: QuantumCircuit, noise_model,
-                             seed: int = None) -> tuple[np.ndarray, dict]:
+                             seed: int = None, max_ops: int = 1_000_000) -> tuple[np.ndarray, dict]:
         """Single-shot simulation with per-gate noise injection.
 
         After each gate, applies the corresponding noise channel from the
@@ -373,10 +450,9 @@ class Simulator:
 
         pc = 0
         ops_executed = 0
-        max_ops = 10000
         while pc < len(circuit.operations):
             if ops_executed > max_ops:
-                raise RuntimeError(f"Exceeded maximum operations limit ({max_ops}).")
+                raise QVMResourceLimitError(f"Exceeded maximum operations limit ({max_ops}).")
 
             op = circuit.operations[pc]
             ops_executed += 1
@@ -413,6 +489,15 @@ class Simulator:
                 state = self._apply_swap_gate(state, qubits[0], qubits[1], num_qubits)
             elif name in ["ccx", "toffoli"]:
                 state = self._apply_ccx_gate(state, qubits[0], qubits[1], qubits[2], num_qubits)
+            elif name == "rzz":
+                state = self._apply_rzz_gate(state, qubits[0], qubits[1],
+                                             float(resolve_param(params[0])), num_qubits)
+            elif name == "rxx":
+                state = self._apply_rxx_gate(state, qubits[0], qubits[1],
+                                             float(resolve_param(params[0])), num_qubits)
+            elif name == "cp":
+                state = self._apply_cp_gate(state, qubits[0], qubits[1],
+                                            float(resolve_param(params[0])), num_qubits)
             elif name == "measure":
                 bit_str, state = self._measure_and_collapse(state, qubits, num_qubits, rng)
                 if op["target_bit"]:
@@ -420,7 +505,7 @@ class Simulator:
                     classical_memory[reg_name][reg_idx] = int(bit_str[0])
                 pc += 1
                 continue  # No noise after measurement
-            elif name == "delay":
+            elif name in ("delay", "barrier"):
                 pc += 1
                 continue
             elif name == "classical_op":
@@ -428,10 +513,10 @@ class Simulator:
                 pc += 1
                 continue
             else:
-                raise ValueError(f"Unsupported gate operation: {name}")
+                raise UnsupportedGateError(f"Unsupported gate operation: {name}")
 
             # Apply per-gate noise (stochastic Kraus trajectory)
-            if name not in ["measure", "delay", "classical_op"]:
+            if name not in ["measure", "delay", "classical_op", "barrier"]:
                 channel = noise_model.get_noise_for(name, qubits)
                 if channel is not None:
                     state = channel.apply_to_statevector(state, qubits, num_qubits, rng)

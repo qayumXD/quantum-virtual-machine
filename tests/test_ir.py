@@ -1,7 +1,7 @@
 # tests/test_ir.py
 
 import pytest
-from src.qvm.ir import QuantumCircuit
+from qvm.ir import QuantumCircuit
 
 def test_qc_creation():
     """Tests valid and invalid QuantumCircuit creation."""

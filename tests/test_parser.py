@@ -1,8 +1,8 @@
 # tests/test_parser.py
 
 import pytest
-from src.qvm.ir import QuantumCircuit
-from src.qvm.parser import QASMParser
+from qvm.ir import QuantumCircuit
+from qvm.parser import QASMParser
 
 def test_parse_valid_circuit():
     """Tests parsing a valid circuit description."""

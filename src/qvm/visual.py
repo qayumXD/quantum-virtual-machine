@@ -7,7 +7,7 @@ Provides functions to plot quantum circuits and measurement probabilities.
 
 import matplotlib.pyplot as plt
 import numpy as np
-from src.qvm.ir import QuantumCircuit
+from qvm.ir import QuantumCircuit
 
 def plot_histogram(data, title="Quantum State Probabilities"):
     """

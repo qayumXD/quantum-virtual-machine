@@ -14,7 +14,7 @@ except ImportError:
     print("Cirq is not installed. Install with: pip install cirq")
     raise SystemExit(1)
 
-from src.qvm.parser import CirqParser
+from qvm.parser import CirqParser
 
 
 def main():
@@ -35,7 +35,7 @@ def main():
     print("\nGate list for QVM CLI (JSON):")
     print(json.dumps(gate_list, indent=2))
     print("\nRun with:")
-    print("  python -m src.qvm.cli <json-file> --nqubits 2 --transpile")
+    print("  python -m qvm.cli <json-file> --nqubits 2 --transpile")
 
 
 if __name__ == "__main__":

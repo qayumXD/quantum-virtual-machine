@@ -5,7 +5,8 @@ Decomposes complex quantum gates into a sequence of simpler, native gates.
 Updated to preserve OpenQASM 3.0 classical metadata and control flow.
 """
 
-from src.qvm.ir import QuantumCircuit
+from qvm.ir import QuantumCircuit
+from qvm.exceptions import UnsupportedGateError
 
 class Decomposer:
     """
@@ -22,7 +23,7 @@ class Decomposer:
         gate_name = op["name"]
         
         # If it's a non-gate op (classical, label, etc.), it's considered native
-        if gate_name in ["classical_op", "label", "jump", "delay", "measure"]:
+        if gate_name in ["classical_op", "label", "jump", "delay", "measure", "barrier"]:
             return [op]
 
         if gate_name in self.native_gates:
@@ -31,7 +32,7 @@ class Decomposer:
         if gate_name == "toffoli" or gate_name == "ccx":
             return self._decompose_toffoli(op)
         
-        raise ValueError(f"No decomposition rule available for gate: {gate_name}")
+        raise UnsupportedGateError(f"No decomposition rule available for gate: {gate_name}")
 
     def _decompose_toffoli(self, op: dict) -> list:
         qubits = op["qubits"]

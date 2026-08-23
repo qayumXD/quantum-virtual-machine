@@ -1,6 +1,6 @@
 # tests/test_qasm_roundtrip.py
 import pytest
-from src.qvm.ir import QuantumCircuit
+from qvm.ir import QuantumCircuit
 
 def test_qasm_roundtrip():
     qc = QuantumCircuit(2)

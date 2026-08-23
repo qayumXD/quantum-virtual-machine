@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantum-virtual-machine"
+version = "0.4.0"
+description = "Quantum Virtual Machine (QVM): OpenQASM ingestion, transpilation, statevector/MPS simulation, noise modeling, and Qiskit/Cirq interop"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "QVM Contributors" }]
+keywords = ["quantum", "simulator", "openqasm", "transpiler", "qiskit", "cirq"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+    "numpy>=1.22",
+    "lark>=1.1",
+]
+
+[project.optional-dependencies]
+qiskit = ["qiskit>=1.0,<3", "qiskit-aer>=0.14"]
+cirq = ["cirq>=1.4,<2"]
+viz = ["matplotlib>=3.5"]
+server = ["fastapi>=0.109", "uvicorn>=0.23", "python-dotenv>=1.0", "supabase>=2.3"]
+dev = [
+    "pytest>=7",
+    "matplotlib>=3.5",
+    "fastapi>=0.109",
+    "uvicorn>=0.23",
+    "httpx",
+    "python-dotenv>=1.0",
+    "scipy>=1.9",
+]
+
+[project.scripts]
+qvm = "qvm.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/qayumXD/quantum-virtual-machine"
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["qvm*"]
+
+[tool.setuptools.package-data]
+qvm = ["*.lark"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

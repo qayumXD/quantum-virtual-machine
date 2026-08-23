@@ -1,17 +1,15 @@
 import argparse
 import json
 import sys
-import matplotlib.pyplot as plt
 import numpy as np
-from src.qvm.parser import QASMParser, OpenQASM2Parser
-from src.qvm.qasm3_parser import OpenQASM3Parser
-from src.qvm.simulator import Simulator
-from src.qvm.transpiler import Transpiler
-from src.qvm.decomposer import Decomposer
-from src.qvm.architecture import get_linear_architecture
-from src.qvm.visual import plot_histogram, plot_circuit
-from src.qvm.noise import NoiseChannel, NoiseModel, DeviceBackend
-from src.qvm.observable import Hamiltonian
+from qvm.parser import QASMParser, OpenQASM2Parser
+from qvm.qasm3_parser import OpenQASM3Parser
+from qvm.simulator import Simulator
+from qvm.transpiler import Transpiler
+from qvm.decomposer import Decomposer
+from qvm.architecture import get_linear_architecture
+from qvm.noise import NoiseChannel, NoiseModel, DeviceBackend
+from qvm.observable import Hamiltonian
 
 def main():
     parser = argparse.ArgumentParser(description="Quantum Virtual Machine (QVM) CLI")
@@ -169,9 +167,13 @@ def main():
     if args.visualize:
         print("\nDisplaying visualizations...")
         try:
+            import matplotlib.pyplot as plt
+            from qvm.visual import plot_circuit, plot_histogram
             plot_circuit(qc, title="Quantum Circuit")
             plot_histogram(probs, title="Statevector Probabilities")
             plt.show()
+        except ImportError:
+            print("Visualization requires matplotlib: pip install 'quantum-virtual-machine[viz]'")
         except Exception as e:
             print(f"Error visualizing: {e}")
 

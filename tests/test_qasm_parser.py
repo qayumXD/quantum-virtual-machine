@@ -1,6 +1,6 @@
 import pytest
-from src.qvm.parser import OpenQASM2Parser
-from src.qvm.ir import QuantumCircuit
+from qvm.parser import OpenQASM2Parser
+from qvm.ir import QuantumCircuit
 
 
 def test_parse_simple_qasm():

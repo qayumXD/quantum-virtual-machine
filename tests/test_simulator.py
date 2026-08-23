@@ -2,9 +2,9 @@
 
 import pytest
 import numpy as np
-from src.qvm.ir import QuantumCircuit
-from src.qvm.parser import QASMParser
-from src.qvm.simulator import Simulator
+from qvm.ir import QuantumCircuit
+from qvm.parser import QASMParser
+from qvm.simulator import Simulator
 
 # Initialize simulator globally for tests
 sim = Simulator()
@@ -87,18 +87,16 @@ def test_unsupported_gate():
         sim.simulate(qc)
 
 def test_invalid_qubit_for_single_gate():
-    """Test error for single-qubit gate acting on multiple qubits."""
+    """Malformed gate arity is rejected eagerly at circuit-construction time."""
     circuit_desc = [{"name": "h", "qubits": [0, 1]}]
-    qc = QASMParser.parse(circuit_desc, 2)
-    with pytest.raises(ValueError, match="(?i)gate.*must act on a single qubit"):
-        sim.simulate(qc)
+    with pytest.raises(ValueError, match="(?i)gate 'h' acts on 1 qubit"):
+        QASMParser.parse(circuit_desc, 2)
 
 def test_invalid_qubit_for_cnot_gate():
-    """Test error for CNOT gate acting on non-two qubits."""
+    """Malformed CNOT arity is rejected eagerly at circuit-construction time."""
     circuit_desc = [{"name": "cx", "qubits": [0]}]
-    qc = QASMParser.parse(circuit_desc, 2)
-    with pytest.raises(ValueError, match="(?i)gate.*must act on two qubits"):
-        sim.simulate(qc)
+    with pytest.raises(ValueError, match=r"(?i)gate 'cx' acts on 2 qubit"):
+        QASMParser.parse(circuit_desc, 2)
 
 def test_sampling_bell_state_counts():
     """Sampling should reflect Bell state probabilities."""

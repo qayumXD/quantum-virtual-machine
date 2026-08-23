@@ -2,7 +2,7 @@
 CLI entry to start the FastAPI server.
 
 Usage:
-    python -m src.qvm.server --host 127.0.0.1 --port 8000
+    python -m qvm.server --host 127.0.0.1 --port 8000
 """
 
 import argparse

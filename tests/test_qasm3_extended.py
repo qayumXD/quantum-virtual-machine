@@ -1,7 +1,7 @@
 # tests/test_qasm3_extended.py
 import numpy as np
-from src.qvm.qasm3_parser import OpenQASM3Parser
-from src.qvm.simulator import Simulator
+from qvm.qasm3_parser import OpenQASM3Parser
+from qvm.simulator import Simulator
 
 def test_sx_gate():
     qasm = """
