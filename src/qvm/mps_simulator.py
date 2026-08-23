@@ -8,6 +8,7 @@ Uses SVD-based compression to maintain a compact state representation.
 import numpy as np
 from qvm.ir import QuantumCircuit
 from qvm.parameter import resolve_param
+from qvm.exceptions import UnsupportedGateError
 
 class MPSSimulator:
     def __init__(self, max_bond_dim: int = 16):
@@ -27,6 +28,7 @@ class MPSSimulator:
         Simulates the circuit using MPS.
         Returns: (list of tensors, classical_memory)
         """
+        circuit = circuit.lowered()   # expand multi-controlled macros
         n = circuit.num_qubits
         self.tensors = [np.array([[[1.0], [0.0]]], dtype=complex) for _ in range(n)]
         classical_memory = {name: np.zeros(size, dtype=int) for name, size in circuit.classical_registers.items()}
@@ -47,11 +49,27 @@ class MPSSimulator:
                 self._apply_cz(qubits[0], qubits[1])
             elif name == "swap":
                 self._apply_swap(qubits[0], qubits[1])
+            elif name == "rzz":
+                self._apply_rzz(qubits[0], qubits[1],
+                                float(resolve_param(params[0])))
+            elif name == "rxx":
+                self._apply_rxx(qubits[0], qubits[1],
+                                float(resolve_param(params[0])))
+            elif name == "cp":
+                self._apply_cp(qubits[0], qubits[1],
+                               float(resolve_param(params[0])))
+            elif name in ("barrier", "delay"):
+                pass
             elif name == "measure":
                 outcome = self._measure_qubit(qubits[0], rng)
                 if op["target_bit"]:
                     reg_name, reg_idx = op["target_bit"]
                     classical_memory[reg_name][reg_idx] = outcome
+            else:
+                raise UnsupportedGateError(
+                    f"MPSSimulator cannot execute gate '{name}'. "
+                    f"Run the Decomposer first or extend the engine."
+                )
         
         return self.tensors, classical_memory
 
@@ -103,14 +121,33 @@ class MPSSimulator:
         # Contract tensor with gate: (L, p, R) * (p_new, p) -> (L, p_new, R)
         self.tensors[q] = np.einsum('ijk,aj->iak', self.tensors[q], gate)
 
+    def _route_and_apply(self, a, b, adjacent_fn):
+        """Apply a two-site gate on non-adjacent wires by walking the states
+        together with SWAP gates, applying at adjacency, then undoing.
+
+        Logical wire identities are restored exactly, so subsequent
+        operations are unaffected apart from bond-dimension truncation.
+        """
+        if a == b:
+            raise ValueError("two-qubit gate needs distinct wires")
+        swaps = []
+        cur = b
+        while abs(cur - a) != 1:
+            nxt = cur - 1 if cur > a else cur + 1
+            self._apply_swap(cur, nxt)
+            swaps.append((cur, nxt))
+            cur = nxt
+        adjacent_fn(a, cur)
+        for x, y in reversed(swaps):
+            self._apply_swap(x, y)
+
     def _apply_cx(self, ctrl, target):
-        # For simplicity, assume ctrl and target are adjacent.
-        # If not, we would normally use swaps (handled by transpiler).
         if abs(ctrl - target) != 1:
-            # Educational shortcut: In a real MPS, you'd use a chain of swaps.
-            # Here, we'll just fail if not adjacent to reinforce the MPS topology constraint.
-            raise ValueError("MPSSimulator currently only supports nearest-neighbor CX gates.")
-        
+            self._route_and_apply(ctrl, target, self._apply_cx_adjacent)
+            return
+        self._apply_cx_adjacent(ctrl, target)
+
+    def _apply_cx_adjacent(self, ctrl, target):
         q1, q2 = min(ctrl, target), max(ctrl, target)
         
         # 1. Contract A[q1] and A[q2]
@@ -156,8 +193,11 @@ class MPSSimulator:
 
     def _apply_swap(self, q1, q2):
         if abs(q1 - q2) != 1:
-            raise ValueError("MPSSimulator currently only supports nearest-neighbor SWAP gates.")
-        
+            self._route_and_apply(q1, q2, self._apply_swap_adjacent)
+            return
+        self._apply_swap_adjacent(q1, q2)
+
+    def _apply_swap_adjacent(self, q1, q2):
         idx1, idx2 = min(q1, q2), max(q1, q2)
         # Contract
         combined = np.einsum('ijk,klm->ijlm', self.tensors[idx1], self.tensors[idx2])
@@ -172,12 +212,31 @@ class MPSSimulator:
 
     def _apply_cz(self, ctrl, target):
         """Apply CZ gate using CX decomposition: H-CX-H."""
-        if abs(ctrl - target) != 1:
-            raise ValueError("MPSSimulator currently only supports nearest-neighbor CZ gates.")
-        # CZ = (I ⊗ H) · CX · (I ⊗ H)
         self._apply_single_qubit(target, self.H)
         self._apply_cx(ctrl, target)
         self._apply_single_qubit(target, self.H)
+
+    def _apply_rzz(self, a, b, theta):
+        """RZZ(theta) = CX . RZ_b(theta) . CX  (exact, any distance)."""
+        def block(x, y):
+            self._apply_cx(x, y)
+            self._apply_single_qubit(y, self._get_gate_matrix("rz", [theta]))
+            self._apply_cx(x, y)
+        self._route_and_apply(a, b, block)
+
+    def _apply_rxx(self, a, b, theta):
+        h = self._get_gate_matrix("h", [])
+        self._apply_single_qubit(a, h)
+        self._apply_single_qubit(b, h)
+        self._apply_rzz(a, b, theta)
+        self._apply_single_qubit(a, h)
+        self._apply_single_qubit(b, h)
+
+    def _apply_cp(self, a, b, lam):
+        """CP(lam) ~ rz_a(lam/2) . rz_b(lam/2) . RZZ(-lam/2)   (up to global phase)."""
+        self._apply_single_qubit(a, self._get_gate_matrix("rz", [lam / 2]))
+        self._apply_single_qubit(b, self._get_gate_matrix("rz", [lam / 2]))
+        self._apply_rzz(a, b, -lam / 2)
 
     def sample(self, circuit: QuantumCircuit, shots: int = 1024,
                seed: int = None) -> dict:
@@ -204,17 +263,21 @@ class MPSSimulator:
         return counts
 
     def get_statevector(self) -> np.ndarray:
-        """Contracts the full MPS to return a standard statevector (for small N)."""
+        """Contracts the full MPS to return a standard statevector (small N).
+
+        Output uses QVM's little-endian convention (qubit 0 = least
+        significant bit), matching Simulator / Qiskit.
+        """
         res = self.tensors[0]
         for i in range(1, len(self.tensors)):
             res = np.einsum('ijk,klm->ijlm', res, self.tensors[i])
-            # Reshape to merge bond index: (L_start, p1, p2, ..., pi, R_i)
-            # Actually easier to merge into (1, p1*p2*...*pi, 1)
             L, *phys, R = res.shape
-            new_phys_dim = np.prod(phys)
-            res = res.reshape(L, new_phys_dim, R)
-        
-        return res.flatten()
+            res = res.reshape(L, int(np.prod(phys)), R)
+
+        n = len(self.tensors)
+        vec = res.reshape(-1).reshape([2] * n)      # site 0 = slowest axis
+        vec = np.transpose(vec, axes=tuple(reversed(range(n))))
+        return vec.reshape(-1)
 
 if __name__ == "__main__":
     qc = QuantumCircuit(3)
