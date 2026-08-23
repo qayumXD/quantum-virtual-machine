@@ -98,7 +98,7 @@ if os.path.exists("web/out"):
 def root():
     return {
         "status": "Quantum Virtual Machine (QVM) API is active",
-        "version": "0.4.0",
+        "version": "0.5.0",
         "frontend": "https://quantum-virtual-machine.vercel.app",
         "endpoints": {
             "/health": "GET - check API health",
