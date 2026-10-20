@@ -11,9 +11,11 @@ The QVM exposes a web interface to allow users to interactively build circuits, 
 
 The API server (`api/app.py`) runs on standard port `8000` (started by `src/qvm/server.py`). It exposes the following REST endpoints:
 
-*   **`GET /`**: Serves the Next.js production build.
+*   **`GET /`**: Serves the Next.js production build and API status.
 *   **`GET /health`**: Simple healthcheck route returning `{"status": "ok"}`.
-*   **`POST /run`**: The main execution endpoint. It accepts a `RunRequest` JSON payload, runs the compilation and simulation steps, and returns a `RunResponse` JSON payload.
+*   **`POST /run`**: The main execution endpoint. It accepts a `RunRequest` JSON payload, runs the compilation and simulation steps, and returns a `RunResponse` JSON payload. For comprehensive parameter documentation and curl/Python examples, see [810 REST API Reference](/docs/810_REST_API_Reference).
+*   **`GET /circuits`**: Retrieve circuit library from Supabase (if configured).
+*   **`GET /history`**: Retrieve recent simulation runs from Supabase (if configured).
 
 ---
 

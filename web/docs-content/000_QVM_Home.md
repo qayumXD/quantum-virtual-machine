@@ -48,7 +48,15 @@ graph TD
 
 ### 🧬 6. Variational & Application Layers
 * **[Variational Quantum Algorithms](/docs/700_Variational_Quantum_Algorithms)**: Variational Quantum Eigensolver (VQE) and Quantum Approximate Optimization Algorithm (QAOA) implementations, analytical gradients (Parameter Shift Rule), and scipy minimizer configurations.
+* **[Tutorial 1: Quantum Circuit Basics](/docs/710_Tutorial_Quantum_Circuit_Basics)**: Qubits, superposition, gates ($X, H, R_y$), projective measurement, and REST API calls.
+* **[Tutorial 2: Quantum Entanglement](/docs/720_Tutorial_Quantum_Entanglement)**: Bell state $|\Phi^+\rangle$, CNOT correlations, exact state evolution, and Qiskit/Cirq export.
+* **[Tutorial 3: Grover's Search Algorithm](/docs/730_Tutorial_Grovers_Algorithm)**: 3-qubit unstructured search marking $|101\rangle$, phase oracle, diffusion operator, and probability amplification.
+* **[Tutorial 4: Quantum Teleportation](/docs/740_Tutorial_Quantum_Teleportation)**: Dynamic circuits in OpenQASM 3: 3-qubit protocol, mid-circuit measurement, and classical conditional corrections.
+* **[Tutorial 5: Variational Quantum Eigensolver](/docs/750_Tutorial_VQE_Ground_State)**: $\text{H}_2$ ground-state energy in STO-3G, parameterized ansatz, Pauli expectation values, and classical optimization.
+
+### 🌐 7. Web API & Developer Services
 * **[Web API and Dashboard](/docs/800_Web_API_and_Dashboard)**: FastAPI endpoint specification, request/response payload structures, CLI mapping, and the interactive dashboard user interface.
+* **[REST API Reference: /run](/docs/810_REST_API_Reference)**: Complete reference for `/run`, Pydantic schemas, validation rules, status codes, curl, and Python requests examples.
 
 ---
 

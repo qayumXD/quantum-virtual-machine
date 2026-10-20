@@ -26,7 +26,11 @@ from qvm.observable import Hamiltonian
 
 import os
 from dotenv import load_dotenv
-from supabase import create_client, Client
+try:
+    from supabase import create_client, Client
+except ImportError:
+    create_client = None
+    Client = None
 import time
 
 load_dotenv()

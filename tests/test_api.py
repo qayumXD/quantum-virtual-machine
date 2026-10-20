@@ -96,3 +96,79 @@ def test_static_client_served():
         pytest.skip("Static web client build (web/out) not present locally")
     resp = client.get("/web/index.html")
     assert resp.status_code == 200
+
+
+def test_run_with_expectation_pauli():
+    payload = {
+        "source_type": "json",
+        "nqubits": 2,
+        "circuit": [
+            {"name": "h", "qubits": [0]},
+            {"name": "cx", "qubits": [0, 1]},
+        ],
+        "expectation_pauli": {"ZZ": 1.0, "XX": 1.0},
+    }
+    resp = client.post("/run", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["expectation_value"] is not None
+    assert pytest.approx(data["expectation_value"], rel=1e-5) == 2.0
+
+
+def test_run_openqasm3():
+    qasm3 = """OPENQASM 3.0;
+    include "stdgates.inc";
+    qubit[2] q;
+    h q[0];
+    cx q[0], q[1];
+    """
+    payload = {
+        "source_type": "qasm",
+        "qasm": qasm3,
+        "shots": 0,
+    }
+    resp = client.post("/run", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    probs = data["probabilities"]
+    assert pytest.approx(probs[0], rel=1e-6) == 0.5
+    assert pytest.approx(probs[3], rel=1e-6) == 0.5
+
+
+def test_run_device_backend():
+    payload = {
+        "source_type": "json",
+        "nqubits": 2,
+        "circuit": [
+            {"name": "h", "qubits": [0]},
+            {"name": "cx", "qubits": [0, 1]},
+        ],
+        "device_backend": "fake_5q",
+        "shots": 100,
+    }
+    resp = client.post("/run", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["noise_summary"] is not None
+
+
+def test_run_missing_circuit_raises_400():
+    payload = {
+        "source_type": "json",
+        "circuit": None,
+        "nqubits": None,
+    }
+    resp = client.post("/run", json=payload)
+    assert resp.status_code == 400
+    assert "Parse error" in resp.json()["detail"]
+
+
+def test_run_invalid_engine_raises_422():
+    payload = {
+        "source_type": "json",
+        "circuit": [{"name": "h", "qubits": [0]}],
+        "nqubits": 1,
+        "engine": "invalid_engine",
+    }
+    resp = client.post("/run", json=payload)
+    assert resp.status_code == 422

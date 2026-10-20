@@ -75,15 +75,44 @@ state, classical_memory = Simulator().simulate(qc)
 print((abs(state) ** 2).round(3))
 ```
 
-### Framework bridge
+### Running Locally
 
-```python
-import cirq, qiskit
-from qvm.ir import QuantumCircuit
+You can run QVM as a CLI, a headless Python library, a FastAPI REST server, or a full-stack Next.js web dashboard:
 
-circuit = cirq.Circuit(cirq.H(cirq.LineQubit(0)), cirq.CNOT.on(cirq.LineQubit(0), cirq.LineQubit(1)))
-qk_circuit = QuantumCircuit.cirq_to_qiskit(circuit)   # Cirq → QVM IR → Qiskit
+#### 1. Backend REST Server (FastAPI)
+```bash
+# Start the API server on port 8000
+python -m uvicorn api.app:app --host 127.0.0.1 --port 8000 --reload
+# Verify health
+curl http://127.0.0.1:8000/health
 ```
+
+#### 2. Web Client Dashboard (Next.js)
+```bash
+cd web
+npm install
+npm run dev
+# Dashboard available at http://localhost:3000
+# Technical documentation available at http://localhost:3000/docs
+```
+
+---
+
+## Web Dashboard & Visualizations
+
+The QVM web application provides an interactive workspace for designing and executing quantum programs:
+
+1. **Interactive Code Editor**: Write and edit circuits in OpenQASM 3.0, OpenQASM 2.0, or JSON.
+2. **Execution Controls**:
+   * **Engine Selection**: Toggle between `statevector` (exact amplitudes for $N \le 16$) and `mps` (Matrix Product States for low-entanglement circuits up to 24+ qubits).
+   * **Transpilation & Routing**: Enable physical routing on linear topologies using `greedy` or `sabre` algorithms with optional uncomputation mapping restoration.
+   * **Noise Configuration**: Inject depolarizing error, readout bit-flip error, or realistic $T_1/T_2$ amplitude and phase damping.
+   * **Measurement Sampling**: Specify `shots` for projective measurement sampling or `0` for exact analytical statevector probabilities.
+3. **Interpreting Results**:
+   * **Circuit Diagram**: A clean SVG/PNG plot showing the routed gates, barriers, and measurements across physical qubits.
+   * **Probability Histogram**: A bar chart displaying the probabilities of all basis states ($P(x) = |\langle x|\psi\rangle|^2$).
+   * **Measurement Counts**: Sampled outcome frequencies when `shots > 0` (e.g. `{"00": 508, "11": 492}`).
+   * **Classical Memory**: Final binary values recorded in named registers from mid-circuit and terminal measurements.
 
 ---
 
@@ -159,16 +188,45 @@ pytest tests/test_interop_roundtrip.py -v     # interop guarantees (triple-engin
 python -m benchmarks.run_audit --all          # 20-algorithm audit corpus (QASM/Qiskit/Cirq/VQE/QAOA)
 ```
 
-## Tutorials
+## Tutorials & Practical Use Cases
 
-Executable notebooks in [`tutorials/`](https://github.com/qayumXD/quantum-virtual-machine/main/tutorials/) — each one is run by CI so it cannot rot:
+QVM includes comprehensive, executable tutorials available as both CI-verified Jupyter notebooks and step-by-step markdown guides:
 
-1. [`01_hello_bell.ipynb`](https://github.com/qayumXD/quantum-virtual-machine/main/tutorials/01_hello_bell.ipynb) — ingest QASM, simulate, export to Qiskit & Cirq, cross-check with Aer
-2. [`02_teleportation.ipynb`](https://github.com/qayumXD/quantum-virtual-machine/main/tutorials/02_teleportation.ipynb) — dynamic circuits: mid-circuit measurement + classical feedback
-3. [`03_grover_search.ipynb`](https://github.com/qayumXD/quantum-virtual-machine/main/tutorials/03_grover_search.ipynb) — Grover in OpenQASM 3 validated against ideal amplitudes
-4. [`04_vqe_in_30_lines.ipynb`](https://github.com/qayumXD/quantum-virtual-machine/main/tutorials/04_vqe_in_30_lines.ipynb) — H₂ ground state via VQE
+| Tutorial | Focus & Capabilities | Notebook | Markdown Guide |
+|---|---|---|---|
+| **1. Quantum Circuit Basics** | Qubits, superposition, gates ($X, H, R_y$), projective measurement, and REST API calls. | — | [`docs/tutorials/01_quantum_circuit_basics.md`](docs/tutorials/01_quantum_circuit_basics.md) |
+| **2. Quantum Entanglement** | Bell state $|\Phi^+\rangle$, CNOT correlations, exact state evolution, and Qiskit/Cirq export. | [`tutorials/01_hello_bell.ipynb`](tutorials/01_hello_bell.ipynb) | [`docs/tutorials/02_quantum_entanglement.md`](docs/tutorials/02_quantum_entanglement.md) |
+| **3. Grover's Search Algorithm** | 3-qubit unstructured search marking $\|101\rangle$, phase oracle, diffusion operator, and probability amplification. | [`tutorials/03_grover_search.ipynb`](tutorials/03_grover_search.ipynb) | [`docs/tutorials/03_grovers_algorithm.md`](docs/tutorials/03_grovers_algorithm.md) |
+| **4. Quantum Teleportation** | Dynamic circuits in OpenQASM 3: 3-qubit protocol, mid-circuit measurement, and classical conditional corrections. | [`tutorials/02_teleportation.ipynb`](tutorials/02_teleportation.ipynb) | [`docs/tutorials/04_quantum_teleportation.md`](docs/tutorials/04_quantum_teleportation.md) |
+| **5. Variational Quantum Eigensolver** | $\text{H}_2$ ground-state energy in STO-3G, parameterized ansatz, Pauli Hamiltonian expectation values, and classical optimization. | [`tutorials/04_vqe_in_30_lines.ipynb`](tutorials/04_vqe_in_30_lines.ipynb) | [`docs/tutorials/05_variational_quantum_eigensolver.md`](docs/tutorials/05_variational_quantum_eigensolver.md) |
 
-The interop suite verifies probability agreement across QVM, Qiskit, and Cirq for every gate in the vocabulary, round-trip structural preservation, and that unsupported inputs raise rather than corrupt. The audit corpus runs textbook-to-industry algorithms end-to-end and cross-validates against native simulators — see [`docs/reports/algorithm_audit_2026-08-24.md`](docs/reports/algorithm_audit_2026-08-24.md).
+Every notebook is executed by `tests/test_tutorials.py` on every CI run, ensuring that no tutorial code rots.
+
+---
+
+## API Documentation
+
+QVM exposes a production-ready FastAPI service for headless simulation, containerized deployments, and web interfaces:
+
+*   **Primary Execution Endpoint**: `POST /run` (accepts OpenQASM 2/3 and JSON; returns state probabilities, sampled counts, base64 circuit and histogram plots, and Pauli expectation values).
+*   **Documentation Guides**:
+    *   [REST API Reference Guide](docs/guides/API_REFERENCE.md)
+    *   [Interactive Web Docs (`/docs`)](web/docs-content/810_REST_API_Reference.md)
+    *   Swagger UI: `http://localhost:8000/docs`
+
+---
+
+## Troubleshooting & Known Limitations
+
+### Scaling Limits
+*   **Statevector Engine (`Simulator`)**: Memory scales as $O(2^N)$ complex amplitudes. Circuits with $N \le 14$ execute in milliseconds; $N \ge 16$ requires substantial memory (~0.5–1 GB). For large 1D low-entanglement systems ($N \ge 20$), select the `engine="mps"` (Matrix Product States) backend.
+*   **MPS Simulator**: Requires circuits with moderate bipartite entanglement. Deep circuits with dense all-to-all entangling gates will experience SVD truncation or high bond dimensions.
+
+### Common Errors & Solutions
+*   `MissingBackendError: Cirq is not installed`: Install the Cirq extra via `pip install "quantum-virtual-machine[cirq]"`.
+*   `MissingBackendError: Qiskit is not installed`: Install the Qiskit extra via `pip install "quantum-virtual-machine[qiskit]"`.
+*   `UnsupportedGateError`: QVM strictly enforces physical equivalence. Any gate outside the 22-gate vocabulary will raise this error rather than silently degrading. Pass `transpile_foreign=True` to auto-transpile through Qiskit if available.
+*   `QVMParseError`: Ensure your OpenQASM header starts with `OPENQASM 2.0;` or `OPENQASM 3.0;` and uses standard includes (`qelib1.inc` or `stdgates.inc`).
 
 ---
 
