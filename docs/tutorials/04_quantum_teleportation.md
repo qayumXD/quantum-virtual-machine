@@ -80,7 +80,7 @@ out[0] = measure q[2];
 teleport = OpenQASM3Parser().parse(qasm)
 counts = Simulator().sample(teleport, shots=SHOTS, seed=42)
 
-p_one = sum(c for bits, c in counts.items() if bits[0] == "1") / SHOTS
+p_one = sum(c for bits, c in counts.items() if bits[2] == "1") / SHOTS
 theory_p_one = math.sin(THETA / 2) ** 2
 
 print(f"P(q[2] = 1) observed: {p_one:.4f}, theoretical: {theory_p_one:.4f}")

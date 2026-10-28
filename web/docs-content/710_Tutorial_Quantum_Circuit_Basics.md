@@ -56,13 +56,13 @@ import numpy as np
 
 # 1. Instantiate a 1-qubit circuit with 1 classical bit register
 qc = QuantumCircuit(1)
-qc.add_register("c", 1)
+qc.add_classical_register("c", 1)
 
 # 2. Apply Hadamard to create superposition (|0> -> (|0> + |1>)/sqrt(2))
 qc.add_operation("h", [0])
 
 # 3. Add measurement operation
-qc.add_operation("measure", [0], register="c", cbit=0)
+qc.add_operation("measure", [0], target_bit=("c", 0))
 
 # 4. Simulate exact statevector
 sim = Simulator()

@@ -126,7 +126,7 @@ sim = Simulator()
 counts = sim.sample(teleport_circuit, shots=SHOTS, seed=42)
 
 # Compute measured probability of Bob's qubit being |1>
-p_one = sum(c for bits, c in counts.items() if bits[0] == "1") / SHOTS
+p_one = sum(c for bits, c in counts.items() if bits[2] == "1") / SHOTS
 theoretical_p_one = math.sin(THETA / 2) ** 2
 
 print(f"Empirical P(q[2] = 1): {p_one:.4f}")
@@ -140,9 +140,9 @@ print("\nSuccess: The unknown quantum state was teleported intact!")
 
 ### Verified Output
 ```text
-Empirical P(q[2] = 1): 0.1504
+Empirical P(q[2] = 1): 0.1550
 Theoretical P(1)     : 0.1516
-Absolute discrepancy : 0.0012
+Absolute discrepancy : 0.0034
 
 Success: The unknown quantum state was teleported intact!
 ```

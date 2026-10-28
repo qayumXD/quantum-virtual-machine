@@ -180,11 +180,20 @@ QVM contains built-in classes in `src/qvm/vqe.py` and `src/qvm/qaoa.py` with aut
 
 ```python
 from qvm.vqe import VQE
-from qvm.observable import Hamiltonian
+from qvm.parameter import Parameter
 
-vqe = VQE(ansatz_func=create_ansatz, hamiltonian=H, optimizer="cobyla")
-result = vqe.compute_minimum_eigenvalue(initial_point=initial_guess)
-print(result.eigenvalue + OFFSET)
+parameters = [Parameter(f"theta_{index}") for index in range(4)]
+
+def vqe_ansatz(values):
+    return create_ansatz([values[parameter] for parameter in parameters])
+
+vqe = VQE(ansatz_fn=vqe_ansatz, hamiltonian=H, optimizer="cobyla")
+result = vqe.run(
+    parameters=parameters,
+    initial_params=initial_guess,
+    max_iterations=500,
+)
+print(result.optimal_energy + OFFSET)
 ```
 
 Next: [REST API Reference](/docs/810_REST_API_Reference).
