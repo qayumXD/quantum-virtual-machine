@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Activity, Clock, Zap } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 
 type RunHistory = {
   id: string;
@@ -19,7 +20,7 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("https://quantum-virtual-machine.onrender.com/history?limit=50")
+    fetch(`${API_BASE_URL}/history?limit=50`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data.history)) {

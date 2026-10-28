@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Play, Upload, Download, TerminalSquare, AlertCircle } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function Workspace() {
   const [qasm, setQasm] = useState(`OPENQASM 3.0;
@@ -63,7 +64,7 @@ c[1] = measure q[1];`);
   const handleRun = async () => {
     setIsSimulating(true);
     setResults(null);
-    addLog("Submitting circuit to QVM Backend (https://quantum-virtual-machine.onrender.com)...");
+    addLog(`Submitting circuit to QVM Backend (${API_BASE_URL})...`);
 
     let parsedPauli = null;
     if (expectationPauli.trim()) {
@@ -78,7 +79,7 @@ c[1] = measure q[1];`);
 
     try {
       const startTime = performance.now();
-      const response = await fetch("https://quantum-virtual-machine.onrender.com/run", {
+      const response = await fetch(`${API_BASE_URL}/run`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
